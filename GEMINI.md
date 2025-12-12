@@ -30,6 +30,11 @@ interface Widget {
   type: WidgetType;   // e.g., 'lv_btn', 'lv_label'
   events: WidgetEvent[]; 
   style: WidgetStyle; // CSS-like props mapped to LVGL styles
+  
+  // Image Specifics
+  src?: string;       // Filename reference (e.g. "icon.png")
+  imageData?: string; // Base64 string for Browser Preview ONLY (stripped before sending to AI)
+  
   // ... coordinates (x, y, width, height)
 }
 
@@ -46,23 +51,26 @@ interface WidgetEvent {
 ### `App.tsx`
 - Holds the root state: `screens[]`, `activeScreenId`, `canvasSettings`.
 - Manages global actions (Add Widget, Generate Code, Apply Theme).
+- Handles **Layer Reordering** logic via `handleReorderLayers`.
 
 ### `components/Canvas.tsx`
 - Renders the "Active Screen".
 - Handles Drag-and-Drop (creation), Drag-to-Move, and Resizing.
 - Renders LVGL-like HTML approximations of widgets.
+- **Image Rendering**: Renders Base64 `imageData` if present, otherwise shows a placeholder.
 
 ### `components/PropertiesPanel.tsx`
 - **Selection Mode**: Edits properties of selected widget(s).
-- **Global Mode**: When nothing is selected, edits Active Screen settings, Global Theme, and Resolution.
-- **Events Section**: UI to push objects into the `widget.events` array.
+- **Global Mode**: When nothing is selected, edits Active Screen settings, Global Theme, and **Layer Management** (Reorder, Lock, Hide).
+- **Image Upload**: Handles converting `File` inputs to Base64 strings for preview.
 
 ### `services/aiService.ts`
 - **Prompt Engineering**: serialized the `screens` array into a simplified JSON format.
+- **Optimization**: Specifically filters out `imageData` (Base64) from the JSON payload to prevent token limit exhaustion, sending only the `src` filename to the LLM.
 - **Context Injection**: Instructs the LLM to generate:
     - `ui_init()` function.
-    - `ui_ScreenX_screen_init()` for each screen.
-    - Event callbacks (`ui_event_Button1`) linking `LV_EVENT_CLICKED` to `lv_scr_load_anim`.
+    - Event callbacks (`ui_event_Button1`).
+    - Image references using `src` filename (e.g., `lv_img_set_src(obj, "S:path/" + src)`).
 
 ## 5. Themes (`constants.ts`)
 Themes are static configuration objects (`PROJECT_THEMES`) that define color palettes (`primary`, `surface`, `background`, etc.).
@@ -73,4 +81,7 @@ When generating code for this project:
 1.  **C Code**: Must be LVGL v8/v9 compatible. Use `lv_obj_create`, `lv_obj_set_style_*`, `lv_obj_add_event_cb`.
 2.  **MicroPython**: Must use the standard `lvgl` module bindings.
 3.  **Navigation**: Logic must handle screen loading (e.g., `lv_scr_load_anim`).
-4.  **Token Efficiency**: The JSON payload sent to the AI strips unnecessary UI state (like `isSelected`) to focus on data needed for code generation.
+4.  **Images**: 
+    - Assume images are file-based or pre-declared symbols.
+    - Do not try to inline Base64 data in C code.
+    - Use the `src` property (filename) to generate the reference.

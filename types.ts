@@ -97,12 +97,21 @@ export interface Theme {
   borderRadius: number;
 }
 
+export interface DevicePreset {
+  id: string;
+  name: string;
+  manufacturer: string;
+  width: number;
+  height: number;
+}
+
 export interface CanvasSettings {
   width: number;
   height: number;
   defaultBackgroundColor: string;
   projectName: string;
   theme: string; // ID of the currently active theme
+  targetDevice?: string; // ID of the selected DevicePreset
 }
 
 export type CodeLanguage = 'c' | 'micropython';

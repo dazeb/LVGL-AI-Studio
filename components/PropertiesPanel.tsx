@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer } from '../types';
-import { PROJECT_THEMES } from '../constants';
+import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer, DevicePreset } from '../types';
+import { PROJECT_THEMES, DEVICE_PRESETS } from '../constants';
 import { 
   Settings, 
   Trash2, 
@@ -27,7 +27,8 @@ import {
   EyeOff,
   GripVertical,
   Upload,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Smartphone
 } from 'lucide-react';
 
 interface PropertiesPanelProps {
@@ -99,6 +100,28 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   // Case 1: No selection -> Screen Settings
   if (selectedWidgets.length === 0) {
     const isLandscape = settings.width >= settings.height;
+
+    // Group Presets by Manufacturer
+    const groupedPresets = DEVICE_PRESETS.reduce((acc, preset) => {
+        if (!acc[preset.manufacturer]) acc[preset.manufacturer] = [];
+        acc[preset.manufacturer].push(preset);
+        return acc;
+    }, {} as Record<string, DevicePreset[]>);
+
+    const handleDeviceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const val = e.target.value;
+        const preset = DEVICE_PRESETS.find(p => p.id === val);
+        if (preset) {
+            onUpdateSettings({
+                ...settings,
+                width: preset.width,
+                height: preset.height,
+                targetDevice: preset.id
+            });
+        } else {
+             onUpdateSettings({ ...settings, targetDevice: 'custom' });
+        }
+    };
 
     return (
       <div className="w-80 bg-slate-900 border-l border-slate-700 flex flex-col h-full overflow-y-auto">
@@ -269,6 +292,28 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             />
           </div>
 
+          <div>
+             <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-2">
+                <Smartphone size={12} /> Target Device
+             </label>
+             <select 
+                value={settings.targetDevice || 'custom'}
+                onChange={handleDeviceChange}
+                className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
+             >
+                <option value="custom">Custom Resolution</option>
+                {Object.keys(groupedPresets).map(mfr => (
+                    <optgroup key={mfr} label={mfr}>
+                        {groupedPresets[mfr].map(preset => (
+                            <option key={preset.id} value={preset.id}>
+                                {preset.name} ({preset.width}x{preset.height})
+                            </option>
+                        ))}
+                    </optgroup>
+                ))}
+             </select>
+          </div>
+
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <div>
@@ -276,7 +321,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <input 
                   type="number" 
                   value={settings.width}
-                  onChange={(e) => onUpdateSettings({...settings, width: parseInt(e.target.value) || 0})}
+                  onChange={(e) => onUpdateSettings({...settings, width: parseInt(e.target.value) || 0, targetDevice: 'custom'})}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -285,7 +330,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <input 
                   type="number" 
                   value={settings.height}
-                  onChange={(e) => onUpdateSettings({...settings, height: parseInt(e.target.value) || 0})}
+                  onChange={(e) => onUpdateSettings({...settings, height: parseInt(e.target.value) || 0, targetDevice: 'custom'})}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>

@@ -3,6 +3,24 @@
 
 All notable changes to the **LVGL Studio AI** project will be documented in this file.
 
+## [0.3.0] - 2025-05-22
+
+### Added
+- **Image Upload Support**: Users can now upload local image files to the Image Widget. The app generates a preview using Base64 and automatically calculates dimensions.
+- **Layer Reordering**: Added Drag-and-Drop functionality to the Layers list in the Properties Panel to change Z-index order.
+- **Image Code Generation**: The AI Service now intelligently handles images by using the filename reference for code generation while stripping heavy Base64 data from the prompt to save tokens.
+
+### Changed
+- **UI Restructuring**: Moved the **Layers Panel** from the Left Sidebar (Widget Palette) to the Right Sidebar (Properties Panel).
+- **Layer Access**: Layers are now accessible in the "Screen Settings" view (visible when no specific widget is selected).
+- **Canvas Rendering**: Updated Canvas to render uploaded Base64 image data instead of just placeholders.
+
+### Fixed
+- Fixed aspect ratio resizing for Images and Icons (or when holding Shift).
+- Improved performance by optimizing the AI prompt payload size.
+
+---
+
 ## [0.2.0] - 2025-05-20
 
 ### Added

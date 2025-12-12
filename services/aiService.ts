@@ -1,6 +1,7 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { Widget, CanvasSettings, CodeLanguage, AISettings, Screen } from '../types';
+import { DEVICE_PRESETS } from '../constants';
 
 const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: CodeLanguage) => {
     // We send only necessary data to save tokens
@@ -29,6 +30,10 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
                 })
         }))
     };
+    
+    // Find device name if set
+    const selectedDevice = DEVICE_PRESETS.find(d => d.id === settings.targetDevice);
+    const deviceName = selectedDevice ? `${selectedDevice.manufacturer} ${selectedDevice.name}` : 'Generic Custom Display';
 
     const projectJson = JSON.stringify(projectData, null, 2);
 
@@ -36,6 +41,9 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
       You are an embedded GUI expert specializing in LVGL (Light and Versatile Graphics Library).
       
       Task: Generate production-ready ${language === 'c' ? 'C (LVGL v8/v9)' : 'MicroPython'} code for a multi-screen UI project.
+      
+      Target Hardware: ${deviceName}
+      Display Dimensions: ${settings.width}x${settings.height}
       
       Project Data (JSON):
       ${projectJson}

@@ -11,10 +11,48 @@
 *   **Global Theming** 🆕: Instantly style your entire project with presets like *Cyberpunk*, *Midnight*, *Retro*, and more.
 *   **Event System** 🆕: Define logic for Clicked, Pressed, Released, and Value Changed events. Support for Navigation actions or Custom C/Python code.
 *   **Visual Drag-and-Drop Editor**: Intuitive canvas to place and arrange UI elements with snapping.
-*   **Layer Management**: Create, lock, hide, and reorder layers to manage complex composite UIs.
+*   **Layer Management**: Create, lock, hide, and **reorder** layers via drag-and-drop to manage complex composite UIs.
+*   **Image Uploads**: Upload images to preview them on the canvas and generate correct file-reference code.
 *   **Precision Control**: Keyboard navigation for pixel-perfect widget positioning.
 *   **Multi-Provider AI**: Generate code using Gemini, OpenAI, or local models (Ollama/LocalAI).
 *   **Live Properties**: Real-time editing of dimensions, colors, borders, shadows, and logic.
+
+---
+
+## 🚀 Running Locally
+
+This project uses modern ES Modules directly in the browser via `importmap`. No complex build step (Webpack/Vite) is strictly required for development, but you need a local server to handle module loading correctly (opening `index.html` directly via file system will result in CORS errors).
+
+### Prerequisites
+*   A modern browser (Chrome, Edge, Firefox).
+*   A method to serve static files (Python, Node.js, or VS Code).
+
+### Steps
+
+1.  **Clone the repository**.
+    ```bash
+    git clone https://github.com/yourusername/lvgl-studio-ai.git
+    cd lvgl-studio-ai
+    ```
+
+2.  **Serve the directory**:
+    
+    *   **Using Python (Recommended)**:
+        ```bash
+        # Python 3
+        python3 -m http.server 8000
+        ```
+    
+    *   **Using Node.js**:
+        ```bash
+        npx serve .
+        ```
+
+    *   **Using VS Code**:
+        Install the **Live Server** extension, right-click `index.html`, and select "Open with Live Server".
+
+3.  **Open in Browser**:
+    Navigate to `http://localhost:8000` (or the port provided by your server).
 
 ---
 
@@ -42,9 +80,11 @@ graph TD
 
 ### 1. The Workspace Layout
 The interface is divided into three professional zones:
-*   **Left Sidebar**: Manage **Widgets**, **Layers**, and **Screens**.
+*   **Left Sidebar**: Widget Palette and Screen List.
 *   **Center (Canvas)**: Your active WYSIWYG design area.
-*   **Right (Properties)**: Context-aware panel for editing widgets, managing **Events**, and selecting global **Themes**.
+*   **Right (Properties)**: Context-aware panel.
+    *   *If Widget Selected*: Edit properties, events, and styles.
+    *   *If Canvas Selected*: Edit Screen settings, Global Theme, and **Layers**.
 
 ### 2. Multi-Screen & Navigation 🧭
 1.  **Add Screen**: Go to the **Screens** tab in the left sidebar and click `+`.
@@ -60,13 +100,19 @@ Widgets support a robust event system. In the **Properties Panel**:
     *   **CUSTOM CODE**: Injects raw C or Python code (e.g., `printf("Hello");` or `led.on()`).
 4.  Widgets with events display a small yellow "Zap" badge on the canvas.
 
-### 4. AI Configuration ⚙️
+### 4. Image Handling 🖼️
+1.  Add an **Image Widget**.
+2.  In the Properties Panel, click **Upload Image**.
+3.  The image is Base64 encoded for the browser preview.
+4.  The generated code will reference the filename (e.g., `lv_img_set_src(ui_img, "S:my_image.png")`).
+
+### 5. AI Configuration ⚙️
 Click the **Settings Icon** in the top header to configure your AI provider.
 *   **Google Gemini**: Default. Uses `process.env.API_KEY` or user-provided key.
 *   **OpenAI**: Requires `sk-...` key.
 *   **Local LLM**: Connect to local endpoints (e.g., Ollama at `http://localhost:11434/v1`).
 
-### 5. AI Code Generation 🤖
+### 6. AI Code Generation 🤖
 1.  Design your UI.
 2.  Click **Generate Code**.
 3.  The AI receives a structured JSON payload describing all screens, widgets, themes, and events.
@@ -87,7 +133,7 @@ Click the **Settings Icon** in the top header to configure your AI provider.
 | **Container** | 📦 | Background (Solid/Transparent), Borders, Radius |
 | **Text Area** | 📝 | Placeholder, Text, Cursor blink simulation |
 | **Chart** | 📊 | Line vs Bar mode, Data points simulation, Grid lines |
-| **Image** | 🖼️ | Source path, Placeholder visualization |
+| **Image** | 🖼️ | Source path/upload, Placeholder visualization |
 | **Icon** | ⭐ | Built-in LVGL Symbols (Home, Wifi, Battery, etc.) |
 
 ---

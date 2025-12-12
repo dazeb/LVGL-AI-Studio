@@ -1,5 +1,5 @@
 
-import { WidgetType, CanvasSettings, Theme } from './types';
+import { WidgetType, CanvasSettings, Theme, DevicePreset } from './types';
 
 export const PROJECT_THEMES: Record<string, Theme> = {
   light: {
@@ -74,12 +74,46 @@ export const PROJECT_THEMES: Record<string, Theme> = {
   }
 };
 
+export const DEVICE_PRESETS: DevicePreset[] = [
+  { id: 'custom', name: 'Custom Resolution', manufacturer: 'Generic', width: 480, height: 320 },
+  
+  // M5Stack
+  { id: 'm5_core', name: 'Core / Core2 / Basic', manufacturer: 'M5Stack', width: 320, height: 240 },
+  { id: 'm5_stickc_plus', name: 'StickC Plus', manufacturer: 'M5Stack', width: 240, height: 135 },
+  { id: 'm5_cardputer', name: 'Cardputer', manufacturer: 'M5Stack', width: 240, height: 135 },
+  { id: 'm5_paper', name: 'M5Paper', manufacturer: 'M5Stack', width: 960, height: 540 },
+  { id: 'm5_dial', name: 'M5Dial (Round)', manufacturer: 'M5Stack', width: 240, height: 240 },
+  
+  // Seeed Studio
+  { id: 'wio_terminal', name: 'Wio Terminal', manufacturer: 'Seeed Studio', width: 320, height: 240 },
+  
+  // Adafruit
+  { id: 'ada_pyportal', name: 'PyPortal', manufacturer: 'Adafruit', width: 320, height: 240 },
+  { id: 'ada_pyportal_titano', name: 'PyPortal Titano', manufacturer: 'Adafruit', width: 480, height: 320 },
+  { id: 'ada_tft_24', name: '2.4" TFT FeatherWing', manufacturer: 'Adafruit', width: 320, height: 240 },
+  { id: 'ada_tft_35', name: '3.5" TFT Breakout', manufacturer: 'Adafruit', width: 480, height: 320 },
+  { id: 'ada_round_128', name: '1.28" Round IPS', manufacturer: 'Adafruit', width: 240, height: 240 },
+  
+  // Waveshare
+  { id: 'wave_35_ips', name: '3.5" IPS LCD', manufacturer: 'Waveshare', width: 480, height: 320 },
+  { id: 'wave_40_hdmi', name: '4.0" HDMI LCD', manufacturer: 'Waveshare', width: 800, height: 480 },
+  { id: 'wave_50_hdmi', name: '5.0" HDMI LCD', manufacturer: 'Waveshare', width: 800, height: 480 },
+  { id: 'wave_70_hdmi', name: '7.0" HDMI LCD', manufacturer: 'Waveshare', width: 1024, height: 600 },
+  { id: 'wave_128_round', name: '1.28" Touch LCD', manufacturer: 'Waveshare', width: 240, height: 240 },
+  
+  // Generic
+  { id: 'gen_st7789', name: 'Generic ST7789 (Square)', manufacturer: 'Generic', width: 240, height: 240 },
+  { id: 'gen_ili9341', name: 'Generic ILI9341', manufacturer: 'Generic', width: 320, height: 240 },
+  { id: 'gen_st7735', name: 'Generic ST7735', manufacturer: 'Generic', width: 160, height: 128 },
+];
+
 export const DEFAULT_CANVAS_SETTINGS: CanvasSettings = {
   width: 480,
   height: 320,
   defaultBackgroundColor: PROJECT_THEMES.light.colors.background,
   projectName: 'My_LVGL_Project',
-  theme: 'light'
+  theme: 'light',
+  targetDevice: 'custom'
 };
 
 export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
