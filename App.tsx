@@ -10,7 +10,8 @@ import { Code, MonitorPlay } from 'lucide-react';
 
 const App: React.FC = () => {
   const [widgets, setWidgets] = useState<Widget[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Multi-selection state
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [settings, setSettings] = useState<CanvasSettings>(DEFAULT_CANVAS_SETTINGS);
   
   const [showCode, setShowCode] = useState(false);
@@ -18,16 +19,15 @@ const App: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('c');
 
-  const selectedWidget = widgets.find(w => w.id === selectedId) || null;
+  // Helper to get actual widget objects from IDs
+  const selectedWidgets = widgets.filter(w => selectedIds.includes(w.id));
 
   const handleAddWidget = (type: WidgetType, x?: number, y?: number) => {
     const defaultProps = DEFAULT_WIDGET_PROPS[type];
     
-    // Determine position: use provided x,y or default with offset
     let posX = x !== undefined ? x : 20;
     let posY = y !== undefined ? y : 20;
 
-    // If no specific coordinates provided, offset slightly to avoid stacking
     if (x === undefined && widgets.length > 0) {
        posX += 10;
        posY += 10;
@@ -40,18 +40,63 @@ const App: React.FC = () => {
       x: posX,
       y: posY,
       ...defaultProps,
-      // Deep copy style to avoid reference issues
       style: { ...defaultProps.style } 
     };
 
     setWidgets(prev => [...prev, newWidget]);
-    setSelectedId(newWidget.id);
+    // Auto-select the new widget
+    setSelectedIds([newWidget.id]);
+  };
+
+  const handleSelectWidget = (id: string | null, isShift: boolean) => {
+    if (id === null) {
+      if (!isShift) setSelectedIds([]);
+      return;
+    }
+
+    const targetWidget = widgets.find(w => w.id === id);
+    if (!targetWidget) return;
+
+    // Identify all widgets that should be part of this click (handle groups)
+    let idsToToggle = [id];
+    if (targetWidget.groupId) {
+      idsToToggle = widgets.filter(w => w.groupId === targetWidget.groupId).map(w => w.id);
+    }
+
+    if (isShift) {
+      // Toggle selection
+      setSelectedIds(prev => {
+        const newSet = new Set(prev);
+        const allPresent = idsToToggle.every(tid => newSet.has(tid));
+        
+        if (allPresent) {
+          // Deselect all
+          idsToToggle.forEach(tid => newSet.delete(tid));
+        } else {
+          // Select all
+          idsToToggle.forEach(tid => newSet.add(tid));
+        }
+        return Array.from(newSet);
+      });
+    } else {
+      // If simply clicking an unselected item (or group), replace selection.
+      // If clicking something ALREADY selected, keep it selected (to allow dragging context)
+      // BUT if it's a drag start, we don't want to deselect others yet. 
+      // This nuance is often handled by 'mouseup' vs 'mousedown', but for now:
+      // If the clicked item is already in the selection, DO NOT clear the selection,
+      // because the user might be starting a drag of the multi-selection.
+      // However, if the user clicked an *unselected* item, we clear and select it.
+      
+      const isAlreadySelected = idsToToggle.every(tid => selectedIds.includes(tid));
+      if (!isAlreadySelected) {
+        setSelectedIds(idsToToggle);
+      }
+    }
   };
 
   const handleUpdateWidget = useCallback((id: string, updates: Partial<Widget>) => {
     setWidgets(prev => prev.map(w => {
       if (w.id === id) {
-        // If style is updated, merge it carefully
         const newStyle = updates.style ? { ...w.style, ...updates.style } : w.style;
         return { ...w, ...updates, style: newStyle };
       }
@@ -59,21 +104,50 @@ const App: React.FC = () => {
     }));
   }, []);
 
-  const handleDeleteWidget = (id: string) => {
-    setWidgets(prev => prev.filter(w => w.id !== id));
-    if (selectedId === id) setSelectedId(null);
+  // Batch update for moving multiple widgets
+  const handleUpdateWidgets = useCallback((updates: {id: string, changes: Partial<Widget>}[]) => {
+    setWidgets(prev => {
+      const updateMap = new Map(updates.map(u => [u.id, u.changes]));
+      return prev.map(w => {
+        if (updateMap.has(w.id)) {
+          const changes = updateMap.get(w.id)!;
+          const newStyle = changes.style ? { ...w.style, ...changes.style } : w.style;
+          return { ...w, ...changes, style: newStyle };
+        }
+        return w;
+      });
+    });
+  }, []);
+
+  const handleDeleteWidgets = (ids: string[]) => {
+    setWidgets(prev => prev.filter(w => !ids.includes(w.id)));
+    setSelectedIds([]);
+  };
+
+  const handleGroup = () => {
+    if (selectedIds.length < 2) return;
+    const newGroupId = `group_${Date.now()}`;
+    handleUpdateWidgets(selectedIds.map(id => ({
+      id,
+      changes: { groupId: newGroupId }
+    })));
+  };
+
+  const handleUngroup = () => {
+    handleUpdateWidgets(selectedIds.map(id => ({
+      id,
+      changes: { groupId: undefined } // Remove property
+    })));
   };
 
   const handleGenerateCode = async () => {
     setShowCode(true);
-    // Always regenerate to capture latest changes
     setIsGenerating(true);
     const generated = await generateLVGLCode(widgets, settings, codeLanguage);
     setCode(generated);
     setIsGenerating(false);
   };
 
-  // Effect to re-generate when language changes inside the modal
   const handleLanguageChange = async (lang: CodeLanguage) => {
     setCodeLanguage(lang);
     if (showCode) {
@@ -130,18 +204,20 @@ const App: React.FC = () => {
         <Canvas 
           widgets={widgets} 
           settings={settings} 
-          selectedId={selectedId}
-          onSelectWidget={setSelectedId}
-          onUpdateWidget={handleUpdateWidget}
+          selectedIds={selectedIds}
+          onSelectWidget={handleSelectWidget}
+          onUpdateWidgets={handleUpdateWidgets}
           onAddWidget={handleAddWidget}
         />
         
         <PropertiesPanel 
-          widget={selectedWidget}
+          selectedWidgets={selectedWidgets}
           settings={settings}
-          onUpdateWidget={handleUpdateWidget}
+          onUpdateWidget={handleUpdateWidget} // For single edits
           onUpdateSettings={setSettings}
-          onDeleteWidget={handleDeleteWidget}
+          onDeleteWidgets={handleDeleteWidgets}
+          onGroup={handleGroup}
+          onUngroup={handleUngroup}
         />
       </main>
 

@@ -23,6 +23,7 @@ export interface WidgetStyle {
 
 export interface Widget {
   id: string;
+  groupId?: string; // ID for grouping multiple widgets
   type: WidgetType;
   name: string;
   x: number;

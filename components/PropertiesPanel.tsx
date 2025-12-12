@@ -1,24 +1,29 @@
 import React from 'react';
 import { Widget, CanvasSettings, WidgetType } from '../types';
-import { Settings, Trash2, Sliders, RotateCw } from 'lucide-react';
+import { Settings, Trash2, Sliders, RotateCw, Layers, Ungroup, Group } from 'lucide-react';
 
 interface PropertiesPanelProps {
-  widget: Widget | null;
+  selectedWidgets: Widget[]; // Changed from widget | null
   settings: CanvasSettings;
   onUpdateWidget: (id: string, updates: Partial<Widget>) => void;
   onUpdateSettings: (settings: CanvasSettings) => void;
-  onDeleteWidget: (id: string) => void;
+  onDeleteWidgets: (ids: string[]) => void;
+  onGroup: () => void;
+  onUngroup: () => void;
 }
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ 
-  widget, 
+  selectedWidgets, 
   settings, 
   onUpdateWidget, 
   onUpdateSettings,
-  onDeleteWidget
+  onDeleteWidgets,
+  onGroup,
+  onUngroup
 }) => {
   
-  if (!widget) {
+  // Case 1: No selection -> Canvas Settings
+  if (selectedWidgets.length === 0) {
     const isLandscape = settings.width >= settings.height;
 
     return (
@@ -90,26 +95,94 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </div>
         </div>
         <div className="mt-auto p-4 text-slate-500 text-xs text-center">
-          Select a widget to edit properties
+          Select widgets to edit or group
         </div>
       </div>
     );
   }
 
-  // Widget Properties Mode
+  // Case 2: Multiple selection -> Grouping Actions
+  if (selectedWidgets.length > 1) {
+    // Check if they are already in the same group
+    const firstGroupId = selectedWidgets[0].groupId;
+    const allSameGroup = firstGroupId && selectedWidgets.every(w => w.groupId === firstGroupId);
+    
+    return (
+      <div className="w-80 bg-slate-900 border-l border-slate-700 flex flex-col h-full overflow-y-auto">
+        <div className="p-4 border-b border-slate-700 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+            <Layers className="text-blue-500" size={18} /> Selection ({selectedWidgets.length})
+          </h2>
+           <button 
+            onClick={() => onDeleteWidgets(selectedWidgets.map(w => w.id))}
+            className="text-red-400 hover:text-red-300 p-1 hover:bg-slate-800 rounded"
+            title="Delete Selected"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
+        
+        <div className="p-4 space-y-4">
+           <div className="bg-slate-800 p-3 rounded-lg border border-slate-700">
+              <p className="text-sm text-slate-300 mb-3">
+                 {allSameGroup 
+                   ? "These widgets are grouped." 
+                   : "Multiple widgets selected."}
+              </p>
+              
+              <div className="flex gap-2">
+                <button
+                  onClick={onGroup}
+                  className="flex-1 flex items-center justify-center gap-2 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-sm font-medium transition-colors"
+                >
+                   <Group size={16} /> Group
+                </button>
+                
+                <button
+                   onClick={onUngroup}
+                   disabled={!selectedWidgets.some(w => w.groupId)}
+                   className="flex-1 flex items-center justify-center gap-2 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                   <Ungroup size={16} /> Ungroup
+                </button>
+              </div>
+           </div>
+           
+           <div className="text-xs text-slate-500">
+              To edit specific properties, select a single widget.
+           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Case 3: Single Widget -> Full Property Editor
+  const widget = selectedWidgets[0];
+  
   return (
     <div className="w-80 bg-slate-900 border-l border-slate-700 flex flex-col h-full overflow-y-auto">
       <div className="p-4 border-b border-slate-700 flex justify-between items-center">
         <h2 className="text-lg font-bold text-white flex items-center gap-2">
           <Sliders className="text-green-500" size={18} /> Properties
         </h2>
-        <button 
-          onClick={() => onDeleteWidget(widget.id)}
-          className="text-red-400 hover:text-red-300 p-1 hover:bg-slate-800 rounded"
-          title="Delete Widget"
-        >
-          <Trash2 size={18} />
-        </button>
+        <div className="flex gap-1">
+          {widget.groupId && (
+             <button 
+               onClick={onUngroup}
+               className="text-slate-400 hover:text-white p-1 hover:bg-slate-800 rounded"
+               title="Ungroup"
+             >
+               <Ungroup size={18} />
+             </button>
+          )}
+          <button 
+            onClick={() => onDeleteWidgets([widget.id])}
+            className="text-red-400 hover:text-red-300 p-1 hover:bg-slate-800 rounded"
+            title="Delete Widget"
+          >
+            <Trash2 size={18} />
+          </button>
+        </div>
       </div>
       
       <div className="p-4 space-y-6">
