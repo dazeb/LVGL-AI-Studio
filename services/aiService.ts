@@ -147,6 +147,45 @@ const generateOpenAICompatible = async (prompt: string, settings: AISettings): P
     return cleanContent;
 };
 
+// -- Anthropic Implementation --
+const generateAnthropic = async (prompt: string, settings: AISettings): Promise<string> => {
+    const key = settings.apiKey;
+    const url = settings.baseUrl || 'https://api.anthropic.com/v1';
+    
+    const headers: Record<string, string> = {
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        // Note: 'dangerously-allow-browser': 'true' is implied by user knowing about CORS or using a proxy
+    };
+
+    const body = {
+        model: settings.model,
+        max_tokens: 4096,
+        messages: [{ role: "user", content: prompt }]
+    };
+
+    const response = await fetch(`${url}/messages`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Anthropic Request Failed: ${response.status} ${err}`);
+    }
+
+    const data = await response.json();
+    const content = data.content?.[0]?.text;
+    
+    if (!content) throw new Error("Invalid response format from Anthropic.");
+    
+    const cleanContent = content.replace(/^```[a-zA-Z]*\n/, '').replace(/```$/, '').trim();
+    return cleanContent;
+};
+
+
 export const generateLVGLCode = async (
   screens: Screen[],
   settings: CanvasSettings,
@@ -158,6 +197,8 @@ export const generateLVGLCode = async (
     
     if (aiSettings.provider === 'gemini') {
         return await generateGemini(prompt, aiSettings);
+    } else if (aiSettings.provider === 'anthropic') {
+        return await generateAnthropic(prompt, aiSettings);
     } else {
         return await generateOpenAICompatible(prompt, aiSettings);
     }

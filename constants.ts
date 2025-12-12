@@ -74,6 +74,27 @@ export const PROJECT_THEMES: Record<string, Theme> = {
   }
 };
 
+export const AI_MODELS = {
+  gemini: [
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Fast)' },
+    { id: 'gemini-3-pro-preview', name: 'Gemini 3.0 Pro (Thinking/High Quality)' },
+    { id: 'gemini-2.5-flash-thinking', name: 'Gemini 2.5 Flash Thinking' }
+  ],
+  openai: [
+    { id: 'gpt-4o', name: 'GPT-4o' },
+    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' }
+  ],
+  anthropic: [
+    { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet' },
+    { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
+    { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' }
+  ],
+  custom: [
+    { id: 'llama3', name: 'Llama 3' },
+    { id: 'mistral', name: 'Mistral' }
+  ]
+};
+
 export const DEVICE_PRESETS: DevicePreset[] = [
   { id: 'custom', name: 'Custom Resolution', manufacturer: 'Generic', width: 480, height: 320 },
   

@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, RotateCcw, Shield, Server, Cpu, Key } from 'lucide-react';
+import { X, Save, RotateCcw, Shield, Server, Cpu, Key, ExternalLink, Zap } from 'lucide-react';
 import { AISettings, AIProvider } from '../types';
+import { AI_MODELS } from '../constants';
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -43,6 +44,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             } else if (value === 'openai') {
                 updates.baseUrl = 'https://api.openai.com/v1';
                 updates.model = 'gpt-4o';
+            } else if (value === 'anthropic') {
+                updates.baseUrl = 'https://api.anthropic.com/v1';
+                updates.model = 'claude-3-5-sonnet-20240620';
             } else if (value === 'custom') {
                 updates.baseUrl = 'http://localhost:11434/v1';
                 updates.model = 'llama3';
@@ -50,6 +54,23 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
         }
         return { ...prev, ...updates };
     });
+  };
+
+  const handleGoogleAuth = async () => {
+    if ((window as any).aistudio) {
+      try {
+        await (window as any).aistudio.openSelectKey();
+        // Clear manual key to force usage of the injected env key.
+        // The App automatically uses process.env.API_KEY if settings.apiKey is empty.
+        handleChange('apiKey', '');
+        alert("Google Account connected! Pro tokens enabled.");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to select key.");
+      }
+    } else {
+      alert("Google AI Studio integration is not available in this environment.");
+    }
   };
 
   return (
@@ -70,16 +91,17 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
            {/* Provider */}
            <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Provider</label>
-              <div className="grid grid-cols-3 gap-2">
-                 {(['gemini', 'openai', 'custom'] as AIProvider[]).map(p => (
+              <div className="grid grid-cols-4 gap-2">
+                 {(['gemini', 'openai', 'anthropic', 'custom'] as AIProvider[]).map(p => (
                     <button
                        key={p}
                        onClick={() => handleChange('provider', p)}
-                       className={`py-2 px-3 rounded text-sm font-medium border transition-all capitalize ${
+                       className={`py-2 px-1 rounded text-sm font-medium border transition-all capitalize truncate ${
                           localSettings.provider === p 
                           ? 'bg-blue-600 border-blue-500 text-white' 
                           : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
                        }`}
+                       title={p}
                     >
                        {p}
                     </button>
@@ -95,13 +117,28 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
               <input 
                  type="password"
                  value={localSettings.apiKey}
-                 placeholder={localSettings.provider === 'gemini' ? "Leave empty to use process.env.API_KEY" : "sk-..."}
+                 placeholder={localSettings.provider === 'gemini' ? "Leave empty to use env/account key" : "Enter API Key..."}
                  onChange={(e) => handleChange('apiKey', e.target.value)}
                  className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-slate-600"
               />
+              
+              {/* Google Auth Button */}
+              {localSettings.provider === 'gemini' && (
+                  <div className="mt-2">
+                    <button 
+                        onClick={handleGoogleAuth}
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded bg-slate-800 hover:bg-slate-750 border border-slate-700 text-blue-400 text-xs font-medium transition-colors"
+                    >
+                        <Zap size={12} className="fill-current" /> Connect Google Account (Pro Tokens)
+                    </button>
+                  </div>
+              )}
+              
               <p className="text-[10px] text-slate-500 mt-1">
                  {localSettings.provider === 'gemini' 
-                    ? "If set, this overrides the default environment key."
+                    ? "Leave empty to use the connected account or environment variable."
+                    : localSettings.provider === 'anthropic' 
+                    ? "Required for Anthropic Claude models."
                     : "Required for OpenAI. Optional for some local endpoints."}
               </p>
            </div>
@@ -118,17 +155,41 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                      onChange={(e) => handleChange('baseUrl', e.target.value)}
                      className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
                   />
+                  {localSettings.provider === 'anthropic' && (
+                    <p className="text-[10px] text-amber-500 mt-1">
+                       Note: Direct Anthropic API calls from browser may fail CORS. Use a proxy if needed.
+                    </p>
+                  )}
                </div>
            )}
 
-           {/* Model */}
+           {/* Model Selection */}
            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Model Name</label>
+              <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Model</label>
+              
+              {/* Model Chips */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {AI_MODELS[localSettings.provider]?.map(m => (
+                    <button
+                        key={m.id}
+                        onClick={() => handleChange('model', m.id)}
+                        className={`text-[10px] px-2 py-1 rounded border transition-colors ${
+                            localSettings.model === m.id 
+                            ? 'bg-blue-900/40 border-blue-500 text-blue-200' 
+                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-300'
+                        }`}
+                    >
+                        {m.name}
+                    </button>
+                ))}
+              </div>
+
               <input 
                  type="text"
                  value={localSettings.model}
                  onChange={(e) => handleChange('model', e.target.value)}
                  className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                 placeholder="Custom model ID..."
               />
            </div>
 
