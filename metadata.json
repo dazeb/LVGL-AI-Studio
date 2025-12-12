@@ -1,0 +1,5 @@
+{
+  "name": "LVGL Studio AI",
+  "description": "A professional drag-and-drop LVGL UI designer. Visually build embedded GUIs and generate production-ready C or MicroPython code instantly using Gemini AI.",
+  "requestFramePermissions": []
+}
