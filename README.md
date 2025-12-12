@@ -1,85 +1,113 @@
-# LVGL Studio AI
 
-**LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It allows developers to visually build GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface and instantly generate production-ready code using Google's Gemini AI.
+# LVGL Studio AI 🎨✨
 
-![LVGL Studio AI](https://raw.githubusercontent.com/google/generative-ai-docs/main/site/en/images/gemini_logo_lockup.png)
+**LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It empowers developers to visually build complex GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface, advanced layer management, and instantly generate production-ready code using **Google's Gemini AI**.
 
-## 🚀 Key Features
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![LVGL](https://img.shields.io/badge/LVGL-v8%2Fv9-green) ![AI](https://img.shields.io/badge/Powered%20by-Gemini%202.5-orange)
 
-*   **Visual Drag-and-Drop Editor**: Intuitive canvas to place and arrange UI elements.
-*   **Multi-Language Support**: Generate code for **C (LVGL v8/v9)** or **MicroPython**.
-*   **AI-Powered Generation**: Uses **Gemini 2.5 Flash** to convert visual layouts into clean, idiomatic, and functioning code.
-*   **Real-time Customization**: detailed property inspector for styling (colors, borders, radius) and logic (values, ranges, checked states).
-*   **Canvas Management**: Adjustable screen resolution, landscape/portrait toggling, and background styling.
-*   **Instant Export**: Copy code to clipboard or download `.c` / `.py` files directly.
+## 🌟 Key Features
 
-## 🛠️ How to Use
-
-### 1. The Workspace
-The interface is divided into three main sections:
-*   **Left (Toolbox)**: Contains the palette of available LVGL widgets.
-*   **Center (Canvas)**: Your active design area representing the embedded screen.
-*   **Right (Properties)**: Context-aware panel for editing settings.
-
-### 2. Building your Interface
-*   **Add Widgets**: Click a widget in the Toolbox or drag it onto the Canvas.
-*   **Positioning**: Drag widgets around the canvas. They snap to a 10px grid for alignment.
-*   **Selection**: Click any widget to select it. Click the canvas background to deselect.
-
-### 3. Customizing Properties
-When a widget is selected, the right panel shows its specific properties:
-*   **Layout**: X, Y, Width, Height.
-*   **Content**: Text labels, placeholder text, image sources.
-*   **Logic**: Slider/Arc values, min/max ranges, checkbox states, chart types.
-*   **Style**: Background colors, text colors, border styles, radius, and font sizes.
-
-### 4. Canvas Settings
-Click on the empty background area to view **Canvas Settings** in the right panel:
-*   **Resolution**: Set custom dimensions (e.g., 480x320).
-*   **Orientation**: Quickly toggle between Portrait and Landscape modes.
-*   **Screen Name**: Name your screen (useful for code generation).
-*   **Background**: Set the global background color of the screen.
-
-### 5. Generating Code
-1.  Click the **Generate Code** button in the top header.
-2.  Select your target language: **C** or **MicroPython**.
-3.  The AI will analyze your layout and generate the corresponding code.
-4.  **Review**: See the code in the syntax-highlighted viewer.
-5.  **Export**: Click **Download** to save the file or **Copy** to paste it into your IDE.
+*   **Visual Drag-and-Drop Editor**: Intuitive canvas to place and arrange UI elements with snapping.
+*   **Layer Management**: Create, lock, hide, and reorder layers to manage complex composite UIs.
+*   **Precision Control**: Keyboard navigation for pixel-perfect widget positioning.
+*   **Grouping & Alignment**: Group widgets to move them together and control Z-index ordering (Bring to Front/Back).
+*   **Style Presets**: Save and re-use your favorite widget styles (Glassmorphism, Cyber, Neumorphism, etc.).
+*   **AI-Powered Code Generation**: Uses **Gemini 2.5 Flash** to convert visual layouts into clean C or MicroPython code.
+*   **Live Properties**: Real-time editing of dimensions, colors, borders, shadows, and logic.
 
 ---
 
-## 🤖 How it Works
+## 📐 Workflow Architecture
 
-LVGL Studio AI bridges the gap between visual design and coding implementation using Generative AI.
+```mermaid
+graph TD
+    User([User Interaction]) -->|Drag & Drop / Keyboard| State[App State Store]
+    User -->|Layer & Style Mgmt| State
+    State -->|JSON Representation| Canvas[Visual Canvas]
+    State -->|Context Data| AI{Gemini 2.5 AI}
+    AI -->|Prompt Engineering| Generator[Code Generator]
+    Generator -->|Export| CFile[ui.c / LVGL C]
+    Generator -->|Export| PyFile[ui.py / MicroPython]
+```
 
-1.  **State Serialization**: As you design, the application maintains a structured JSON representation of your interface, including every widget's type, position, style, and unique properties.
-2.  **Prompt Engineering**: When you click "Generate", this JSON data is embedded into a specialized prompt sent to the **Gemini 2.5 Flash** model.
-3.  **AI Processing**: Gemini acts as an expert embedded engineer. It interprets the JSON structure and writes the corresponding C or MicroPython code, handling boilerplates, imports, style definitions, and object creation.
-4.  **Output**: The result is clean, human-readable code that you can drop directly into your LVGL project.
+---
+
+## 🛠️ User Guide
+
+### 1. The Workspace Layout
+The interface is divided into three professional zones:
+*   **Left Sidebar (Palette & Layers)**: Toggle between adding **Widgets** and managing **Layers**.
+*   **Center (Canvas)**: Your active WYSIWYG design area.
+*   **Right (Properties)**: Context-aware panel for editing specific settings, global canvas options, or selection groups.
+
+### 2. Layer Management 🍰
+Complex UIs require organization. Use the **Layers** tab in the left sidebar to:
+*   **Add Layers**: Click `+` to create new transparent layers on top of the base.
+*   **Locking 🔒**: Click the lock icon to prevent accidental edits to background elements.
+*   **Visibility 👁️**: Toggle visibility to focus on specific parts of the UI. Hidden layers are excluded from code generation.
+*   **Selection**: Clicking a layer name makes it the "Active Layer". New widgets are always added to the Active Layer.
+
+### 3. Widget Operations
+*   **Placement**: Drag from the palette or click to add to the center.
+*   **Grouping**: Select multiple items (hold Shift + Click) and press **Group** in the right panel.
+*   **Z-Index**: Use the "Bring Forward", "Send Backward", "Front", and "Back" buttons to arrange overlapping items.
+*   **Resizing**: Use the drag handles on selected widgets (supports aspect-ratio locking for Icons/Images).
+
+### 4. Keyboard Shortcuts ⌨️
+Achieve pixel-perfect precision without touching the mouse:
+
+| Shortcut | Action | Description |
+| :--- | :--- | :--- |
+| **Arrow Keys** | Nudge Position | Move selected widget(s) by **1px**. |
+| **Shift + Arrow** | Fast Move | Move selected widget(s) by **10px**. |
+| **Shift + Click** | Multi-Select | Add/Remove widget from selection. |
+| **Delete** | Delete | Remove selected widgets. |
+
+### 5. AI Code Generation 🤖
+1.  Design your UI.
+2.  Click the **Generate Code** button in the top header.
+3.  Choose **C (LVGL)** or **MicroPython**.
+4.  Gemini analyzes your layers, groups, and styles to produce specific code including:
+    *   Object creation (`lv_btn_create`, `lv_label_create`, etc.).
+    *   Style definitions (`lv_style_t`).
+    *   Positioning and sizing.
+    *   Event handler skeletons.
+
+---
 
 ## 📦 Supported Widgets
 
-| Widget | Description | Configurable Properties |
-| :--- | :--- | :--- |
-| **Button** | Clickable action element | Text, Dimensions, Colors, Radius |
-| **Label** | Static text display | Text content, Font size, Color |
-| **Slider** | Select a value from a range | Value, Min, Max, Knob colors |
-| **Switch** | Binary toggle state | Checked state, Dimensions |
-| **Checkbox** | Box with label | Text, Checked state |
-| **Arc** | Circular progress/loader | Value, Range, Arc color |
-| **Container** | Grouping element | Border, Background, Dimensions |
-| **Text Area** | Input field | Placeholder, Text, Cursor simulation |
-| **Chart** | Data visualization | Type (Bar/Line), Dimensions |
-| **Image** | Graphic display | Source path (or LVGL symbol) |
+| Widget | Icon | Configurable Properties |
+| :--- | :---: | :--- |
+| **Button** | ⏹️ | Text, Color, Radius, Gradient sheen |
+| **Label** | 🔤 | Text content, Font size, Text Color |
+| **Slider** | 🎚️ | Value, Range (Min/Max), Indicator Color, Knob style |
+| **Switch** | 🔛 | Checked state, Pill styling, Animation timing |
+| **Checkbox** | ☑️ | Label text, Checked state |
+| **Arc** | ⭕ | Value, Range, Track/Indicator colors, Thickness |
+| **Container** | 📦 | Background (Solid/Transparent), Borders, Radius |
+| **Text Area** | 📝 | Placeholder, Text, Cursor blink simulation |
+| **Chart** | 📊 | Line vs Bar mode, Data points simulation, Grid lines |
+| **Image** | 🖼️ | Source path, Placeholder visualization |
+| **Icon** | ⭐ | Built-in LVGL Symbols (Home, Wifi, Battery, etc.) |
+
+---
 
 ## 🔧 Setup & Configuration
 
-This project requires a Google Cloud API Key with access to the Gemini API.
+This project is built with **React 19**, **TailwindCSS**, and **Google GenAI SDK**.
 
-1.  Ensure the application is running in an environment where `process.env.API_KEY` is available.
-2.  The app uses `@google/genai` SDK to communicate with the model.
+1.  **API Key**: Ensure `process.env.API_KEY` is set in your environment variables or build configuration.
+2.  **Dependencies**: The app uses ES Modules (ESM) via `importmap` for a build-free experience in the browser, but can be bundled.
+
+```json
+// metadata.json configuration
+{
+  "name": "LVGL Studio AI",
+  "permissions": []
+}
+```
 
 ## 📝 License
 
-This project is open-source. Generated code belongs to the user.
+This project is open-source under the MIT License. Generated code belongs to the user.
