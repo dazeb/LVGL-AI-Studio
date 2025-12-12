@@ -337,6 +337,7 @@ const Canvas: React.FC<CanvasProps> = ({
     const isSelected = selectedIds.includes(widget.id);
     const isSingleSelection = selectedIds.length === 1 && isSelected;
     const locked = isLayerLocked(widget.layerId);
+    const hasEvents = (widget.events || []).length > 0;
 
     // Container Style: Positioning and layout
     const containerStyle: React.CSSProperties = {
@@ -621,6 +622,13 @@ const Canvas: React.FC<CanvasProps> = ({
         <div style={innerStyle}>
            {renderInner()}
         </div>
+        
+        {/* Event Indicator Badge */}
+        {hasEvents && !isSelected && (
+           <div className="absolute top-0 right-0 p-0.5 bg-yellow-500 rounded-bl-md z-10 shadow-sm pointer-events-none">
+              <Zap size={8} className="text-white fill-current" />
+           </div>
+        )}
 
         {/* Render Handles only for single selection and if NOT locked */}
         {isSingleSelection && !locked && handles.map(h => (

@@ -1,11 +1,85 @@
 
-import { WidgetType, CanvasSettings } from './types';
+import { WidgetType, CanvasSettings, Theme } from './types';
+
+export const PROJECT_THEMES: Record<string, Theme> = {
+  light: {
+    id: 'light',
+    name: 'Standard Light',
+    colors: {
+      background: '#f0f2f5',
+      surface: '#ffffff',
+      primary: '#2196F3',
+      secondary: '#e5e7eb',
+      text: '#1f2937',
+      textInvert: '#ffffff',
+      border: '#e2e8f0'
+    },
+    borderRadius: 8
+  },
+  dark: {
+    id: 'dark',
+    name: 'Standard Dark',
+    colors: {
+      background: '#111827',
+      surface: '#1f2937',
+      primary: '#3b82f6',
+      secondary: '#374151',
+      text: '#f3f4f6',
+      textInvert: '#ffffff',
+      border: '#374151'
+    },
+    borderRadius: 8
+  },
+  midnight: {
+    id: 'midnight',
+    name: 'Midnight Blue',
+    colors: {
+      background: '#0f172a',
+      surface: '#1e293b',
+      primary: '#6366f1', // Indigo
+      secondary: '#334155',
+      text: '#e2e8f0',
+      textInvert: '#ffffff',
+      border: '#334155'
+    },
+    borderRadius: 12
+  },
+  retro: {
+    id: 'retro',
+    name: 'Retro Terminal',
+    colors: {
+      background: '#1a1a1a',
+      surface: '#000000',
+      primary: '#00ff00',
+      secondary: '#333333',
+      text: '#00ff00',
+      textInvert: '#000000',
+      border: '#00ff00'
+    },
+    borderRadius: 0
+  },
+  cyber: {
+    id: 'cyber',
+    name: 'Cyberpunk',
+    colors: {
+      background: '#09090b',
+      surface: '#18181b',
+      primary: '#f43f5e', // Rose
+      secondary: '#27272a',
+      text: '#22d3ee', // Cyan
+      textInvert: '#ffffff',
+      border: '#22d3ee'
+    },
+    borderRadius: 2
+  }
+};
 
 export const DEFAULT_CANVAS_SETTINGS: CanvasSettings = {
   width: 480,
   height: 320,
-  backgroundColor: '#f0f2f5', // Slightly off-white for better contrast
-  name: 'Screen1'
+  defaultBackgroundColor: PROJECT_THEMES.light.colors.background,
+  projectName: 'My_LVGL_Project',
+  theme: 'light'
 };
 
 export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
@@ -13,6 +87,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     width: 120,
     height: 40,
     text: 'Button',
+    events: [],
     style: { 
         backgroundColor: '#2196F3', 
         textColor: '#FFFFFF', 
@@ -25,6 +100,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     width: 120,
     height: 30,
     text: 'Label Text',
+    events: [],
     style: { 
         textColor: '#1f2937', // Slate 800
         fontSize: 16, 
@@ -37,6 +113,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     value: 30,
     min: 0,
     max: 100,
+    events: [],
     style: { 
         backgroundColor: '#e5e7eb', // Track color (Gray 200)
         borderColor: '#2196F3',     // Indicator color
@@ -47,6 +124,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     width: 60,
     height: 32,
     checked: false,
+    events: [],
     style: { 
         backgroundColor: '#e5e7eb', // Off state (Gray 200)
         borderColor: '#2196F3',     // On state color
@@ -58,6 +136,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 24,
     text: 'Checkbox',
     checked: false,
+    events: [],
     style: { 
         textColor: '#1f2937', 
         fontSize: 16,
@@ -70,6 +149,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     value: 40,
     min: 0,
     max: 100,
+    events: [],
     style: { 
         borderColor: '#3b82f6', // Indicator
         backgroundColor: '#e2e8f0', // Track
@@ -80,6 +160,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
   [WidgetType.CONTAINER]: {
     width: 200,
     height: 150,
+    events: [],
     style: { 
         backgroundColor: '#ffffff', 
         borderRadius: 12, 
@@ -92,6 +173,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 80,
     text: '',
     placeholder: 'Enter text...',
+    events: [],
     style: { 
         backgroundColor: '#ffffff', 
         textColor: '#1f2937', 
@@ -105,6 +187,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     width: 240,
     height: 160,
     chartType: 'line',
+    events: [],
     style: { 
         backgroundColor: '#ffffff', 
         borderColor: '#e2e8f0', 
@@ -116,12 +199,14 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     width: 64,
     height: 64,
     src: 'lv_symbol_image',
+    events: [],
     style: { backgroundColor: 'transparent' }
   },
   [WidgetType.ICON]: {
     width: 32,
     height: 32,
     symbol: 'LV_SYMBOL_HOME',
+    events: [],
     style: { 
         textColor: '#1f2937', 
         fontSize: 24, 

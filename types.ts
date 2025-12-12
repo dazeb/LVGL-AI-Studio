@@ -36,6 +36,17 @@ export interface Layer {
   locked: boolean;
 }
 
+export type EventTrigger = 'CLICKED' | 'PRESSED' | 'RELEASED' | 'VALUE_CHANGED' | 'FOCUSED' | 'DEFOCUSED';
+export type EventAction = 'NAVIGATE' | 'CUSTOM_CODE';
+
+export interface WidgetEvent {
+  id: string;
+  trigger: EventTrigger;
+  action: EventAction;
+  targetScreenId?: string;
+  customCode?: string;
+}
+
 export interface Widget {
   id: string;
   layerId: string; // The layer this widget belongs to
@@ -57,13 +68,39 @@ export interface Widget {
   chartType?: 'line' | 'bar'; // For Chart
   src?: string; // For Image (symbol or path)
   symbol?: string; // For Icon
+  // Navigation & Events
+  events: WidgetEvent[];
+}
+
+export interface Screen {
+  id: string;
+  name: string;
+  backgroundColor: string;
+  widgets: Widget[];
+  layers: Layer[];
+}
+
+export interface Theme {
+  id: string;
+  name: string;
+  colors: {
+    background: string; // Global Screen BG
+    surface: string;    // Container/Card BG
+    primary: string;    // Main interaction color (Buttons, Active States)
+    secondary: string;  // Secondary elements (Tracks, Inactive)
+    text: string;       // Main text color
+    textInvert: string; // Text color on top of primary
+    border: string;     // Border colors
+  };
+  borderRadius: number;
 }
 
 export interface CanvasSettings {
   width: number;
   height: number;
-  backgroundColor: string;
-  name: string;
+  defaultBackgroundColor: string;
+  projectName: string;
+  theme: string; // ID of the currently active theme
 }
 
 export type CodeLanguage = 'c' | 'micropython';

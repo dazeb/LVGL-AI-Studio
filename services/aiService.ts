@@ -1,29 +1,78 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { Widget, CanvasSettings, CodeLanguage, AISettings } from '../types';
+import { Widget, CanvasSettings, CodeLanguage, AISettings, Screen } from '../types';
 
-const constructPrompt = (widgets: Widget[], settings: CanvasSettings, language: CodeLanguage) => {
-    const widgetJson = JSON.stringify(widgets, null, 2);
-    const settingsJson = JSON.stringify(settings, null, 2);
+const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: CodeLanguage) => {
+    // We send only necessary data to save tokens
+    const projectData = {
+        project: settings.projectName,
+        width: settings.width,
+        height: settings.height,
+        theme: settings.theme,
+        screens: screens.map(s => ({
+            id: s.id,
+            name: s.name,
+            backgroundColor: s.backgroundColor,
+            layers: s.layers.filter(l => l.visible).map(l => l.id), // Only visible layers
+            widgets: s.widgets
+                .filter(w => {
+                    const layer = s.layers.find(l => l.id === w.layerId);
+                    return layer && layer.visible;
+                })
+                .map(w => ({
+                    ...w,
+                    events: w.events // Include the events array
+                }))
+        }))
+    };
+
+    const projectJson = JSON.stringify(projectData, null, 2);
 
     return `
       You are an embedded GUI expert specializing in LVGL (Light and Versatile Graphics Library).
       
-      Task: Generate production-ready ${language === 'c' ? 'C (LVGL v8/v9)' : 'MicroPython'} code for the following UI design.
+      Task: Generate production-ready ${language === 'c' ? 'C (LVGL v8/v9)' : 'MicroPython'} code for a multi-screen UI project.
       
-      Canvas Settings:
-      ${settingsJson}
+      Project Data (JSON):
+      ${projectJson}
       
-      Widgets (JSON format):
-      ${widgetJson}
+      General Requirements:
+      1. Output ONLY valid code. No markdown backticks (unless requested), no explanations.
+      2. Support LVGL v8/v9 API standards.
+      3. Global dimensions: ${settings.width}x${settings.height}.
       
-      Requirements:
-      1. If C: Include necessary headers ('lvgl/lvgl.h'), create a function 'void create_ui(void)', and handle global styles/declarations if needed to make it standalone-ish or easy to integrate.
-      2. If MicroPython: Import 'lvgl as lv', ensure 'lv.init()' is assumed (or comment about it), and create a class or setup function.
-      3. Style: Accurately reflect the positions (x, y), sizes (width, height), and simple styles (color, radius) provided in the JSON.
-      4. Events: Add empty event handler skeletons (e.g., specific callbacks for Buttons).
-      5. Widget Type 'lv_icon': This represents an LVGL Label that displays a symbol. Set its text to the 'symbol' property (e.g., LV_SYMBOL_HOME).
-      6. Output ONLY the code, no markdown backticks, no explanatory text outside comments.
+      Specific ${language === 'c' ? 'C' : 'MicroPython'} Requirements:
+      
+      ${language === 'c' ? `
+      - Include "lvgl/lvgl.h".
+      - Declare global variables for all screen objects (e.g., \`lv_obj_t * ui_Screen1;\`) and widget objects so they are accessible.
+      - Create a function \`void ui_init(void)\` that calls setup functions for all screens.
+      - Create separate setup functions for each screen (e.g., \`void ui_Screen1_screen_init(void)\`).
+      - In each screen setup:
+        - Create the screen object.
+        - Create all widgets.
+      - Events:
+        - For each widget event, generate a callback function (e.g., \`void ui_event_Button1(lv_event_t * e)\`).
+        - Attach it using \`lv_obj_add_event_cb(widget, ui_event_Button1, LV_EVENT_..., NULL);\`.
+        - Inside the callback:
+          - If action is 'NAVIGATE', use \`lv_scr_load_anim(target_screen_obj, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);\`.
+          - If action is 'CUSTOM_CODE', insert the code snippet directly.
+      ` : `
+      - Import \`lvgl as lv\`.
+      - Assume \`lv.init()\` and display driver setup are done externally.
+      - Create a class or global dictionary to hold screen objects.
+      - Create a function \`ui_init()\` to build all screens.
+      - Events:
+        - Define a callback function for each event.
+        - Attach using \`widget.add_event_cb(callback, lv.EVENT...., None)\`.
+        - If action is 'NAVIGATE', use \`lv.scr_load_anim(...)\`.
+        - If action is 'CUSTOM_CODE', insert the code snippet.
+      `}
+
+      Widget Styling:
+      - Accurately apply x, y, width, height.
+      - Apply styles (radius, bg color, text color, border) using local styles or direct style modification functions (e.g., \`lv_obj_set_style_bg_color\`).
+      - For 'lv_icon', create a Label and set text to the symbol name (e.g., \`LV_SYMBOL_HOME\`).
     `;
 };
 
@@ -45,7 +94,6 @@ const generateOpenAICompatible = async (prompt: string, settings: AISettings): P
     const key = settings.apiKey;
     const url = settings.baseUrl || 'https://api.openai.com/v1';
     
-    // For some local LLMs, key might not be needed, but usually a dummy is required.
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
     };
@@ -78,19 +126,18 @@ const generateOpenAICompatible = async (prompt: string, settings: AISettings): P
     
     if (!content) throw new Error("Invalid response format from AI provider.");
     
-    // Cleanup markdown if present (some models love adding ```c ... ```)
     const cleanContent = content.replace(/^```[a-zA-Z]*\n/, '').replace(/```$/, '').trim();
     return cleanContent;
 };
 
 export const generateLVGLCode = async (
-  widgets: Widget[],
+  screens: Screen[],
   settings: CanvasSettings,
   language: CodeLanguage,
   aiSettings: AISettings
 ): Promise<string> => {
   try {
-    const prompt = constructPrompt(widgets, settings, language);
+    const prompt = constructPrompt(screens, settings, language);
     
     if (aiSettings.provider === 'gemini') {
         return await generateGemini(prompt, aiSettings);
