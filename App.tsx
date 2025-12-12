@@ -8,7 +8,7 @@ import PropertiesPanel from './components/PropertiesPanel';
 import CodeViewer from './components/CodeViewer';
 import SettingsDialog from './components/SettingsDialog';
 import { generateLVGLCode } from './services/aiService';
-import { Code, MonitorPlay, Settings as SettingsIcon } from 'lucide-react';
+import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 const App: React.FC = () => {
   // --- Global App State ---
@@ -29,6 +29,7 @@ const App: React.FC = () => {
 
   // Canvas Global Settings (Width/Height)
   const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>(DEFAULT_CANVAS_SETTINGS);
+  const [zoom, setZoom] = useState<number>(1);
   
   // Selection State (Global IDs, but logic checks active screen)
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -513,6 +514,33 @@ const App: React.FC = () => {
           <div className="text-xs text-slate-500 hidden md:block">
             {currentScreen.name} • {canvasSettings.width}x{canvasSettings.height}
           </div>
+
+          <div className="h-6 w-px bg-slate-700 mx-2 hidden md:block"></div>
+          
+          {/* Zoom Controls */}
+          <div className="flex items-center bg-slate-800 p-1 rounded-lg border border-slate-700">
+             <button 
+               onClick={() => setZoom(z => Math.max(0.2, z - 0.1))} 
+               className="p-1 hover:text-white text-slate-400 hover:bg-slate-700 rounded"
+               title="Zoom Out"
+             >
+               <ZoomOut size={14} />
+             </button>
+             <button
+               onClick={() => setZoom(1)}
+               className="text-xs font-mono w-10 text-center hover:text-white text-slate-300"
+               title="Reset Zoom"
+             >
+               {Math.round(zoom * 100)}%
+             </button>
+             <button 
+               onClick={() => setZoom(z => Math.min(3, z + 0.1))} 
+               className="p-1 hover:text-white text-slate-400 hover:bg-slate-700 rounded"
+               title="Zoom In"
+             >
+               <ZoomIn size={14} />
+             </button>
+          </div>
           
           <div className="h-6 w-px bg-slate-700 mx-2 hidden md:block"></div>
 
@@ -562,6 +590,7 @@ const App: React.FC = () => {
           layers={currentScreen.layers}
           // We override the background color from settings with the screen specific one
           settings={{...canvasSettings, backgroundColor: currentScreen.backgroundColor, name: currentScreen.name }}
+          zoom={zoom}
           selectedIds={selectedIds}
           onSelectWidget={handleSelectWidget}
           onUpdateWidgets={handleUpdateWidgets}

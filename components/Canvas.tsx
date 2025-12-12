@@ -44,6 +44,7 @@ interface CanvasProps {
   widgets: Widget[];
   layers: Layer[];
   settings: CanvasSettings;
+  zoom: number;
   selectedIds: string[];
   onSelectWidget: (id: string | null, isShift: boolean) => void;
   onUpdateWidgets: (updates: {id: string, changes: Partial<Widget>}[]) => void;
@@ -94,6 +95,7 @@ const Canvas: React.FC<CanvasProps> = ({
   widgets, 
   layers,
   settings, 
+  zoom,
   selectedIds, 
   onSelectWidget, 
   onUpdateWidgets,
@@ -194,8 +196,10 @@ const Canvas: React.FC<CanvasProps> = ({
     
     if (type && canvasRef.current) {
         const canvasRect = canvasRef.current.getBoundingClientRect();
-        let x = e.clientX - canvasRect.left;
-        let y = e.clientY - canvasRect.top;
+        // Adjust for Zoom: Scale the difference between mouse and canvas edge
+        let x = (e.clientX - canvasRect.left) / zoom;
+        let y = (e.clientY - canvasRect.top) / zoom;
+        
         x = Math.round(x / 10) * 10;
         y = Math.round(y / 10) * 10;
         onAddWidget(type, x, y);
@@ -210,8 +214,9 @@ const Canvas: React.FC<CanvasProps> = ({
     const handleGlobalMouseMove = (e: MouseEvent) => {
       // 1. Handle Resizing
       if (resizeState && resizeState.active) {
-        const deltaX = e.clientX - resizeState.startMouse.x;
-        const deltaY = e.clientY - resizeState.startMouse.y;
+        // Adjust delta for zoom
+        const deltaX = (e.clientX - resizeState.startMouse.x) / zoom;
+        const deltaY = (e.clientY - resizeState.startMouse.y) / zoom;
         
         let newX = resizeState.startWidget.x;
         let newY = resizeState.startWidget.y;
@@ -292,8 +297,9 @@ const Canvas: React.FC<CanvasProps> = ({
 
       // 2. Handle Moving
       if (dragState && canvasRef.current) {
-        const deltaX = e.clientX - dragState.startMouse.x;
-        const deltaY = e.clientY - dragState.startMouse.y;
+        // Adjust delta for zoom
+        const deltaX = (e.clientX - dragState.startMouse.x) / zoom;
+        const deltaY = (e.clientY - dragState.startMouse.y) / zoom;
 
         const updates: {id: string, changes: Partial<Widget>}[] = [];
 
@@ -329,7 +335,7 @@ const Canvas: React.FC<CanvasProps> = ({
       window.removeEventListener('mousemove', handleGlobalMouseMove);
       window.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [dragState, resizeState, widgets, onUpdateWidgets]);
+  }, [dragState, resizeState, widgets, onUpdateWidgets, zoom]);
 
 
   // Rendering Helpers
@@ -675,12 +681,13 @@ const Canvas: React.FC<CanvasProps> = ({
          onMouseDown={handleCanvasMouseDown}
          onDragOver={handleDragOver}
          onDrop={handleDrop}
-         className="relative shadow-2xl transition-all duration-300"
+         className="relative shadow-2xl transition-all duration-300 origin-center"
          style={{
            width: settings.width,
            height: settings.height,
            backgroundColor: settings.backgroundColor,
-           border: '1px solid #334155'
+           border: '1px solid #334155',
+           transform: `scale(${zoom})`,
          }}
        >
          {widgets.map(renderWidget)}
