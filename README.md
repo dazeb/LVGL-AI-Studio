@@ -1,20 +1,21 @@
 
+
 # LVGL Studio AI 🎨✨
 
-**LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It empowers developers to visually build complex **Multi-Screen** GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface, and instantly generate production-ready code using **Google's Gemini AI**, **OpenAI**, or **Local LLMs**.
+**LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It empowers developers to visually build complex **Multi-Screen** GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface, and instantly generate production-ready C or MicroPython code using **Google's Gemini AI**, **Anthropic Claude**, **OpenAI**, or **Local LLMs**.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) ![LVGL](https://img.shields.io/badge/LVGL-v8%2Fv9-green) ![AI](https://img.shields.io/badge/AI-Gemini%20%7C%20OpenAI%20%7C%20Local-purple)
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![LVGL](https://img.shields.io/badge/LVGL-v8%2Fv9-green) ![AI](https://img.shields.io/badge/AI-Gemini%20%7C%20Claude%20%7C%20OpenAI%20%7C%20Local-purple)
 
 ## 🌟 Key Features
 
 *   **Multi-Screen Support** 🆕: Create, rename, and manage multiple screens. Visually link buttons to navigate between them.
+*   **Device Presets** 🆕: Instant canvas resizing for popular hardware including **M5Stack**, **Adafruit**, **Waveshare**, and generic TFT displays.
 *   **Global Theming** 🆕: Instantly style your entire project with presets like *Cyberpunk*, *Midnight*, *Retro*, and more.
 *   **Event System** 🆕: Define logic for Clicked, Pressed, Released, and Value Changed events. Support for Navigation actions or Custom C/Python code.
 *   **Visual Drag-and-Drop Editor**: Intuitive canvas to place and arrange UI elements with snapping.
 *   **Layer Management**: Create, lock, hide, and **reorder** layers via drag-and-drop to manage complex composite UIs.
 *   **Image Uploads**: Upload images to preview them on the canvas and generate correct file-reference code.
-*   **Precision Control**: Keyboard navigation for pixel-perfect widget positioning.
-*   **Multi-Provider AI**: Generate code using Gemini, OpenAI, or local models (Ollama/LocalAI).
+*   **Multi-Provider AI**: Generate code using **Gemini (Flash/Pro)**, **Claude 3.5**, **GPT-4o**, or local models (Ollama).
 *   **Live Properties**: Real-time editing of dimensions, colors, borders, shadows, and logic.
 
 ---
@@ -65,9 +66,11 @@ graph TD
     State -->|JSON Representation| Canvas[Visual Canvas]
     State -->|Context Data| AIService{AI Service}
     AIService -->|Cloud| Gemini[Google Gemini]
+    AIService -->|Cloud| Claude[Anthropic Claude]
     AIService -->|Cloud| OpenAI[OpenAI GPT-4]
     AIService -->|Local| Ollama[Local LLM / Ollama]
     Gemini --> Generator[Code Generator]
+    Claude --> Generator
     OpenAI --> Generator
     Ollama --> Generator
     Generator -->|Export| CFile[ui.c / LVGL C]
@@ -84,7 +87,7 @@ The interface is divided into three professional zones:
 *   **Center (Canvas)**: Your active WYSIWYG design area.
 *   **Right (Properties)**: Context-aware panel.
     *   *If Widget Selected*: Edit properties, events, and styles.
-    *   *If Canvas Selected*: Edit Screen settings, Global Theme, and **Layers**.
+    *   *If Canvas Selected*: Edit Screen settings, **Target Device**, Global Theme, and **Layers**.
 
 ### 2. Multi-Screen & Navigation 🧭
 1.  **Add Screen**: Go to the **Screens** tab in the left sidebar and click `+`.
@@ -108,15 +111,17 @@ Widgets support a robust event system. In the **Properties Panel**:
 
 ### 5. AI Configuration ⚙️
 Click the **Settings Icon** in the top header to configure your AI provider.
-*   **Google Gemini**: Default. Uses `process.env.API_KEY` or user-provided key.
+*   **Google Gemini**: Default. Supports **Google AI Studio** account integration (via "Connect Google Account") to access **Gemini 3.0 Pro** and **Thinking** models with higher limits.
+*   **Anthropic Claude**: Enter your API key to generate high-quality code using **Claude 3.5 Sonnet** or **Opus**.
 *   **OpenAI**: Requires `sk-...` key.
 *   **Local LLM**: Connect to local endpoints (e.g., Ollama at `http://localhost:11434/v1`).
 
 ### 6. AI Code Generation 🤖
 1.  Design your UI.
-2.  Click **Generate Code**.
-3.  The AI receives a structured JSON payload describing all screens, widgets, themes, and events.
-4.  It produces fully functional C (LVGL v8/v9) or MicroPython code.
+2.  Select your **Target Device** (e.g., M5Stack Core2) in Global Settings for optimized resolution.
+3.  Click **Generate Code**.
+4.  The AI receives a structured JSON payload describing all screens, widgets, themes, and events.
+5.  It produces fully functional C (LVGL v8/v9) or MicroPython code.
 
 ---
 

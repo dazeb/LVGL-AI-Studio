@@ -320,8 +320,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <label className="block text-xs font-medium text-slate-400 mb-1">Width</label>
                 <input 
                   type="number" 
+                  min="0"
                   value={settings.width}
-                  onChange={(e) => onUpdateSettings({...settings, width: parseInt(e.target.value) || 0, targetDevice: 'custom'})}
+                  onChange={(e) => onUpdateSettings({...settings, width: Math.max(0, parseInt(e.target.value) || 0), targetDevice: 'custom'})}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -329,8 +330,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <label className="block text-xs font-medium text-slate-400 mb-1">Height</label>
                 <input 
                   type="number" 
+                  min="0"
                   value={settings.height}
-                  onChange={(e) => onUpdateSettings({...settings, height: parseInt(e.target.value) || 0, targetDevice: 'custom'})}
+                  onChange={(e) => onUpdateSettings({...settings, height: Math.max(0, parseInt(e.target.value) || 0), targetDevice: 'custom'})}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -631,8 +633,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               <label className="block text-xs font-medium text-slate-400 mb-1">X Pos</label>
               <input 
                 type="number" 
+                min="0"
                 value={widget.x}
-                onChange={(e) => onUpdateWidget(widget.id, { x: parseInt(e.target.value) || 0 })}
+                onChange={(e) => onUpdateWidget(widget.id, { x: Math.max(0, parseInt(e.target.value) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
@@ -640,8 +643,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               <label className="block text-xs font-medium text-slate-400 mb-1">Y Pos</label>
               <input 
                 type="number" 
+                min="0"
                 value={widget.y}
-                onChange={(e) => onUpdateWidget(widget.id, { y: parseInt(e.target.value) || 0 })}
+                onChange={(e) => onUpdateWidget(widget.id, { y: Math.max(0, parseInt(e.target.value) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
@@ -649,8 +653,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               <label className="block text-xs font-medium text-slate-400 mb-1">Width</label>
               <input 
                 type="number" 
+                min="0"
                 value={widget.width}
-                onChange={(e) => onUpdateWidget(widget.id, { width: parseInt(e.target.value) || 0 })}
+                onChange={(e) => onUpdateWidget(widget.id, { width: Math.max(0, parseInt(e.target.value) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
@@ -658,8 +663,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               <label className="block text-xs font-medium text-slate-400 mb-1">Height</label>
               <input 
                 type="number" 
+                min="0"
                 value={widget.height}
-                onChange={(e) => onUpdateWidget(widget.id, { height: parseInt(e.target.value) || 0 })}
+                onChange={(e) => onUpdateWidget(widget.id, { height: Math.max(0, parseInt(e.target.value) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
@@ -817,8 +823,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <label className="block text-xs font-medium text-slate-400 mb-1">Radius</label>
                   <input 
                     type="number" 
+                    min="0"
                     value={widget.style.borderRadius || 0}
-                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderRadius: parseInt(e.target.value) || 0 } })}
+                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderRadius: Math.max(0, parseInt(e.target.value) || 0) } })}
                     className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                   />
                </div>
@@ -826,8 +833,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <label className="block text-xs font-medium text-slate-400 mb-1">Font Size</label>
                   <input 
                     type="number" 
+                    min="0"
                     value={widget.style.fontSize || 14}
-                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, fontSize: parseInt(e.target.value) || 0 } })}
+                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, fontSize: Math.max(0, parseInt(e.target.value) || 0) } })}
                     className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                   />
                </div>
