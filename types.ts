@@ -67,3 +67,12 @@ export interface CanvasSettings {
 }
 
 export type CodeLanguage = 'c' | 'micropython';
+
+export type AIProvider = 'gemini' | 'openai' | 'custom';
+
+export interface AISettings {
+  provider: AIProvider;
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}

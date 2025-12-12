@@ -1,13 +1,14 @@
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle, Layer } from './types';
+import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle, Layer, AISettings } from './types';
 import { DEFAULT_CANVAS_SETTINGS, DEFAULT_WIDGET_PROPS } from './constants';
 import WidgetPalette from './components/WidgetPalette';
 import Canvas from './components/Canvas';
 import PropertiesPanel from './components/PropertiesPanel';
 import CodeViewer from './components/CodeViewer';
-import { generateLVGLCode } from './services/geminiService';
-import { Code, MonitorPlay } from 'lucide-react';
+import SettingsDialog from './components/SettingsDialog';
+import { generateLVGLCode } from './services/aiService';
+import { Code, MonitorPlay, Settings as SettingsIcon } from 'lucide-react';
 
 const App: React.FC = () => {
   // Layer State
@@ -22,9 +23,19 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<CanvasSettings>(DEFAULT_CANVAS_SETTINGS);
   
   const [showCode, setShowCode] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  
   const [code, setCode] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('c');
+
+  // AI Settings State
+  const [aiSettings, setAiSettings] = useState<AISettings>({
+    provider: 'gemini',
+    apiKey: '', // Empty means use process.env.API_KEY for Gemini
+    baseUrl: '',
+    model: 'gemini-2.5-flash'
+  });
 
   // Default presets
   const [stylePresets, setStylePresets] = useState<StylePreset[]>([
@@ -277,8 +288,8 @@ const App: React.FC = () => {
   const handleGenerateCode = async () => {
     setShowCode(true);
     setIsGenerating(true);
-    // Use visibleSortedWidgets to ensure WYSIWYG and correct Z-order in code
-    const generated = await generateLVGLCode(visibleSortedWidgets, settings, codeLanguage);
+    // Pass aiSettings to the service
+    const generated = await generateLVGLCode(visibleSortedWidgets, settings, codeLanguage, aiSettings);
     setCode(generated);
     setIsGenerating(false);
   };
@@ -287,7 +298,7 @@ const App: React.FC = () => {
     setCodeLanguage(lang);
     if (showCode) {
       setIsGenerating(true);
-      const generated = await generateLVGLCode(visibleSortedWidgets, settings, lang);
+      const generated = await generateLVGLCode(visibleSortedWidgets, settings, lang, aiSettings);
       setCode(generated);
       setIsGenerating(false);
     }
@@ -375,6 +386,14 @@ const App: React.FC = () => {
               <option value="micropython" className="bg-slate-800">MicroPython</option>
             </select>
           </div>
+          
+          <button 
+            onClick={() => setShowSettings(true)}
+            className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+            title="AI Settings"
+          >
+             <SettingsIcon size={20} />
+          </button>
 
           <button 
             onClick={handleGenerateCode}
@@ -434,6 +453,14 @@ const App: React.FC = () => {
           onLanguageChange={handleLanguageChange}
         />
       )}
+
+      {/* Settings Modal */}
+      <SettingsDialog 
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        settings={aiSettings}
+        onSave={setAiSettings}
+      />
     </div>
   );
 };
