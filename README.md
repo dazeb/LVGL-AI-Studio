@@ -2,9 +2,9 @@
 
 # LVGL Studio AI 🎨✨
 
-**LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It empowers developers to visually build complex **Multi-Screen** GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface, and instantly generate production-ready C or MicroPython code using **Google's Gemini AI**, **Anthropic Claude**, **OpenAI**, or **Local LLMs**.
+**LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It empowers developers to visually build complex **Multi-Screen** GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface, and instantly generate production-ready C or MicroPython code using **Google's Gemini AI**, **Anthropic Claude**, **OpenAI**, **DeepSeek**, or **Local LLMs**.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) ![LVGL](https://img.shields.io/badge/LVGL-v8%2Fv9-green) ![AI](https://img.shields.io/badge/AI-Gemini%20%7C%20Claude%20%7C%20OpenAI%20%7C%20Local-purple)
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![LVGL](https://img.shields.io/badge/LVGL-v8%2Fv9-green) ![AI](https://img.shields.io/badge/AI-Gemini%20%7C%20Claude%20%7C%20DeepSeek%20%7C%20OpenAI-purple)
 
 ## 🌟 Key Features
 
@@ -15,7 +15,7 @@
 *   **Visual Drag-and-Drop Editor**: Intuitive canvas to place and arrange UI elements with snapping.
 *   **Layer Management**: Create, lock, hide, and **reorder** layers via drag-and-drop to manage complex composite UIs.
 *   **Image Uploads**: Upload images to preview them on the canvas and generate correct file-reference code.
-*   **Multi-Provider AI**: Generate code using **Gemini (Flash/Pro)**, **Claude 3.5**, **GPT-4o**, or local models (Ollama).
+*   **Multi-Provider AI**: Generate code using **Gemini (Flash/Pro)**, **DeepSeek V3/R1**, **Claude 3.5**, **GPT-4o**, or local models (Ollama).
 *   **Live Properties**: Real-time editing of dimensions, colors, borders, shadows, and logic.
 
 ---
@@ -66,10 +66,12 @@ graph TD
     State -->|JSON Representation| Canvas[Visual Canvas]
     State -->|Context Data| AIService{AI Service}
     AIService -->|Cloud| Gemini[Google Gemini]
+    AIService -->|Cloud| DeepSeek[DeepSeek V3/R1]
     AIService -->|Cloud| Claude[Anthropic Claude]
     AIService -->|Cloud| OpenAI[OpenAI GPT-4]
     AIService -->|Local| Ollama[Local LLM / Ollama]
     Gemini --> Generator[Code Generator]
+    DeepSeek --> Generator
     Claude --> Generator
     OpenAI --> Generator
     Ollama --> Generator
@@ -112,6 +114,7 @@ Widgets support a robust event system. In the **Properties Panel**:
 ### 5. AI Configuration ⚙️
 Click the **Settings Icon** in the top header to configure your AI provider.
 *   **Google Gemini**: Default. Supports **Google AI Studio** account integration (via "Connect Google Account") to access **Gemini 3.0 Pro** and **Thinking** models with higher limits.
+*   **DeepSeek**: Enter your API key. Supports **DeepSeek V3** and **R1** (Reasoner).
 *   **Anthropic Claude**: Enter your API key to generate high-quality code using **Claude 3.5 Sonnet** or **Opus**.
 *   **OpenAI**: Requires `sk-...` key.
 *   **Local LLM**: Connect to local endpoints (e.g., Ollama at `http://localhost:11434/v1`).

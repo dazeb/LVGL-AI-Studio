@@ -1,4 +1,5 @@
 
+
 import { WidgetType, CanvasSettings, Theme, DevicePreset } from './types';
 
 export const PROJECT_THEMES: Record<string, Theme> = {
@@ -88,6 +89,10 @@ export const AI_MODELS = {
     { id: 'claude-3-5-sonnet-20240620', name: 'Claude 3.5 Sonnet' },
     { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus' },
     { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku' }
+  ],
+  deepseek: [
+    { id: 'deepseek-chat', name: 'DeepSeek V3 (Chat)' },
+    { id: 'deepseek-reasoner', name: 'DeepSeek R1 (Reasoner)' }
   ],
   custom: [
     { id: 'llama3', name: 'Llama 3' },

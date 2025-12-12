@@ -47,6 +47,9 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
             } else if (value === 'anthropic') {
                 updates.baseUrl = 'https://api.anthropic.com/v1';
                 updates.model = 'claude-3-5-sonnet-20240620';
+            } else if (value === 'deepseek') {
+                updates.baseUrl = 'https://api.deepseek.com';
+                updates.model = 'deepseek-chat';
             } else if (value === 'custom') {
                 updates.baseUrl = 'http://localhost:11434/v1';
                 updates.model = 'llama3';
@@ -91,12 +94,12 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
            {/* Provider */}
            <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Provider</label>
-              <div className="grid grid-cols-4 gap-2">
-                 {(['gemini', 'openai', 'anthropic', 'custom'] as AIProvider[]).map(p => (
+              <div className="flex flex-wrap gap-2">
+                 {(['gemini', 'openai', 'anthropic', 'deepseek', 'custom'] as AIProvider[]).map(p => (
                     <button
                        key={p}
                        onClick={() => handleChange('provider', p)}
-                       className={`py-2 px-1 rounded text-sm font-medium border transition-all capitalize truncate ${
+                       className={`flex-1 py-2 px-1 rounded text-sm font-medium border transition-all capitalize truncate min-w-[80px] text-center ${
                           localSettings.provider === p 
                           ? 'bg-blue-600 border-blue-500 text-white' 
                           : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-750'
@@ -139,6 +142,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                     ? "Leave empty to use the connected account or environment variable."
                     : localSettings.provider === 'anthropic' 
                     ? "Required for Anthropic Claude models."
+                    : localSettings.provider === 'deepseek'
+                    ? "Required. Uses DeepSeek's OpenAI-compatible API."
                     : "Required for OpenAI. Optional for some local endpoints."}
               </p>
            </div>

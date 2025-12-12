@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI } from "@google/genai";
 import { Widget, CanvasSettings, CodeLanguage, AISettings, Screen } from '../types';
 import { DEVICE_PRESETS } from '../constants';
@@ -107,6 +108,7 @@ const generateGemini = async (prompt: string, settings: AISettings): Promise<str
 };
 
 // -- OpenAI / Compatible Implementation --
+// Handles OpenAI, DeepSeek, and Local LLMs (Ollama)
 const generateOpenAICompatible = async (prompt: string, settings: AISettings): Promise<string> => {
     const key = settings.apiKey;
     const url = settings.baseUrl || 'https://api.openai.com/v1';
@@ -200,6 +202,7 @@ export const generateLVGLCode = async (
     } else if (aiSettings.provider === 'anthropic') {
         return await generateAnthropic(prompt, aiSettings);
     } else {
+        // OpenAI, DeepSeek, Custom (Ollama)
         return await generateOpenAICompatible(prompt, aiSettings);
     }
 
