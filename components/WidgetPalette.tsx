@@ -10,7 +10,8 @@ import {
   Box,
   MessageSquare,
   BarChart3,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Star
 } from 'lucide-react';
 
 interface WidgetPaletteProps {
@@ -21,6 +22,7 @@ const WidgetPalette: React.FC<WidgetPaletteProps> = ({ onAddWidget }) => {
   const widgets = [
     { type: WidgetType.BUTTON, icon: <Square size={18} />, label: 'Button' },
     { type: WidgetType.LABEL, icon: <Type size={18} />, label: 'Label' },
+    { type: WidgetType.ICON, icon: <Star size={18} />, label: 'Icon' },
     { type: WidgetType.SLIDER, icon: <Sliders size={18} />, label: 'Slider' },
     { type: WidgetType.SWITCH, icon: <ToggleLeft size={18} />, label: 'Switch' },
     { type: WidgetType.CHECKBOX, icon: <CheckSquare size={18} />, label: 'Checkbox' },

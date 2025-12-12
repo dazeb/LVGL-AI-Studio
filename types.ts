@@ -1,3 +1,4 @@
+
 export enum WidgetType {
   BUTTON = 'lv_btn',
   LABEL = 'lv_label',
@@ -8,7 +9,8 @@ export enum WidgetType {
   CONTAINER = 'lv_obj',
   TEXT_AREA = 'lv_textarea',
   CHART = 'lv_chart',
-  IMAGE = 'lv_img'
+  IMAGE = 'lv_img',
+  ICON = 'lv_icon' // Renders as label with symbol in LVGL
 }
 
 export interface WidgetStyle {
@@ -19,6 +21,12 @@ export interface WidgetStyle {
   borderRadius?: number;
   fontSize?: number;
   opacity?: number;
+}
+
+export interface StylePreset {
+  id: string;
+  name: string;
+  style: WidgetStyle;
 }
 
 export interface Widget {
@@ -40,6 +48,7 @@ export interface Widget {
   placeholder?: string; // For Text Area
   chartType?: 'line' | 'bar'; // For Chart
   src?: string; // For Image (symbol or path)
+  symbol?: string; // For Icon
 }
 
 export interface CanvasSettings {

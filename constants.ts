@@ -72,5 +72,11 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 64,
     src: 'lv_symbol_home',
     style: { backgroundColor: 'transparent' }
+  },
+  [WidgetType.ICON]: {
+    width: 30,
+    height: 30,
+    symbol: 'LV_SYMBOL_HOME',
+    style: { textColor: '#000000', fontSize: 24, backgroundColor: 'transparent' }
   }
 };

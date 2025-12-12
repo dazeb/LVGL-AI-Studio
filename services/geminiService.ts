@@ -36,7 +36,8 @@ export const generateLVGLCode = async (
       2. If MicroPython: Import 'lvgl as lv', ensure 'lv.init()' is assumed (or comment about it), and create a class or setup function.
       3. Style: Accurately reflect the positions (x, y), sizes (width, height), and simple styles (color, radius) provided in the JSON.
       4. Events: Add empty event handler skeletons (e.g., specific callbacks for Buttons).
-      5. Output ONLY the code, no markdown backticks, no explanatory text outside comments.
+      5. Widget Type 'lv_icon': This represents an LVGL Label that displays a symbol. Set its text to the 'symbol' property (e.g., LV_SYMBOL_HOME).
+      6. Output ONLY the code, no markdown backticks, no explanatory text outside comments.
     `;
 
     const response = await ai.models.generateContent({

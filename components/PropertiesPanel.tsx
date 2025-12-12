@@ -1,6 +1,22 @@
+
 import React from 'react';
-import { Widget, CanvasSettings, WidgetType } from '../types';
-import { Settings, Trash2, Sliders, RotateCw, Layers, Ungroup, Group } from 'lucide-react';
+import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle } from '../types';
+import { 
+  Settings, 
+  Trash2, 
+  Sliders, 
+  RotateCw, 
+  Layers, 
+  Ungroup, 
+  Group,
+  ArrowUpToLine,
+  ArrowDownToLine,
+  ArrowUp,
+  ArrowDown,
+  Bookmark,
+  Plus,
+  X as XIcon
+} from 'lucide-react';
 
 interface PropertiesPanelProps {
   selectedWidgets: Widget[]; // Changed from widget | null
@@ -10,7 +26,51 @@ interface PropertiesPanelProps {
   onDeleteWidgets: (ids: string[]) => void;
   onGroup: () => void;
   onUngroup: () => void;
+  onLayerAction: (action: 'front' | 'back' | 'forward' | 'backward') => void;
+  stylePresets: StylePreset[];
+  onAddPreset: (name: string, style: WidgetStyle) => void;
+  onDeletePreset: (id: string) => void;
 }
+
+const LVGL_SYMBOLS_LIST = [
+  'LV_SYMBOL_HOME',
+  'LV_SYMBOL_SETTINGS',
+  'LV_SYMBOL_OK',
+  'LV_SYMBOL_CLOSE',
+  'LV_SYMBOL_PLUS',
+  'LV_SYMBOL_MINUS',
+  'LV_SYMBOL_EDIT',
+  'LV_SYMBOL_SAVE',
+  'LV_SYMBOL_WIFI',
+  'LV_SYMBOL_BLUETOOTH',
+  'LV_SYMBOL_GPS',
+  'LV_SYMBOL_USB',
+  'LV_SYMBOL_CHARGE',
+  'LV_SYMBOL_BATTERY_FULL',
+  'LV_SYMBOL_BATTERY_3',
+  'LV_SYMBOL_BATTERY_2',
+  'LV_SYMBOL_BATTERY_1',
+  'LV_SYMBOL_BATTERY_EMPTY',
+  'LV_SYMBOL_CALL',
+  'LV_SYMBOL_PLAY',
+  'LV_SYMBOL_PAUSE',
+  'LV_SYMBOL_STOP',
+  'LV_SYMBOL_NEXT',
+  'LV_SYMBOL_PREV',
+  'LV_SYMBOL_BELL',
+  'LV_SYMBOL_TRASH',
+  'LV_SYMBOL_USER',
+  'LV_SYMBOL_POWER',
+  'LV_SYMBOL_KEYBOARD',
+  'LV_SYMBOL_UPLOAD',
+  'LV_SYMBOL_DOWNLOAD',
+  'LV_SYMBOL_EYE_OPEN',
+  'LV_SYMBOL_EYE_CLOSE',
+  'LV_SYMBOL_VOLUME_MAX',
+  'LV_SYMBOL_MUTE',
+  'LV_SYMBOL_SHUFFLE',
+  'LV_SYMBOL_LOOP'
+];
 
 const PropertiesPanel: React.FC<PropertiesPanelProps> = ({ 
   selectedWidgets, 
@@ -19,7 +79,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onUpdateSettings,
   onDeleteWidgets,
   onGroup,
-  onUngroup
+  onUngroup,
+  onLayerAction,
+  stylePresets,
+  onAddPreset,
+  onDeletePreset
 }) => {
   
   // Case 1: No selection -> Canvas Settings
@@ -101,6 +165,23 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     );
   }
 
+  const LayerControls = () => (
+     <div className="grid grid-cols-4 gap-1 p-1 bg-slate-800 rounded-lg border border-slate-700 mb-4">
+        <button onClick={() => onLayerAction('front')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded flex justify-center" title="Bring to Front">
+          <ArrowUpToLine size={16} />
+        </button>
+        <button onClick={() => onLayerAction('forward')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded flex justify-center" title="Bring Forward">
+          <ArrowUp size={16} />
+        </button>
+        <button onClick={() => onLayerAction('backward')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded flex justify-center" title="Send Backward">
+          <ArrowDown size={16} />
+        </button>
+        <button onClick={() => onLayerAction('back')} className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded flex justify-center" title="Send to Back">
+          <ArrowDownToLine size={16} />
+        </button>
+     </div>
+  );
+
   // Case 2: Multiple selection -> Grouping Actions
   if (selectedWidgets.length > 1) {
     // Check if they are already in the same group
@@ -123,6 +204,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
         
         <div className="p-4 space-y-4">
+           {/* Layer Controls */}
+           <LayerControls />
+
            <div className="bg-slate-800 p-3 rounded-lg border border-slate-700">
               <p className="text-sm text-slate-300 mb-3">
                  {allSameGroup 
@@ -158,6 +242,17 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
   // Case 3: Single Widget -> Full Property Editor
   const widget = selectedWidgets[0];
+
+  const handleApplyPreset = (preset: StylePreset) => {
+    onUpdateWidget(widget.id, { style: { ...widget.style, ...preset.style } });
+  };
+
+  const handleSaveCurrentAsPreset = () => {
+    const name = prompt("Enter a name for this style preset:", "My Custom Style");
+    if (name) {
+      onAddPreset(name, widget.style);
+    }
+  };
   
   return (
     <div className="w-80 bg-slate-900 border-l border-slate-700 flex flex-col h-full overflow-y-auto">
@@ -186,6 +281,48 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
       </div>
       
       <div className="p-4 space-y-6">
+        {/* Layer Controls */}
+        <LayerControls />
+
+        {/* Presets */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+               <Bookmark size={12} /> Style Presets
+             </h3>
+             <button 
+               onClick={handleSaveCurrentAsPreset}
+               className="text-xs bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 rounded px-2 py-0.5 flex items-center gap-1 transition-colors"
+               title="Save current style"
+             >
+               <Plus size={12} /> Save
+             </button>
+          </div>
+          
+          <div className="flex flex-wrap gap-2">
+            {stylePresets.map(preset => (
+              <div 
+                key={preset.id} 
+                className="group relative flex items-center bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full pl-3 pr-1 py-1 transition-all cursor-pointer"
+              >
+                <span onClick={() => handleApplyPreset(preset)} className="text-xs text-slate-300 mr-2 select-none hover:text-white">
+                   {preset.name}
+                </span>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onDeletePreset(preset.id); }}
+                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-slate-600 rounded-full text-slate-400 hover:text-red-400 transition-all"
+                  title="Delete preset"
+                >
+                   <XIcon size={12} />
+                </button>
+              </div>
+            ))}
+            {stylePresets.length === 0 && <div className="text-xs text-slate-500 italic">No presets saved</div>}
+          </div>
+        </section>
+
+        <hr className="border-slate-800" />
+
         {/* Common Properties */}
         <section>
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Layout</h3>
@@ -311,6 +448,20 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   onChange={(e) => onUpdateWidget(widget.id, { src: e.target.value })}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                 />
+              </div>
+            )}
+            {widget.type === WidgetType.ICON && (
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Symbol</label>
+                <select 
+                   value={widget.symbol || 'LV_SYMBOL_HOME'}
+                   onChange={(e) => onUpdateWidget(widget.id, { symbol: e.target.value })}
+                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
+                >
+                   {LVGL_SYMBOLS_LIST.map(sym => (
+                      <option key={sym} value={sym}>{sym.replace('LV_SYMBOL_', '')}</option>
+                   ))}
+                </select>
               </div>
             )}
           </div>

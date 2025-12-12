@@ -1,5 +1,6 @@
+
 import React, { useState, useCallback } from 'react';
-import { Widget, CanvasSettings, WidgetType, CodeLanguage } from './types';
+import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle } from './types';
 import { DEFAULT_CANVAS_SETTINGS, DEFAULT_WIDGET_PROPS } from './constants';
 import WidgetPalette from './components/WidgetPalette';
 import Canvas from './components/Canvas';
@@ -18,6 +19,14 @@ const App: React.FC = () => {
   const [code, setCode] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('c');
+
+  // Default presets
+  const [stylePresets, setStylePresets] = useState<StylePreset[]>([
+    { id: 'p1', name: 'Primary', style: { backgroundColor: '#3b82f6', textColor: '#ffffff', borderRadius: 8, borderWidth: 0 } },
+    { id: 'p2', name: 'Outline', style: { backgroundColor: 'transparent', textColor: '#3b82f6', borderColor: '#3b82f6', borderWidth: 2, borderRadius: 8 } },
+    { id: 'p3', name: 'Dark Card', style: { backgroundColor: '#1e293b', textColor: '#e2e8f0', borderColor: '#334155', borderWidth: 1, borderRadius: 12 } },
+    { id: 'p4', name: 'Alert', style: { backgroundColor: '#ef4444', textColor: '#ffffff', borderRadius: 4, borderWidth: 0 } },
+  ]);
 
   // Helper to get actual widget objects from IDs
   const selectedWidgets = widgets.filter(w => selectedIds.includes(w.id));
@@ -140,6 +149,66 @@ const App: React.FC = () => {
     })));
   };
 
+  const handleLayerAction = (action: 'front' | 'back' | 'forward' | 'backward') => {
+    if (selectedIds.length === 0) return;
+
+    setWidgets(prev => {
+      let newWidgets = [...prev];
+      
+      if (action === 'front') {
+         const selected = newWidgets.filter(w => selectedIds.includes(w.id));
+         const unselected = newWidgets.filter(w => !selectedIds.includes(w.id));
+         return [...unselected, ...selected];
+      }
+      
+      if (action === 'back') {
+         const selected = newWidgets.filter(w => selectedIds.includes(w.id));
+         const unselected = newWidgets.filter(w => !selectedIds.includes(w.id));
+         return [...selected, ...unselected];
+      }
+
+      if (action === 'forward') {
+        // Iterate from end to start to bubble selected items up one slot
+        for (let i = newWidgets.length - 2; i >= 0; i--) {
+            const current = newWidgets[i];
+            const next = newWidgets[i+1];
+            
+            if (selectedIds.includes(current.id) && !selectedIds.includes(next.id)) {
+                // Swap
+                newWidgets[i] = next;
+                newWidgets[i+1] = current;
+            }
+        }
+        return newWidgets;
+      }
+
+      if (action === 'backward') {
+        // Iterate from start to end to bubble selected items down one slot
+        for (let i = 1; i < newWidgets.length; i++) {
+            const current = newWidgets[i];
+            const prev = newWidgets[i-1];
+            
+            if (selectedIds.includes(current.id) && !selectedIds.includes(prev.id)) {
+                // Swap
+                newWidgets[i] = prev;
+                newWidgets[i-1] = current;
+            }
+        }
+        return newWidgets;
+      }
+
+      return newWidgets;
+    });
+  };
+
+  const handleAddPreset = (name: string, style: WidgetStyle) => {
+    setStylePresets(prev => [...prev, { id: `preset_${Date.now()}`, name, style }]);
+  };
+
+  const handleDeletePreset = (id: string) => {
+    setStylePresets(prev => prev.filter(p => p.id !== id));
+  };
+
   const handleGenerateCode = async () => {
     setShowCode(true);
     setIsGenerating(true);
@@ -218,6 +287,10 @@ const App: React.FC = () => {
           onDeleteWidgets={handleDeleteWidgets}
           onGroup={handleGroup}
           onUngroup={handleUngroup}
+          onLayerAction={handleLayerAction}
+          stylePresets={stylePresets}
+          onAddPreset={handleAddPreset}
+          onDeletePreset={handleDeletePreset}
         />
       </main>
 
