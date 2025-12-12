@@ -1,4 +1,5 @@
 
+
 export enum WidgetType {
   BUTTON = 'lv_btn',
   LABEL = 'lv_label',
@@ -67,6 +68,7 @@ export interface Widget {
   placeholder?: string; // For Text Area
   chartType?: 'line' | 'bar'; // For Chart
   src?: string; // For Image (symbol or path)
+  imageData?: string; // Base64 string for image preview
   symbol?: string; // For Icon
   // Navigation & Events
   events: WidgetEvent[];

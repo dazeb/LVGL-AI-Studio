@@ -19,10 +19,14 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
                     const layer = s.layers.find(l => l.id === w.layerId);
                     return layer && layer.visible;
                 })
-                .map(w => ({
-                    ...w,
-                    events: w.events // Include the events array
-                }))
+                .map(w => {
+                    // Create a copy to remove heavy data
+                    const { imageData, ...rest } = w;
+                    return {
+                        ...rest,
+                        events: w.events // Include the events array
+                    };
+                })
         }))
     };
 
@@ -73,6 +77,11 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
       - Accurately apply x, y, width, height.
       - Apply styles (radius, bg color, text color, border) using local styles or direct style modification functions (e.g., \`lv_obj_set_style_bg_color\`).
       - For 'lv_icon', create a Label and set text to the symbol name (e.g., \`LV_SYMBOL_HOME\`).
+      - For 'lv_img' (Image Widgets):
+        - The 'src' property contains the filename (e.g., "my_image.png").
+        - Assume the image is a file.
+        - In C: Use \`lv_img_set_src(img_obj, "S:path/to/" + src_filename)\` or refer to a declared image descriptor pointer if common (e.g. \`&ui_img_filename_png\`). Prefer the declared pointer variable style \`&ui_img_FILENAME_png\` for standard converted images.
+        - In MicroPython: Use \`img.set_src("path/to/" + src_filename)\`.
     `;
 };
 

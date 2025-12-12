@@ -578,10 +578,19 @@ const Canvas: React.FC<CanvasProps> = ({
              );
           
           case WidgetType.IMAGE:
+             if (widget.imageData) {
+                return (
+                   <img 
+                      src={widget.imageData} 
+                      alt="Widget Preview" 
+                      className="w-full h-full object-cover pointer-events-none"
+                   />
+                );
+             }
              return (
                <div className="flex flex-col items-center justify-center w-full h-full bg-slate-100 rounded border border-dashed border-slate-300 overflow-hidden text-slate-400">
                  <ImageIcon size={24} className="mb-1" />
-                 <span className="text-[10px] truncate w-full text-center px-1 font-mono">{widget.src}</span>
+                 <span className="text-[10px] truncate w-full text-center px-1 font-mono">{widget.src || 'No Image'}</span>
                </div>
              );
           

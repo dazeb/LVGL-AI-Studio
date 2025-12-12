@@ -25,7 +25,9 @@ import {
   Unlock,
   Eye,
   EyeOff,
-  GripVertical
+  GripVertical,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 
 interface PropertiesPanelProps {
@@ -386,6 +388,32 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        // Load image to get dimensions
+        const img = new Image();
+        img.onload = () => {
+            onUpdateWidget(widget.id, { 
+                imageData: result,
+                src: file.name,
+                width: img.width > 200 ? 200 : img.width, // Set reasonable default but don't blow up canvas
+                height: img.width > 200 ? (200 / img.width) * img.height : img.height
+            });
+        };
+        img.src = result;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleClearImage = () => {
+      onUpdateWidget(widget.id, { imageData: undefined, src: 'lv_img_placeholder' });
+  };
+
   // --- Event Handlers ---
   const handleAddEvent = () => {
     const newEvent: WidgetEvent = {
@@ -643,14 +671,45 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               </div>
             )}
             {widget.type === WidgetType.IMAGE && (
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Source (Symbol/Path)</label>
-                <input 
-                  type="text" 
-                  value={widget.src || ''}
-                  onChange={(e) => onUpdateWidget(widget.id, { src: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
-                />
+              <div className="space-y-3">
+                 <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-2">Image Source</label>
+                    <div className="flex gap-2">
+                       <label className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded cursor-pointer transition-colors text-xs font-medium">
+                          <Upload size={14} /> Upload Image
+                          <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                       </label>
+                       {widget.imageData && (
+                           <button 
+                             onClick={handleClearImage}
+                             className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors text-xs"
+                             title="Clear Image"
+                           >
+                             <Trash2 size={14} />
+                           </button>
+                       )}
+                    </div>
+                 </div>
+                 
+                 {widget.imageData && (
+                    <div className="bg-slate-800 p-2 rounded border border-slate-700">
+                       <img src={widget.imageData} alt="Preview" className="w-full h-auto max-h-32 object-contain rounded" />
+                       <div className="mt-1 text-[10px] text-slate-500 text-center truncate">
+                          Preview
+                       </div>
+                    </div>
+                 )}
+
+                <div>
+                   <label className="block text-xs font-medium text-slate-400 mb-1">Path/Filename Reference</label>
+                   <input 
+                     type="text" 
+                     value={widget.src || ''}
+                     onChange={(e) => onUpdateWidget(widget.id, { src: e.target.value })}
+                     className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
+                     placeholder="path/to/image.png"
+                   />
+                </div>
               </div>
             )}
             {widget.type === WidgetType.ICON && (
