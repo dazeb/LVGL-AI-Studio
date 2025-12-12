@@ -1,5 +1,6 @@
+
 import React, { useRef, useState, useEffect } from 'react';
-import { Widget, CanvasSettings, WidgetType } from '../types';
+import { Widget, CanvasSettings, WidgetType, Layer } from '../types';
 import { 
   Image as ImageIcon,
   Home,
@@ -41,6 +42,7 @@ import {
 
 interface CanvasProps {
   widgets: Widget[];
+  layers: Layer[];
   settings: CanvasSettings;
   selectedIds: string[];
   onSelectWidget: (id: string | null, isShift: boolean) => void;
@@ -90,6 +92,7 @@ const LVGL_SYMBOLS: Record<string, React.ReactNode> = {
 
 const Canvas: React.FC<CanvasProps> = ({ 
   widgets, 
+  layers,
   settings, 
   selectedIds, 
   onSelectWidget, 
@@ -114,9 +117,16 @@ const Canvas: React.FC<CanvasProps> = ({
     aspectRatio: number;
   } | null>(null);
 
+  const isLayerLocked = (layerId: string) => {
+    return layers.find(l => l.id === layerId)?.locked ?? false;
+  };
+
   const handleMouseDown = (e: React.MouseEvent, widget: Widget) => {
     e.stopPropagation();
     
+    // Prevent interaction if layer is locked
+    if (isLayerLocked(widget.layerId)) return;
+
     // If we are currently resizing, don't start a drag
     if (resizeState?.active) return;
 
@@ -145,18 +155,25 @@ const Canvas: React.FC<CanvasProps> = ({
     const initialPos: Record<string, {x: number, y: number}> = {};
     widgets.forEach(w => {
         if (effectiveSelectedIds.includes(w.id)) {
-            initialPos[w.id] = { x: w.x, y: w.y };
+            // Safety check for locking again
+            if (!isLayerLocked(w.layerId)) {
+                initialPos[w.id] = { x: w.x, y: w.y };
+            }
         }
     });
 
-    setDragState({
-      startMouse: { x: e.clientX, y: e.clientY },
-      initialPositions: initialPos
-    });
+    if (Object.keys(initialPos).length > 0) {
+        setDragState({
+            startMouse: { x: e.clientX, y: e.clientY },
+            initialPositions: initialPos
+        });
+    }
   };
 
   const handleResizeMouseDown = (e: React.MouseEvent, direction: string, widget: Widget) => {
     e.stopPropagation();
+    if (isLayerLocked(widget.layerId)) return;
+
     setResizeState({
       active: true,
       direction,
@@ -319,6 +336,7 @@ const Canvas: React.FC<CanvasProps> = ({
   const renderWidget = (widget: Widget) => {
     const isSelected = selectedIds.includes(widget.id);
     const isSingleSelection = selectedIds.length === 1 && isSelected;
+    const locked = isLayerLocked(widget.layerId);
 
     // Container Style: Positioning and layout
     const containerStyle: React.CSSProperties = {
@@ -328,7 +346,7 @@ const Canvas: React.FC<CanvasProps> = ({
       width: widget.width,
       height: widget.height,
       opacity: widget.style.opacity ?? 1,
-      cursor: dragState && isSelected ? 'grabbing' : 'grab',
+      cursor: locked ? 'not-allowed' : (dragState && isSelected ? 'grabbing' : 'grab'),
       userSelect: 'none',
       boxSizing: 'border-box',
     };
@@ -356,88 +374,227 @@ const Canvas: React.FC<CanvasProps> = ({
     const renderInner = () => {
         switch (widget.type) {
           case WidgetType.BUTTON:
-            return <div className="w-full h-full flex items-center justify-center shadow-sm" style={{boxShadow: '0 2px 4px rgba(0,0,0,0.2)'}}>{widget.text}</div>;
+            return (
+              <div className="w-full h-full flex items-center justify-center shadow-md relative overflow-hidden group">
+                 {/* Gradient sheen effect simulation */}
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
+                 <span className="relative font-medium">{widget.text}</span>
+              </div>
+            );
+          
           case WidgetType.LABEL:
-            return <div className="w-full h-full flex items-center justify-start">{widget.text}</div>;
+            return (
+              <div 
+                className="w-full h-full flex items-center justify-start overflow-hidden text-ellipsis whitespace-nowrap"
+                style={{ lineHeight: 1.2 }}
+              >
+                {widget.text}
+              </div>
+            );
+          
           case WidgetType.SLIDER:
+             const sliderVal = widget.value || 0;
+             const sliderMin = widget.min || 0;
+             const sliderMax = widget.max || 100;
+             const sliderPercent = Math.min(100, Math.max(0, ((sliderVal - sliderMin) / (sliderMax - sliderMin)) * 100));
+             
              return (
-               <div className="w-full h-full relative">
-                 <div style={{position: 'absolute', width: '100%', height: '30%', backgroundColor: widget.style.backgroundColor || '#eee', borderRadius: 4, top: '35%'}}></div>
-                 <div style={{position: 'absolute', width: `${widget.value || 30}%`, height: '30%', backgroundColor: widget.style.borderColor || '#2196F3', borderRadius: 4, left: 0, top: '35%'}}></div>
-                 <div style={{position: 'absolute', width: widget.height, height: widget.height, backgroundColor: '#fff', border: `2px solid ${widget.style.borderColor || '#2196F3'}`, borderRadius: '50%', left: `calc(${widget.value || 30}% - ${widget.height/2}px)`, top: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.3)'}}></div>
+               <div className="w-full h-full flex items-center justify-center px-1">
+                 <div className="relative w-full h-2 rounded-full overflow-visible" style={{ backgroundColor: widget.style.backgroundColor || '#e5e7eb' }}>
+                    {/* Indicator */}
+                    <div 
+                      className="absolute left-0 top-0 h-full rounded-full" 
+                      style={{ width: `${sliderPercent}%`, backgroundColor: widget.style.borderColor || '#3b82f6' }}
+                    ></div>
+                    {/* Knob - centered on the end of the indicator */}
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md border border-slate-200"
+                      style={{ 
+                        left: `calc(${sliderPercent}% - 10px)`, // 10px is half of knob width
+                        cursor: 'pointer' 
+                      }}
+                    ></div>
+                 </div>
                </div>
              );
+          
           case WidgetType.SWITCH:
              return (
-              <div className="w-full h-full relative" style={{
-                  backgroundColor: widget.checked ? (widget.style.borderColor || '#2196F3') : (widget.style.backgroundColor || '#e0e0e0'),
-                  borderRadius: 20
+              <div className="w-full h-full relative transition-colors duration-200" style={{
+                  backgroundColor: widget.checked ? (widget.style.borderColor || '#3b82f6') : (widget.style.backgroundColor || '#e5e7eb'),
+                  borderRadius: 999
               }}>
                 <div style={{
-                  position: 'absolute', width: widget.height - 4, height: widget.height - 4, backgroundColor: '#fff', borderRadius: '50%',
-                  left: widget.checked ? `calc(100% - ${widget.height - 2}px)` : 2, top: 2, transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                  position: 'absolute', 
+                  width: widget.height - 6, 
+                  height: widget.height - 6, 
+                  backgroundColor: '#fff', 
+                  borderRadius: '50%',
+                  top: 3,
+                  left: widget.checked ? `calc(100% - ${widget.height - 3}px)` : 3, 
+                  transition: 'left 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)', 
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                 }}></div>
               </div>
             );
+          
           case WidgetType.CHECKBOX:
              return (
-                <div className="flex items-center gap-2 w-full h-full">
-                  <div style={{width: 20, height: 20, border: `2px solid ${widget.style.textColor}`, backgroundColor: widget.checked ? widget.style.textColor : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                    {widget.checked && <span style={{color: '#fff', fontSize: 14}}>✓</span>}
+                <div className="flex items-center gap-3 w-full h-full px-1">
+                  <div style={{
+                    width: 20, 
+                    height: 20, 
+                    minWidth: 20,
+                    borderRadius: 4,
+                    border: `2px solid ${widget.checked ? (widget.style.borderColor || '#3b82f6') : (widget.style.textColor || '#374151')}`, 
+                    backgroundColor: widget.checked ? (widget.style.borderColor || '#3b82f6') : 'transparent', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}>
+                    {widget.checked && <Check size={14} color="white" strokeWidth={3} />}
                   </div>
-                  <span>{widget.text}</span>
+                  <span className="truncate">{widget.text}</span>
                 </div>
              );
+          
           case WidgetType.ARC:
+             const arcVal = widget.value || 0;
+             const arcMin = widget.min || 0;
+             const arcMax = widget.max || 100;
+             const arcPercent = Math.min(100, Math.max(0, ((arcVal - arcMin) / (arcMax - arcMin)) * 100));
+             const trackColor = widget.style.backgroundColor || '#e5e7eb';
+             const indicatorColor = widget.style.borderColor || '#3b82f6';
+             const width = widget.style.borderWidth || 10;
+             
              return (
-                <div className="w-full h-full relative" style={{
-                   background: `conic-gradient(${widget.style.borderColor || '#2196F3'} ${(widget.value || 40)}%, ${widget.style.backgroundColor || '#eee'} 0)`, borderRadius: '50%'
+                <div className="w-full h-full relative rounded-full" style={{
+                   background: `conic-gradient(${indicatorColor} ${arcPercent}%, ${trackColor} 0)`
                 }}>
-                   <div style={{position: 'absolute', inset: '10%', backgroundColor: settings.backgroundColor, borderRadius: '50%'}}></div>
+                   {/* Inner cutout to make it an arc/ring */}
+                   <div className="absolute rounded-full bg-white" 
+                        style={{
+                           inset: `${width}px`,
+                           backgroundColor: settings.backgroundColor // Match canvas bg to simulate transparency
+                        }}
+                   >
+                     {/* Center Value Text (optional but nice) */}
+                     <div className="w-full h-full flex items-center justify-center font-bold text-slate-400 text-xs">
+                       {arcVal}%
+                     </div>
+                   </div>
                 </div>
              );
+          
           case WidgetType.CONTAINER:
-             return <div className="w-full h-full"></div>;
-          case WidgetType.TEXT_AREA:
              return (
-               <div className="w-full h-full p-1 flex items-start text-left">
-                  {widget.text ? widget.text : <span className="text-slate-400 italic">{widget.placeholder}</span>}
-                  <div className="w-[1px] h-4 bg-slate-400 ml-1 animate-pulse"></div>
+               <div className="w-full h-full overflow-hidden shadow-sm" style={{
+                 backgroundColor: widget.style.backgroundColor,
+                 borderRadius: widget.style.borderRadius,
+                 border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`
+               }}>
+                 {/* Dotted pattern if transparent, to indicate container area in edit mode */}
+                 {widget.style.backgroundColor === 'transparent' && (
+                    <div className="w-full h-full opacity-20 border-2 border-dashed border-slate-400"></div>
+                 )}
                </div>
              );
-          case WidgetType.CHART:
+          
+          case WidgetType.TEXT_AREA:
              return (
-               <div className="w-full h-full p-1 flex items-end justify-around gap-0.5">
-                  {[40, 70, 30, 85, 50, 60].map((h, i) => (
-                    widget.chartType === 'bar' ? (
-                      <div key={i} style={{width: '12%', height: `${h}%`, backgroundColor: '#2196F3'}}></div>
+               <div className="w-full h-full p-2 flex items-start text-left bg-white relative overflow-hidden">
+                  <span className={`${widget.text ? 'text-slate-800' : 'text-slate-400 italic'}`}>
+                     {widget.text || widget.placeholder}
+                  </span>
+                  {/* Blinking Cursor */}
+                  <div className="w-0.5 h-4 bg-blue-500 ml-0.5 animate-pulse inline-block align-middle"></div>
+               </div>
+             );
+          
+          case WidgetType.CHART:
+             const gridColor = '#e5e7eb';
+             const lineColor = '#3b82f6';
+             const barColor = '#3b82f6';
+             const isLine = widget.chartType === 'line';
+             
+             return (
+               <div className="w-full h-full p-2 relative bg-white flex items-end justify-between gap-1 overflow-hidden">
+                  {/* Background Grid */}
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                      backgroundImage: `linear-gradient(${gridColor} 1px, transparent 1px), linear-gradient(90deg, ${gridColor} 1px, transparent 1px)`,
+                      backgroundSize: '20px 20px',
+                      opacity: 0.5
+                  }}></div>
+
+                  {/* Dummy Data Points */}
+                  {[30, 50, 45, 70, 60, 85, 40].map((h, i) => (
+                    isLine ? (
+                      // Line Chart Dots
+                       <div key={i} style={{
+                         position: 'absolute', 
+                         left: `${(i / 6) * 80 + 10}%`, 
+                         bottom: `${h}%`, 
+                         width: 6, 
+                         height: 6, 
+                         borderRadius: '50%', 
+                         backgroundColor: lineColor,
+                         border: '1px solid white',
+                         zIndex: 2
+                       }}></div>
                     ) : (
-                      <div key={i} style={{position: 'absolute', left: `${(i/5)*80 + 10}%`, bottom: `${h}%`, width: 6, height: 6, borderRadius: '50%', backgroundColor: '#2196F3'}}></div>
+                      // Bar Chart Bars
+                      <div key={i} className="flex-1 rounded-t-sm relative z-10" style={{
+                        height: `${h}%`, 
+                        backgroundColor: barColor,
+                        opacity: 0.8
+                      }}></div>
                     )
                   ))}
-                  {widget.chartType === 'line' && (
-                     <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{padding: '4px 10%'}}>
-                       <polyline points="0,60 20,30 40,70 60,15 80,50 100,40" fill="none" stroke="#2196F3" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+
+                  {/* Line Chart Path (SVG) */}
+                  {isLine && (
+                     <svg className="absolute inset-0 w-full h-full pointer-events-none z-10" style={{padding: '0 10%'}} preserveAspectRatio="none">
+                       <polyline 
+                          points="0,70 16.6,50 33.3,55 50,30 66.6,40 83.3,15 100,60" // Mapped roughly to 100-h
+                          fill="none" 
+                          stroke={lineColor} 
+                          strokeWidth="2" 
+                          vectorEffect="non-scaling-stroke" 
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                       />
+                       {/* Gradient fill below line */}
+                       <polyline 
+                          points="0,70 16.6,50 33.3,55 50,30 66.6,40 83.3,15 100,60 100,100 0,100" 
+                          fill={lineColor} 
+                          fillOpacity="0.1"
+                          stroke="none"
+                       />
                      </svg>
                   )}
                </div>
              );
+          
           case WidgetType.IMAGE:
              return (
-               <div className="flex flex-col items-center justify-center w-full h-full">
-                 <ImageIcon className="text-slate-400" size={24} />
-                 <span className="text-[10px] text-slate-500 absolute bottom-1">{widget.src}</span>
+               <div className="flex flex-col items-center justify-center w-full h-full bg-slate-100 rounded border border-dashed border-slate-300 overflow-hidden text-slate-400">
+                 <ImageIcon size={24} className="mb-1" />
+                 <span className="text-[10px] truncate w-full text-center px-1 font-mono">{widget.src}</span>
                </div>
              );
+          
           case WidgetType.ICON:
              const IconComp = LVGL_SYMBOLS[widget.symbol || 'LV_SYMBOL_HOME'] || <Home />;
-             // Calculate size based on widget dimensions (min of w/h to fit)
-             const iconSize = Math.min(widget.width, widget.height) * 0.8;
+             // Ensure icon fits but doesn't overflow
+             const iconSize = Math.min(widget.width, widget.height); 
+             
              return (
-                <div className="flex items-center justify-center w-full h-full">
+                <div className="flex items-center justify-center w-full h-full text-center">
                    {React.cloneElement(IconComp as React.ReactElement, { size: iconSize })}
                 </div>
              );
+          
           default: return null;
         }
     }
@@ -465,8 +622,8 @@ const Canvas: React.FC<CanvasProps> = ({
            {renderInner()}
         </div>
 
-        {/* Render Handles only for single selection */}
-        {isSingleSelection && handles.map(h => (
+        {/* Render Handles only for single selection and if NOT locked */}
+        {isSingleSelection && !locked && handles.map(h => (
             <div 
                key={h.dir}
                className={`absolute w-2.5 h-2.5 bg-white border border-blue-500 z-20 ${h.pos}`}
@@ -477,6 +634,8 @@ const Canvas: React.FC<CanvasProps> = ({
                   marginBottom: h.dir.includes('s') ? '-5px' : undefined,
                   marginLeft: h.dir.includes('w') ? '-5px' : undefined,
                   marginRight: h.dir.includes('e') ? '-5px' : undefined,
+                  borderRadius: '50%', // Round handles look nicer
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
                }}
                onMouseDown={(e) => handleResizeMouseDown(e, h.dir, widget)}
             />
@@ -499,7 +658,7 @@ const Canvas: React.FC<CanvasProps> = ({
          onMouseDown={handleCanvasMouseDown}
          onDragOver={handleDragOver}
          onDrop={handleDrop}
-         className="relative shadow-2xl transition-all"
+         className="relative shadow-2xl transition-all duration-300"
          style={{
            width: settings.width,
            height: settings.height,
@@ -510,7 +669,7 @@ const Canvas: React.FC<CanvasProps> = ({
          {widgets.map(renderWidget)}
        </div>
        
-       <div className="absolute top-4 right-4 bg-slate-800 text-slate-400 text-xs px-2 py-1 rounded border border-slate-700">
+       <div className="absolute top-4 right-4 bg-slate-800 text-slate-400 text-xs px-2 py-1 rounded border border-slate-700 font-mono">
          {settings.width} x {settings.height}
        </div>
     </div>

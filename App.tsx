@@ -1,6 +1,6 @@
 
-import React, { useState, useCallback } from 'react';
-import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle } from './types';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle, Layer } from './types';
 import { DEFAULT_CANVAS_SETTINGS, DEFAULT_WIDGET_PROPS } from './constants';
 import WidgetPalette from './components/WidgetPalette';
 import Canvas from './components/Canvas';
@@ -10,6 +10,12 @@ import { generateLVGLCode } from './services/geminiService';
 import { Code, MonitorPlay } from 'lucide-react';
 
 const App: React.FC = () => {
+  // Layer State
+  const [layers, setLayers] = useState<Layer[]>([
+    { id: 'layer_1', name: 'Base Layer', visible: true, locked: false }
+  ]);
+  const [activeLayerId, setActiveLayerId] = useState<string>('layer_1');
+
   const [widgets, setWidgets] = useState<Widget[]>([]);
   // Multi-selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -26,10 +32,72 @@ const App: React.FC = () => {
     { id: 'p2', name: 'Outline', style: { backgroundColor: 'transparent', textColor: '#3b82f6', borderColor: '#3b82f6', borderWidth: 2, borderRadius: 8 } },
     { id: 'p3', name: 'Dark Card', style: { backgroundColor: '#1e293b', textColor: '#e2e8f0', borderColor: '#334155', borderWidth: 1, borderRadius: 12 } },
     { id: 'p4', name: 'Alert', style: { backgroundColor: '#ef4444', textColor: '#ffffff', borderRadius: 4, borderWidth: 0 } },
+    { id: 'p5', name: 'Success', style: { backgroundColor: '#22c55e', textColor: '#ffffff', borderRadius: 6, borderWidth: 0 } },
+    { id: 'p6', name: 'Warning', style: { backgroundColor: '#f59e0b', textColor: '#ffffff', borderRadius: 6, borderWidth: 0 } },
+    { id: 'p7', name: 'Glass', style: { backgroundColor: '#ffffff20', textColor: '#ffffff', borderColor: '#ffffff40', borderWidth: 1, borderRadius: 16 } },
+    { id: 'p8', name: 'Pill', style: { borderRadius: 999, backgroundColor: '#6366f1', textColor: '#ffffff', borderWidth: 0 } },
+    { id: 'p9', name: 'Minimal', style: { backgroundColor: 'transparent', borderWidth: 0, textColor: '#94a3b8' } },
+    { id: 'p10', name: 'Cyber', style: { backgroundColor: '#000000', borderColor: '#00ff00', borderWidth: 1, textColor: '#00ff00', borderRadius: 0 } },
+    { id: 'p11', name: 'Soft', style: { backgroundColor: '#e2e8f0', textColor: '#475569', borderRadius: 12, borderWidth: 0 } },
+    { id: 'p12', name: 'Ghost', style: { backgroundColor: 'transparent', textColor: '#f8fafc', borderColor: '#475569', borderWidth: 1, borderRadius: 6 } },
   ]);
+
+  // Layer Management
+  const handleAddLayer = () => {
+    if (layers.length >= 5) return; // Limit max layers
+    const newId = `layer_${Date.now()}`;
+    setLayers(prev => [...prev, { id: newId, name: `Layer ${prev.length + 1}`, visible: true, locked: false }]);
+    setActiveLayerId(newId);
+  };
+
+  const handleDeleteLayer = (id: string) => {
+    if (layers.length <= 1) return;
+    
+    // Remove widgets in this layer
+    setWidgets(prev => prev.filter(w => w.layerId !== id));
+    
+    // Remove layer
+    setLayers(prev => {
+      const remaining = prev.filter(l => l.id !== id);
+      if (activeLayerId === id) {
+        setActiveLayerId(remaining[remaining.length - 1].id);
+      }
+      return remaining;
+    });
+  };
+
+  const handleToggleLayerVisible = (id: string) => {
+    setLayers(prev => prev.map(l => l.id === id ? { ...l, visible: !l.visible } : l));
+    // If hiding a layer, deselect its widgets
+    const layerWidgets = widgets.filter(w => w.layerId === id).map(w => w.id);
+    setSelectedIds(prev => prev.filter(pid => !layerWidgets.includes(pid)));
+  };
+
+  const handleToggleLayerLock = (id: string) => {
+    setLayers(prev => prev.map(l => l.id === id ? { ...l, locked: !l.locked } : l));
+    // If locking a layer, deselect its widgets
+    const layerWidgets = widgets.filter(w => w.layerId === id).map(w => w.id);
+    setSelectedIds(prev => prev.filter(pid => !layerWidgets.includes(pid)));
+  };
 
   // Helper to get actual widget objects from IDs
   const selectedWidgets = widgets.filter(w => selectedIds.includes(w.id));
+
+  // Process widgets for rendering: Filter invisible, Sort by layer order
+  const visibleSortedWidgets = useMemo(() => {
+    return widgets
+      .filter(w => {
+        const layer = layers.find(l => l.id === w.layerId);
+        return layer && layer.visible;
+      })
+      .sort((a, b) => {
+        const layerIndexA = layers.findIndex(l => l.id === a.layerId);
+        const layerIndexB = layers.findIndex(l => l.id === b.layerId);
+        if (layerIndexA !== layerIndexB) return layerIndexA - layerIndexB;
+        // Same layer: preserve array order (creation order / Z-index)
+        return 0;
+      });
+  }, [widgets, layers]);
 
   const handleAddWidget = (type: WidgetType, x?: number, y?: number) => {
     const defaultProps = DEFAULT_WIDGET_PROPS[type];
@@ -44,6 +112,7 @@ const App: React.FC = () => {
 
     const newWidget: Widget = {
       id: `widget_${Date.now()}`,
+      layerId: activeLayerId,
       type,
       name: `${type}_${widgets.filter(w => w.type === type).length + 1}`,
       x: posX,
@@ -65,6 +134,10 @@ const App: React.FC = () => {
 
     const targetWidget = widgets.find(w => w.id === id);
     if (!targetWidget) return;
+
+    // Check if layer is locked
+    const layer = layers.find(l => l.id === targetWidget.layerId);
+    if (layer?.locked) return;
 
     // Identify all widgets that should be part of this click (handle groups)
     let idsToToggle = [id];
@@ -88,14 +161,6 @@ const App: React.FC = () => {
         return Array.from(newSet);
       });
     } else {
-      // If simply clicking an unselected item (or group), replace selection.
-      // If clicking something ALREADY selected, keep it selected (to allow dragging context)
-      // BUT if it's a drag start, we don't want to deselect others yet. 
-      // This nuance is often handled by 'mouseup' vs 'mousedown', but for now:
-      // If the clicked item is already in the selection, DO NOT clear the selection,
-      // because the user might be starting a drag of the multi-selection.
-      // However, if the user clicked an *unselected* item, we clear and select it.
-      
       const isAlreadySelected = idsToToggle.every(tid => selectedIds.includes(tid));
       if (!isAlreadySelected) {
         setSelectedIds(idsToToggle);
@@ -212,7 +277,8 @@ const App: React.FC = () => {
   const handleGenerateCode = async () => {
     setShowCode(true);
     setIsGenerating(true);
-    const generated = await generateLVGLCode(widgets, settings, codeLanguage);
+    // Use visibleSortedWidgets to ensure WYSIWYG and correct Z-order in code
+    const generated = await generateLVGLCode(visibleSortedWidgets, settings, codeLanguage);
     setCode(generated);
     setIsGenerating(false);
   };
@@ -221,11 +287,64 @@ const App: React.FC = () => {
     setCodeLanguage(lang);
     if (showCode) {
       setIsGenerating(true);
-      const generated = await generateLVGLCode(widgets, settings, lang);
+      const generated = await generateLVGLCode(visibleSortedWidgets, settings, lang);
       setCode(generated);
       setIsGenerating(false);
     }
   };
+
+  // Keyboard navigation for moving widgets
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedIds.length === 0) return;
+
+      // Avoid interfering with input fields
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
+        return;
+      }
+
+      let dx = 0;
+      let dy = 0;
+      // Precision movement: 1px default, 10px with Shift
+      const step = e.shiftKey ? 10 : 1; 
+
+      if (e.key === 'ArrowLeft') dx = -step;
+      else if (e.key === 'ArrowRight') dx = step;
+      else if (e.key === 'ArrowUp') dy = -step;
+      else if (e.key === 'ArrowDown') dy = step;
+      else return;
+
+      e.preventDefault();
+
+      const updates: {id: string, changes: Partial<Widget>}[] = [];
+      
+      // Calculate updates based on current state
+      selectedIds.forEach(id => {
+        const widget = widgets.find(w => w.id === id);
+        if (widget) {
+          const layer = layers.find(l => l.id === widget.layerId);
+          // Only move if layer is not locked
+          if (layer && !layer.locked) {
+             updates.push({
+               id,
+               changes: {
+                 x: Math.round(widget.x + dx), 
+                 y: Math.round(widget.y + dy)
+               }
+             });
+          }
+        }
+      });
+
+      if (updates.length > 0) {
+        handleUpdateWidgets(updates);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIds, widgets, layers, handleUpdateWidgets]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-200 overflow-hidden font-sans">
@@ -250,10 +369,10 @@ const App: React.FC = () => {
              <select 
               value={codeLanguage}
               onChange={(e) => setCodeLanguage(e.target.value as CodeLanguage)}
-              className="bg-transparent text-xs font-medium text-slate-300 focus:outline-none px-2 py-1 cursor-pointer hover:text-white"
+              className="bg-slate-800 text-xs font-medium text-slate-300 focus:outline-none px-2 py-1 cursor-pointer hover:text-white border-none"
             >
-              <option value="c">C (LVGL)</option>
-              <option value="micropython">MicroPython</option>
+              <option value="c" className="bg-slate-800">C (LVGL)</option>
+              <option value="micropython" className="bg-slate-800">MicroPython</option>
             </select>
           </div>
 
@@ -268,10 +387,20 @@ const App: React.FC = () => {
 
       {/* Main Workspace */}
       <main className="flex-1 flex overflow-hidden">
-        <WidgetPalette onAddWidget={handleAddWidget} />
+        <WidgetPalette 
+          onAddWidget={handleAddWidget} 
+          layers={layers}
+          activeLayerId={activeLayerId}
+          onSetActiveLayer={setActiveLayerId}
+          onAddLayer={handleAddLayer}
+          onDeleteLayer={handleDeleteLayer}
+          onToggleLayerVisible={handleToggleLayerVisible}
+          onToggleLayerLock={handleToggleLayerLock}
+        />
         
         <Canvas 
-          widgets={widgets} 
+          widgets={visibleSortedWidgets} 
+          layers={layers}
           settings={settings} 
           selectedIds={selectedIds}
           onSelectWidget={handleSelectWidget}

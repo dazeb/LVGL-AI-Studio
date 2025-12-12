@@ -29,8 +29,16 @@ export interface StylePreset {
   style: WidgetStyle;
 }
 
+export interface Layer {
+  id: string;
+  name: string;
+  visible: boolean;
+  locked: boolean;
+}
+
 export interface Widget {
   id: string;
+  layerId: string; // The layer this widget belongs to
   groupId?: string; // ID for grouping multiple widgets
   type: WidgetType;
   name: string;
