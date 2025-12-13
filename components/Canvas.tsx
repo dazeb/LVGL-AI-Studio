@@ -52,6 +52,14 @@ interface CanvasProps {
   onAddWidget: (type: WidgetType, x?: number, y?: number) => void;
 }
 
+interface Guideline {
+  type: 'vertical' | 'horizontal';
+  x?: number;
+  y?: number;
+  start: number;
+  end: number;
+}
+
 const LVGL_SYMBOLS: Record<string, React.ReactNode> = {
   'LV_SYMBOL_HOME': <Home />,
   'LV_SYMBOL_SETTINGS': <Settings />,
@@ -139,6 +147,13 @@ const Canvas: React.FC<CanvasProps> = ({
     currentY: number;
   } | null>(null);
 
+  // Guideline Alignment State
+  const [guidelines, setGuidelines] = useState<Guideline[]>([]);
+  const snapLinesRef = useRef<{ 
+      vertical: { pos: number, min: number, max: number }[], 
+      horizontal: { pos: number, min: number, max: number }[] 
+  }>({ vertical: [], horizontal: [] });
+
   // Transient state for smooth rendering without history spam
   const [transientChanges, setTransientChanges] = useState<Record<string, Partial<Widget>>>({});
   const transientChangesRef = useRef<Record<string, Partial<Widget>>>({});
@@ -190,19 +205,11 @@ const Canvas: React.FC<CanvasProps> = ({
         // Toggle selection
         onSelectWidget(widget.id, true);
     }
-    // If already selected and no shift, keep selection (might be starting a group drag)
-
-    // Defer drag initialization slightly to ensure selection state is settled? 
-    // Actually, we need to calculate drag targets based on what *will* be selected.
     
     let effectiveSelectedIds = isAlreadySelected 
         ? [...selectedIds] // Dragging existing selection
         : e.shiftKey ? [...selectedIds, widget.id] : [widget.id]; // Dragging new selection
 
-    // Handle Groups logic (expanding selection to group members)
-    // Simplified for now: assuming selectedIds passed in props is accurate for the start of drag
-    // But we need to account for the just-clicked logic if it wasn't selected before.
-    
     const initialPos: Record<string, {x: number, y: number}> = {};
     
     // We iterate over ALL widgets to find those that match effective selection
@@ -219,6 +226,21 @@ const Canvas: React.FC<CanvasProps> = ({
             startMouse: { x: e.clientX, y: e.clientY },
             initialPositions: initialPos
         });
+
+        // Pre-calculate Snap Lines from UNSELECTED widgets
+        const unselectedWidgets = widgets.filter(w => !effectiveSelectedIds.includes(w.id));
+        snapLinesRef.current = {
+            vertical: unselectedWidgets.flatMap(w => [
+                { pos: w.x, min: w.y, max: w.y + w.height },             // Left
+                { pos: w.x + w.width / 2, min: w.y, max: w.y + w.height }, // Center
+                { pos: w.x + w.width, min: w.y, max: w.y + w.height }      // Right
+            ]),
+            horizontal: unselectedWidgets.flatMap(w => [
+                { pos: w.y, min: w.x, max: w.x + w.width },              // Top
+                { pos: w.y + w.height / 2, min: w.x, max: w.x + w.width }, // Middle
+                { pos: w.y + w.height, min: w.x, max: w.x + w.width }      // Bottom
+            ])
+        };
     }
   };
 
@@ -306,9 +328,6 @@ const Canvas: React.FC<CanvasProps> = ({
          const y = (e.clientY - rect.top) / zoom;
 
          setSelectionBox(prev => prev ? ({ ...prev, currentX: x, currentY: y }) : null);
-
-         // We do not calculate intersections on move to avoid spamming state updates.
-         // We do it on MouseUp. Visual feedback is handled by renderSelectionBox.
       }
 
       // 2. Handle Resizing
@@ -344,8 +363,6 @@ const Canvas: React.FC<CanvasProps> = ({
         }
 
         // --- Aspect Ratio Lock ---
-        // For groups, we probably want to default to scaling proportionally if shift held?
-        // Or for single images/icons.
         const currentWidget = widgetId !== 'GROUP' ? widgets.find(w => w.id === widgetId) : null;
         const shouldLockAspect = (currentWidget?.type === WidgetType.ICON || currentWidget?.type === WidgetType.IMAGE) || e.shiftKey;
 
@@ -387,7 +404,6 @@ const Canvas: React.FC<CanvasProps> = ({
              });
         } else {
              // Single Widget
-             // Snap to grid
              newX = Math.round(newX / 10) * 10;
              newY = Math.round(newY / 10) * 10;
              if (!shouldLockAspect) {
@@ -414,16 +430,96 @@ const Canvas: React.FC<CanvasProps> = ({
         const deltaX = (e.clientX - dragState.startMouse.x) / zoom;
         const deltaY = (e.clientY - dragState.startMouse.y) / zoom;
 
+        // --- GUIDELINES & SNAPPING ---
+        const SNAP_DIST = 5;
+        const newGuidelines: Guideline[] = [];
+        
+        // Calculate the bounding box of the MOVING SELECTION
+        let selectionMinX = Infinity, selectionMinY = Infinity, selectionMaxX = -Infinity, selectionMaxY = -Infinity;
+        
+        Object.entries(dragState.initialPositions).forEach(([id, initPos]) => {
+             const x = initPos.x + deltaX;
+             const y = initPos.y + deltaY;
+             const w = widgets.find(wi => wi.id === id)?.width || 0;
+             const h = widgets.find(wi => wi.id === id)?.height || 0;
+             selectionMinX = Math.min(selectionMinX, x);
+             selectionMinY = Math.min(selectionMinY, y);
+             selectionMaxX = Math.max(selectionMaxX, x + w);
+             selectionMaxY = Math.max(selectionMaxY, y + h);
+        });
+        
+        const selectionWidth = selectionMaxX - selectionMinX;
+        const selectionHeight = selectionMaxY - selectionMinY;
+        const selectionMidX = selectionMinX + selectionWidth / 2;
+        const selectionMidY = selectionMinY + selectionHeight / 2;
+
+        // Check Vertical Snaps (X coordinates)
+        let snappedDeltaX = deltaX;
+        let isXSnapped = false;
+
+        const checkXSnap = (currentX: number) => {
+             if (isXSnapped) return; 
+             for (const line of snapLinesRef.current.vertical) {
+                 if (Math.abs(line.pos - currentX) < SNAP_DIST) {
+                     const snapOffset = line.pos - currentX;
+                     snappedDeltaX = deltaX + snapOffset;
+                     isXSnapped = true;
+                     newGuidelines.push({
+                         type: 'vertical',
+                         x: line.pos,
+                         start: Math.min(line.min, selectionMinY),
+                         end: Math.max(line.max, selectionMaxY)
+                     });
+                     break;
+                 }
+             }
+        };
+
+        checkXSnap(selectionMinX);
+        checkXSnap(selectionMidX);
+        checkXSnap(selectionMaxX);
+
+        // Check Horizontal Snaps (Y coordinates)
+        let snappedDeltaY = deltaY;
+        let isYSnapped = false;
+
+        const checkYSnap = (currentY: number) => {
+             if (isYSnapped) return;
+             for (const line of snapLinesRef.current.horizontal) {
+                 if (Math.abs(line.pos - currentY) < SNAP_DIST) {
+                     const snapOffset = line.pos - currentY;
+                     snappedDeltaY = deltaY + snapOffset;
+                     isYSnapped = true;
+                     newGuidelines.push({
+                         type: 'horizontal',
+                         y: line.pos,
+                         start: Math.min(line.min, selectionMinX),
+                         end: Math.max(line.max, selectionMaxX)
+                     });
+                     break;
+                 }
+             }
+        };
+
+        checkYSnap(selectionMinY);
+        checkYSnap(selectionMidY);
+        checkYSnap(selectionMaxY);
+
+        setGuidelines(newGuidelines);
+
         const updates: Record<string, Partial<Widget>> = {};
 
         Object.entries(dragState.initialPositions).forEach(([id, initPos]) => {
             const pos = initPos as { x: number, y: number };
-            let newX = pos.x + deltaX;
-            let newY = pos.y + deltaY;
+            let newX = pos.x + snappedDeltaX;
+            let newY = pos.y + snappedDeltaY;
 
-            // Snap to grid
-            newX = Math.round(newX / 10) * 10;
-            newY = Math.round(newY / 10) * 10;
+            // Apply grid snap ONLY if alignment snap didn't happen
+            if (!isXSnapped) newX = Math.round(newX / 10) * 10;
+            else newX = Math.round(newX);
+
+            if (!isYSnapped) newY = Math.round(newY / 10) * 10;
+            else newY = Math.round(newY);
 
             updates[id] = { x: newX, y: newY };
         });
@@ -434,6 +530,8 @@ const Canvas: React.FC<CanvasProps> = ({
     };
 
     const handleGlobalMouseUp = (e: MouseEvent) => {
+      setGuidelines([]); // Clear guidelines
+
       // Finalize Selection Box
       if (selectionBox?.active) {
          // Calculate final selection
@@ -998,6 +1096,40 @@ const Canvas: React.FC<CanvasProps> = ({
       );
   };
 
+  // Guidelines Overlay
+  const renderGuidelines = () => {
+      if (guidelines.length === 0) return null;
+      return (
+        <svg className="absolute inset-0 pointer-events-none z-[60] overflow-visible" width="100%" height="100%">
+            {guidelines.map((g, i) => {
+                if (g.type === 'vertical') {
+                    return (
+                        <line 
+                           key={i} 
+                           x1={g.x} y1={g.start} 
+                           x2={g.x} y2={g.end} 
+                           stroke="#ec4899" 
+                           strokeWidth="1" 
+                           strokeDasharray="4 2"
+                        />
+                    );
+                } else {
+                    return (
+                        <line 
+                           key={i} 
+                           x1={g.start} y1={g.y} 
+                           x2={g.end} y2={g.y} 
+                           stroke="#ec4899" 
+                           strokeWidth="1" 
+                           strokeDasharray="4 2"
+                        />
+                    );
+                }
+            })}
+        </svg>
+      );
+  };
+
   // Marquee Selection Box
   const renderSelectionBox = () => {
       if (!selectionBox?.active) return null;
@@ -1045,6 +1177,7 @@ const Canvas: React.FC<CanvasProps> = ({
        >
          {widgets.map(renderWidget)}
          {renderGroupOverlay()}
+         {renderGuidelines()}
          {renderSelectionBox()}
        </div>
        
