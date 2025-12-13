@@ -32,6 +32,27 @@ import {
   ChevronDown
 } from 'lucide-react';
 
+// --- Helper Functions for Hex/Alpha ---
+const getAlpha = (hex?: string) => {
+  if (!hex) return 100;
+  if (hex.length === 9) { // #RRGGBBAA
+    return Math.round((parseInt(hex.slice(7), 16) / 255) * 100);
+  }
+  return 100;
+};
+
+const setAlpha = (hex: string | undefined, alpha: number) => {
+  const base = (hex && hex.length >= 7) ? hex.slice(0, 7) : '#000000';
+  if (alpha === 100) return base; // Standard hex if fully opaque
+  const a = Math.round((alpha / 100) * 255).toString(16).padStart(2, '0');
+  return `${base}${a}`;
+};
+
+const getBaseColor = (hex?: string) => {
+  if (!hex) return '#000000';
+  return hex.slice(0, 7);
+};
+
 // --- Smart Input Component to prevent History spam ---
 // commits changes only on blur or Enter key
 interface SmartInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
@@ -203,8 +224,8 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             <div className="flex gap-2">
               <input 
                 type="color" 
-                value={currentScreen.backgroundColor}
-                onChange={(e) => onUpdateScreen({ backgroundColor: e.target.value })}
+                value={getBaseColor(currentScreen.backgroundColor)}
+                onChange={(e) => onUpdateScreen({ backgroundColor: e.target.value })} // Simple solid color for background for now
                 className="h-8 w-8 bg-transparent border-0 cursor-pointer"
               />
               <SmartInput 
@@ -973,9 +994,13 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <div className="flex gap-2">
                    <input 
                     type="color" 
-                    value={widget.style.backgroundColor !== 'transparent' ? widget.style.backgroundColor : '#000000'}
+                    value={getBaseColor(widget.style.backgroundColor) || '#000000'}
                     disabled={widget.style.backgroundColor === 'transparent'}
-                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, backgroundColor: e.target.value } })}
+                    onChange={(e) => {
+                        const base = e.target.value;
+                        const currentAlpha = getAlpha(widget.style.backgroundColor);
+                        onUpdateWidget(widget.id, { style: { ...widget.style, backgroundColor: setAlpha(base, currentAlpha) } });
+                    }}
                     className={`h-6 w-6 bg-transparent border-0 cursor-pointer ${widget.style.backgroundColor === 'transparent' ? 'opacity-30 cursor-not-allowed' : ''}`}
                     title="Background Color"
                   />
@@ -990,7 +1015,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 <div className="flex gap-2">
                    <input 
                     type="color" 
-                    value={widget.style.textColor || '#000000'}
+                    value={getBaseColor(widget.style.textColor) || '#000000'}
                     onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, textColor: e.target.value } })}
                     className="h-6 w-6 bg-transparent border-0 cursor-pointer"
                     title="Text Color"
@@ -1017,33 +1042,52 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     <div className="flex gap-2">
                        <input 
                         type="color" 
-                        value={widget.style.borderColor || '#000000'}
+                        value={getBaseColor(widget.style.borderColor) || '#000000'}
                         disabled={(widget.style.borderWidth || 0) === 0}
-                        onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderColor: e.target.value } })}
+                        onChange={(e) => {
+                            const base = e.target.value;
+                            const currentAlpha = getAlpha(widget.style.borderColor);
+                            onUpdateWidget(widget.id, { style: { ...widget.style, borderColor: setAlpha(base, currentAlpha) } });
+                        }}
                         className={`h-6 w-6 bg-transparent border-0 cursor-pointer ${(widget.style.borderWidth || 0) === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
                         title="Border Color"
                       />
                     </div>
                  </div>
                  
-                 {/* Border Width (Conditional) */}
+                 {/* Border Controls (Thickness & Opacity) */}
                  {(widget.style.borderWidth || 0) > 0 && (
-                     <div className="flex items-center gap-3 pl-6 pr-1">
-                        <span className="text-[10px] text-slate-500">Thickness</span>
-                        <input 
-                           type="range" 
-                           min="1" 
-                           max="10"
-                           step="1"
-                           value={widget.style.borderWidth || 1}
-                           // Range slider is tricky for "commit on release", keep standard onChange for now or wrap in SmartInput logic if needed
-                           // Standard input range fires onInput. onChange is usually sufficient for drag end in React? No, React standardizes it to onInput.
-                           // Use onMouseUp to commit? For simplicity, leaving as is, or can use onMouseUp logic later.
-                           // Given the user emphasized Drag/Move on canvas, leaving range slider live is better UX for "Style" tweaking.
-                           onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderWidth: parseInt(e.target.value) } })}
-                           className="flex-1 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                        />
-                        <span className="text-[10px] font-mono text-slate-400 w-3 text-right">{widget.style.borderWidth}</span>
+                     <div className="space-y-2">
+                         <div className="flex items-center gap-3 pl-6 pr-1">
+                            <span className="text-[10px] text-slate-500 w-[45px]">Thickness</span>
+                            <input 
+                               type="range" 
+                               min="1" 
+                               max="10"
+                               step="1"
+                               value={widget.style.borderWidth || 1}
+                               onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderWidth: parseInt(e.target.value) } })}
+                               className="flex-1 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            />
+                            <span className="text-[10px] font-mono text-slate-400 w-3 text-right">{widget.style.borderWidth}</span>
+                         </div>
+                         <div className="flex items-center gap-3 pl-6 pr-1">
+                            <span className="text-[10px] text-slate-500 w-[45px]">Opacity</span>
+                            <input 
+                               type="range" 
+                               min="0" 
+                               max="100"
+                               step="5"
+                               value={getAlpha(widget.style.borderColor)}
+                               onChange={(e) => {
+                                   const newAlpha = parseInt(e.target.value);
+                                   const baseColor = getBaseColor(widget.style.borderColor);
+                                   onUpdateWidget(widget.id, { style: { ...widget.style, borderColor: setAlpha(baseColor, newAlpha) } });
+                               }}
+                               className="flex-1 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            />
+                            <span className="text-[10px] font-mono text-slate-400 w-3 text-right">{getAlpha(widget.style.borderColor)}%</span>
+                         </div>
                      </div>
                  )}
              </div>
