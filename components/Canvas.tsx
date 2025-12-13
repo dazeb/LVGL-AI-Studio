@@ -1,5 +1,6 @@
 
 
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Widget, CanvasSettings, WidgetType, Layer } from '../types';
 import { 
@@ -38,7 +39,8 @@ import {
   Repeat,
   Shuffle,
   SkipBack,
-  SkipForward
+  SkipForward,
+  ChevronDown
 } from 'lucide-react';
 
 interface CanvasProps {
@@ -99,7 +101,7 @@ const Canvas: React.FC<CanvasProps> = ({
   zoom,
   selectedIds, 
   onSelectWidget, 
-  onUpdateWidgets,
+  onUpdateWidgets, 
   onAddWidget
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -413,6 +415,8 @@ const Canvas: React.FC<CanvasProps> = ({
             );
           
           case WidgetType.SLIDER:
+          case WidgetType.BAR:
+             const isBar = widget.type === WidgetType.BAR;
              const sliderVal = widget.value || 0;
              const sliderMin = widget.min || 0;
              const sliderMax = widget.max || 100;
@@ -423,42 +427,62 @@ const Canvas: React.FC<CanvasProps> = ({
 
              if (isVertical) {
                 return (
-                   <div className="w-full h-full flex items-center justify-center py-1">
-                     <div className="relative h-full w-2 rounded-full overflow-visible" style={{ backgroundColor: widget.style.backgroundColor || '#e5e7eb' }}>
+                   <div className={`w-full h-full flex items-center justify-center ${isBar ? '' : 'py-1'}`}>
+                     <div className={`relative h-full ${isBar ? 'w-full' : 'w-2'} rounded-full overflow-hidden`} 
+                          style={{ 
+                             backgroundColor: widget.style.backgroundColor || '#e5e7eb',
+                             borderRadius: widget.style.borderRadius
+                          }}>
                         {/* Indicator (Bottom up) */}
                         <div 
-                          className="absolute left-0 bottom-0 w-full rounded-full" 
-                          style={{ height: `${sliderPercent}%`, backgroundColor: widget.style.borderColor || '#3b82f6' }}
-                        ></div>
-                        {/* Knob */}
-                        <div 
-                          className="absolute left-1/2 -translate-x-1/2 w-5 h-5 bg-white rounded-full shadow-md border border-slate-200"
+                          className="absolute left-0 bottom-0 w-full" 
                           style={{ 
-                            bottom: `calc(${sliderPercent}% - 10px)`, 
-                            cursor: 'pointer' 
+                             height: `${sliderPercent}%`, 
+                             backgroundColor: widget.style.borderColor || '#3b82f6',
+                             borderRadius: widget.style.borderRadius 
                           }}
                         ></div>
+                        {/* Knob (only for slider) */}
+                        {!isBar && (
+                            <div 
+                            className="absolute left-1/2 -translate-x-1/2 w-5 h-5 bg-white rounded-full shadow-md border border-slate-200"
+                            style={{ 
+                                bottom: `calc(${sliderPercent}% - 10px)`, 
+                                cursor: 'pointer' 
+                            }}
+                            ></div>
+                        )}
                      </div>
                    </div>
                 );
              }
 
              return (
-               <div className="w-full h-full flex items-center justify-center px-1">
-                 <div className="relative w-full h-2 rounded-full overflow-visible" style={{ backgroundColor: widget.style.backgroundColor || '#e5e7eb' }}>
+               <div className={`w-full h-full flex items-center justify-center ${isBar ? '' : 'px-1'}`}>
+                 <div className={`relative w-full ${isBar ? 'h-full' : 'h-2'} overflow-hidden`} 
+                      style={{ 
+                         backgroundColor: widget.style.backgroundColor || '#e5e7eb',
+                         borderRadius: widget.style.borderRadius
+                      }}>
                     {/* Indicator */}
                     <div 
-                      className="absolute left-0 top-0 h-full rounded-full" 
-                      style={{ width: `${sliderPercent}%`, backgroundColor: widget.style.borderColor || '#3b82f6' }}
-                    ></div>
-                    {/* Knob - centered on the end of the indicator */}
-                    <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md border border-slate-200"
+                      className="absolute left-0 top-0 h-full" 
                       style={{ 
-                        left: `calc(${sliderPercent}% - 10px)`, // 10px is half of knob width
-                        cursor: 'pointer' 
+                          width: `${sliderPercent}%`, 
+                          backgroundColor: widget.style.borderColor || '#3b82f6',
+                          borderRadius: widget.style.borderRadius 
                       }}
                     ></div>
+                    {/* Knob (only for slider) */}
+                    {!isBar && (
+                        <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-md border border-slate-200"
+                        style={{ 
+                            left: `calc(${sliderPercent}% - 10px)`, // 10px is half of knob width
+                            cursor: 'pointer' 
+                        }}
+                        ></div>
+                    )}
                  </div>
                </div>
              );
@@ -649,6 +673,69 @@ const Canvas: React.FC<CanvasProps> = ({
                 </div>
              );
           
+          case WidgetType.ROLLER:
+             const rollerOptions = (widget.options || 'Option 1\nOption 2\nOption 3').split('\n');
+             return (
+                 <div className="w-full h-full flex flex-col items-center justify-center relative bg-white overflow-hidden shadow-inner">
+                    {/* Selected Box Indicator */}
+                    <div className="absolute top-1/2 left-0 right-0 h-8 -translate-y-1/2 bg-blue-100 border-y border-blue-300 z-0"></div>
+                    
+                    {/* Visual Stack */}
+                    <div className="flex flex-col items-center gap-2 z-10 w-full">
+                       <div className="opacity-30 text-sm">{rollerOptions[0]}</div>
+                       <div className="font-bold text-lg text-blue-800">{rollerOptions[1] || rollerOptions[0]}</div>
+                       <div className="opacity-30 text-sm">{rollerOptions[2] || rollerOptions[1] || ''}</div>
+                    </div>
+                 </div>
+             );
+          
+          case WidgetType.DROPDOWN:
+             const dropdownOptions = (widget.options || 'Option 1').split('\n');
+             return (
+                 <div className="w-full h-full flex items-center justify-between px-3 bg-white shadow-sm">
+                     <span className="truncate">{dropdownOptions[0]}</span>
+                     <ChevronDown size={16} className="text-slate-500" />
+                 </div>
+             );
+
+          case WidgetType.LED:
+             return (
+                 <div className="w-full h-full rounded-full relative" style={{
+                     backgroundColor: widget.style.backgroundColor,
+                     boxShadow: `0 0 ${widget.width/2}px ${widget.style.backgroundColor}`,
+                     border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`
+                 }}>
+                     {/* Reflection/Gloss */}
+                     <div className="absolute top-[15%] left-[20%] w-[25%] h-[20%] bg-white rounded-full opacity-40"></div>
+                 </div>
+             );
+
+          case WidgetType.KEYBOARD:
+             return (
+                 <div className="w-full h-full bg-slate-200 flex flex-col p-1 gap-1">
+                     <div className="flex-1 flex gap-1">
+                         {['Q','W','E','R','T','Y','U','I','O','P'].map(k => (
+                             <div key={k} className="flex-1 bg-white rounded shadow-sm flex items-center justify-center text-[10px] font-bold text-slate-600">{k}</div>
+                         ))}
+                     </div>
+                     <div className="flex-1 flex gap-1 px-4">
+                         {['A','S','D','F','G','H','J','K','L'].map(k => (
+                             <div key={k} className="flex-1 bg-white rounded shadow-sm flex items-center justify-center text-[10px] font-bold text-slate-600">{k}</div>
+                         ))}
+                     </div>
+                     <div className="flex-1 flex gap-1 px-8">
+                         <div className="w-8 bg-slate-300 rounded flex items-center justify-center">⇧</div>
+                         {['Z','X','C','V','B','N','M'].map(k => (
+                             <div key={k} className="flex-1 bg-white rounded shadow-sm flex items-center justify-center text-[10px] font-bold text-slate-600">{k}</div>
+                         ))}
+                         <div className="w-8 bg-slate-300 rounded flex items-center justify-center">⌫</div>
+                     </div>
+                     <div className="flex-1 flex gap-1 px-16">
+                         <div className="flex-1 bg-white rounded shadow-sm flex items-center justify-center text-[8px] font-bold text-slate-500">SPACE</div>
+                     </div>
+                 </div>
+             );
+
           default: return null;
         }
     }

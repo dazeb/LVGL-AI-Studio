@@ -802,7 +802,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 />
               </div>
             )}
-             {(widget.type === WidgetType.SLIDER || widget.type === WidgetType.ARC) && (
+             {(widget.type === WidgetType.SLIDER || widget.type === WidgetType.ARC || widget.type === WidgetType.BAR) && (
               <div className="grid grid-cols-2 gap-2">
                  <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Value</label>
@@ -824,6 +824,20 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 </div>
               </div>
             )}
+            
+            {/* Options for List-type widgets */}
+            {(widget.type === WidgetType.ROLLER || widget.type === WidgetType.DROPDOWN) && (
+               <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Options (One per line)</label>
+                  <textarea 
+                     value={widget.options || ''}
+                     onChange={(e) => onUpdateWidget(widget.id, { options: e.target.value })}
+                     className="w-full h-24 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
+                     placeholder="Option 1&#10;Option 2"
+                  />
+               </div>
+            )}
+
              {(widget.type === WidgetType.SWITCH || widget.type === WidgetType.CHECKBOX) && (
               <div className="flex items-center gap-2">
                  <input 

@@ -1,5 +1,6 @@
 
 
+
 import { WidgetType, CanvasSettings, Theme, DevicePreset } from './types';
 
 export const PROJECT_THEMES: Record<string, Theme> = {
@@ -273,6 +274,70 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
         textColor: '#1f2937', 
         fontSize: 24, 
         backgroundColor: 'transparent' 
+    }
+  },
+  // New Widgets
+  [WidgetType.BAR]: {
+    width: 200,
+    height: 20,
+    value: 50,
+    min: 0,
+    max: 100,
+    events: [],
+    style: {
+        backgroundColor: '#e5e7eb', // Track
+        borderColor: '#2196F3', // Indicator
+        borderRadius: 10
+    }
+  },
+  [WidgetType.ROLLER]: {
+    width: 120,
+    height: 140,
+    options: 'Option 1\nOption 2\nOption 3\nOption 4',
+    events: [],
+    style: {
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        fontSize: 16
+    }
+  },
+  [WidgetType.DROPDOWN]: {
+    width: 150,
+    height: 40,
+    options: 'Option 1\nOption 2\nOption 3',
+    events: [],
+    style: {
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        fontSize: 14
+    }
+  },
+  [WidgetType.LED]: {
+    width: 24,
+    height: 24,
+    events: [],
+    style: {
+        backgroundColor: '#ef4444', // Red default
+        borderRadius: 999,
+        borderWidth: 2,
+        borderColor: '#991b1b' // Darker rim
+    }
+  },
+  [WidgetType.KEYBOARD]: {
+    width: 320,
+    height: 140,
+    events: [],
+    style: {
+        backgroundColor: '#cbd5e1',
+        borderRadius: 4,
+        borderColor: '#94a3b8',
+        borderWidth: 1
     }
   }
 };

@@ -1,5 +1,6 @@
 
 
+
 export enum WidgetType {
   BUTTON = 'lv_btn',
   LABEL = 'lv_label',
@@ -11,7 +12,13 @@ export enum WidgetType {
   TEXT_AREA = 'lv_textarea',
   CHART = 'lv_chart',
   IMAGE = 'lv_img',
-  ICON = 'lv_icon' // Renders as label with symbol in LVGL
+  ICON = 'lv_icon', // Renders as label with symbol in LVGL
+  // New Widgets
+  BAR = 'lv_bar',
+  ROLLER = 'lv_roller',
+  DROPDOWN = 'lv_dropdown',
+  LED = 'lv_led',
+  KEYBOARD = 'lv_keyboard'
 }
 
 export interface WidgetStyle {
@@ -60,7 +67,7 @@ export interface Widget {
   height: number;
   text?: string;
   contentMode?: 'text' | 'icon'; // For Button: toggle text vs icon
-  value?: number; // For slider/arc
+  value?: number; // For slider/arc/bar/roller
   checked?: boolean; // For switch/checkbox
   style: WidgetStyle;
   // Specific properties
@@ -71,6 +78,7 @@ export interface Widget {
   src?: string; // For Image (symbol or path)
   imageData?: string; // Base64 string for image preview
   symbol?: string; // For Icon
+  options?: string; // For Roller/Dropdown (newline separated)
   // Navigation & Events
   events: WidgetEvent[];
 }

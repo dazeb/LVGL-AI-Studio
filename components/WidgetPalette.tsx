@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { WidgetType, Layer, Screen } from '../types';
 import { 
@@ -21,7 +22,12 @@ import {
   Unlock,
   Trash2,
   Grid,
-  Monitor
+  Monitor,
+  CreditCard, // For Bar (visually similar to a bar)
+  GalleryVertical, // For Roller (looks like list)
+  ChevronDownSquare, // For Dropdown
+  Lightbulb, // For LED
+  Keyboard // For Keyboard
 } from 'lucide-react';
 
 interface WidgetPaletteProps {
@@ -48,11 +54,16 @@ const WidgetPalette: React.FC<WidgetPaletteProps> = ({
     { type: WidgetType.LABEL, icon: <Type size={18} />, label: 'Label' },
     { type: WidgetType.ICON, icon: <Star size={18} />, label: 'Icon' },
     { type: WidgetType.SLIDER, icon: <Sliders size={18} />, label: 'Slider' },
+    { type: WidgetType.BAR, icon: <CreditCard size={18} />, label: 'Bar' },
     { type: WidgetType.SWITCH, icon: <ToggleLeft size={18} />, label: 'Switch' },
     { type: WidgetType.CHECKBOX, icon: <CheckSquare size={18} />, label: 'Checkbox' },
     { type: WidgetType.ARC, icon: <CircleDashed size={18} />, label: 'Arc' },
     { type: WidgetType.CONTAINER, icon: <Box size={18} />, label: 'Container' },
     { type: WidgetType.TEXT_AREA, icon: <MessageSquare size={18} />, label: 'Text Area' },
+    { type: WidgetType.KEYBOARD, icon: <Keyboard size={18} />, label: 'Keyboard' },
+    { type: WidgetType.DROPDOWN, icon: <ChevronDownSquare size={18} />, label: 'Dropdown' },
+    { type: WidgetType.ROLLER, icon: <GalleryVertical size={18} />, label: 'Roller' },
+    { type: WidgetType.LED, icon: <Lightbulb size={18} />, label: 'LED' },
     { type: WidgetType.CHART, icon: <BarChart3 size={18} />, label: 'Chart' },
     { type: WidgetType.IMAGE, icon: <ImageIcon size={18} />, label: 'Image' },
   ];
