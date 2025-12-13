@@ -1,5 +1,7 @@
 
 
+
+
 # Project Context: LVGL Studio AI
 
 This document provides context for AI models (Gemini, GPT, etc.) to understand the codebase structure, data models, and business logic of the **LVGL Studio AI** application.
@@ -37,6 +39,9 @@ interface Widget {
   src?: string;       // Filename reference (e.g. "icon.png")
   imageData?: string; // Base64 string for Browser Preview ONLY (stripped before sending to AI)
   
+  // List Options (Roller/Dropdown)
+  options?: string;   // Newline separated string
+  
   // ... coordinates (x, y, width, height)
 }
 
@@ -52,11 +57,16 @@ interface ProjectFile {
 
 ### `App.tsx`
 - Holds the root state: `screens[]`, `activeScreenId`, `canvasSettings`.
-- **State Persistence**: 
+- **State Management**: Uses custom `useHistory` hook to manage `past`, `present` (state), and `future` stacks.
+- **Persistence**: 
     - Lazily initializes state from `localStorage` on mount.
     - Updates `localStorage` on every state change.
     - Handles JSON file Import/Export logic (`FileReader` / `Blob`).
-- Manages global actions (Add Widget, Generate Code, Apply Theme).
+- Manages global actions (Add Widget, Generate Code, Apply Theme) via `updateProject` wrapper for History tracking.
+
+### `hooks/useHistory.ts`
+- Provides generic `undo`, `redo`, `jumpTo`, and `set` capabilities.
+- Stores history as `{ state: T, name: string, timestamp: number }` items.
 
 ### `components/Canvas.tsx`
 - Renders the "Active Screen".
@@ -93,3 +103,6 @@ When generating code for this project:
     - Use the `src` property (filename) to generate the reference.
 5.  **Sliders**: 
     - If `height > width`, the slider is vertical. In LVGL this often handles itself via sizing, but check if specific flags/styles are needed for the requested version.
+6.  **New Widgets**:
+    - `lv_roller` and `lv_dropdown`: Use `lv_roller_set_options` / `lv_dropdown_set_options` with newline separators.
+    - `lv_led`: Use `lv_led_set_brightness` or `lv_led_on/off`.

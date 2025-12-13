@@ -1,8 +1,24 @@
 
 
+
+
 # Changelog
 
 All notable changes to the **LVGL Studio AI** project will be documented in this file.
+
+## [0.4.0] - 2025-05-24
+
+### Added
+- **History System**: Full Undo/Redo support (`Ctrl+Z`, `Ctrl+Y`) for all canvas operations (Add/Move/Resize/Delete/Style).
+- **History Menu**: A dropdown menu in the header allowing users to jump back to any previous project state.
+- **Hardware Library**: Added presets for **LilyGo** (T-Display S3, T-HMI), **Sunton** (ESP32-S3 screens), **Elecrow** (CrowPanel), and **Riverdi** (STM32 Embedded) displays.
+- **New Widgets**: Added support for **Bar**, **Roller**, **Dropdown**, **LED**, and **Keyboard** widgets to the palette and AI generator.
+
+### Changed
+- **State Management**: Refactored the core application state to use a `useHistory` hook, enabling time-travel debugging and state restoration.
+- **Project Structure**: Updated `constants.ts` to include a much larger list of manufacturer-specific display resolutions for better SEO and user convenience.
+
+---
 
 ## [0.3.2] - 2025-05-23
 

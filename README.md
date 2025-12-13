@@ -1,5 +1,6 @@
 
 
+
 # LVGL Studio AI 🎨✨
 
 **LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It empowers developers to visually build complex **Multi-Screen** GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface, and instantly generate production-ready C or MicroPython code using **Google's Gemini AI**, **Anthropic Claude**, **OpenAI**, **DeepSeek**, or **Local LLMs**.
@@ -9,11 +10,13 @@
 ## 🌟 Key Features
 
 *   **Multi-Screen Support**: Create, rename, and manage multiple screens. Visually link buttons to navigate between them.
-*   **Project Persistence** 🆕: 
+*   **Time Travel & History** 🆕: 
+    *   **Undo/Redo**: Full state history support (Ctrl+Z / Ctrl+Y).
+    *   **History Menu**: View a timeline of your actions and jump back to any previous state instantly.
+*   **Project Persistence**: 
     *   **Auto-Save**: Your work is automatically saved to browser storage (LocalStorage) so you never lose progress.
     *   **Import/Export**: Save your projects to `.json` files and share them or load them later.
 *   **Template Library**: Jumpstart development with high-fidelity, pre-configured templates (Thermostats, Dashboards, Audio Players).
-*   **Device Presets**: Instant canvas resizing for popular hardware including **M5Stack**, **Adafruit**, **Waveshare**, and generic TFT displays.
 *   **Global Theming**: Instantly style your entire project with presets like *Cyberpunk*, *Midnight*, *Retro*, and more.
 *   **Event System**: Define logic for Clicked, Pressed, Released, and Value Changed events. Support for Navigation actions or Custom C/Python code.
 *   **Visual Drag-and-Drop Editor**: Intuitive canvas to place and arrange UI elements with snapping.
@@ -21,6 +24,47 @@
 *   **Image Uploads**: Upload images to preview them on the canvas and generate correct file-reference code.
 *   **Multi-Provider AI**: Generate code using **Gemini (Flash/Pro)**, **DeepSeek V3/R1**, **Claude 3.5**, **GPT-4o**, or local models (Ollama).
 *   **Live Properties**: Real-time editing of dimensions, colors, borders, shadows, and logic.
+
+---
+
+## 🖥️ Supported Hardware & Manufacturers
+
+LVGL Studio AI includes preset resolutions for a wide range of popular embedded displays and development boards.
+
+### M5Stack
+*   **Core / Core2 / Basic** (320x240)
+*   **M5Paper** (960x540)
+*   **Cardputer / StickC Plus** (240x135)
+*   **M5Dial** (240x240 Round)
+
+### LilyGo
+*   **T-Display S3** (320x170)
+*   **T-Deck** (320x240)
+*   **T-HMI** (320x240)
+
+### Sunton (Makerfabs/Espressif)
+*   **ESP32-S3 4.3"** (800x480)
+*   **ESP32-S3 5.0"** (800x480)
+*   **ESP32-S3 7.0"** (800x480)
+
+### Elecrow
+*   **CrowPanel 5.0"** (800x480)
+*   **CrowPanel 7.0"** (800x480)
+
+### Riverdi
+*   **5.0" STM32 Embedded** (800x480)
+*   **7.0" STM32 Embedded** (1024x600)
+*   **10.1" STM32 Embedded** (1280x800)
+
+### Waveshare
+*   **3.5" IPS LCD** (480x320)
+*   **4.3" / 5.0" / 7.0" HDMI** (800x480 - 1024x600)
+*   **1.28" Round Touch** (240x240)
+
+### Adafruit
+*   **PyPortal / Titano**
+*   **TFT FeatherWings** (2.4", 3.5")
+*   **1.28" Round IPS**
 
 ---
 
@@ -62,7 +106,8 @@ API_KEY=your_google_gemini_api_key
 ```mermaid
 graph TD
     User([User Interaction]) -->|Drag & Drop / Keyboard| State[App State Store]
-    User -->|Screen & Theme Mgmt| State
+    User -->|Undo / Redo| History[History Stack]
+    History --> State
     State -->|Auto-Save| LocalStorage[Local Storage]
     State -->|Export JSON| File[Project File .json]
     State -->|Context Data| AIService{AI Service}
@@ -141,6 +186,11 @@ Click the **Settings Icon** in the top header to configure your AI provider.
 | **Chart** | 📊 | Line vs Bar mode, Data points simulation, Grid lines |
 | **Image** | 🖼️ | Source path/upload, Placeholder visualization |
 | **Icon** | ⭐ | Built-in LVGL Symbols (Home, Wifi, Battery, etc.) |
+| **Bar** | 📊 | Similar to slider but for display only |
+| **Roller** | 📜 | Scrollable option selector |
+| **Dropdown** | 🔽 | Collapsible list |
+| **LED** | 💡 | Circular indicator with gloss effect |
+| **Keyboard** | ⌨️ | Visual keyboard placeholder |
 
 ---
 

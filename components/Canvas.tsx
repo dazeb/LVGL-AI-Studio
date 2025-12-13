@@ -1,6 +1,3 @@
-
-
-
 import React, { useRef, useState, useEffect } from 'react';
 import { Widget, CanvasSettings, WidgetType, Layer } from '../types';
 import { 
@@ -46,7 +43,7 @@ import {
 interface CanvasProps {
   widgets: Widget[];
   layers: Layer[];
-  settings: CanvasSettings;
+  settings: CanvasSettings & { backgroundColor: string };
   zoom: number;
   selectedIds: string[];
   onSelectWidget: (id: string | null, isShift: boolean) => void;
@@ -138,7 +135,7 @@ const Canvas: React.FC<CanvasProps> = ({
     // Select widget (with Shift logic)
     onSelectWidget(widget.id, e.shiftKey);
     
-    const canvasRect = (e.currentTarget.offsetParent as HTMLElement).getBoundingClientRect();
+    const canvasRect = ((e.currentTarget as HTMLElement).offsetParent as HTMLElement).getBoundingClientRect();
     
     let effectiveSelectedIds = [...selectedIds];
     const isAlreadySelected = selectedIds.includes(widget.id);
@@ -395,7 +392,7 @@ const Canvas: React.FC<CanvasProps> = ({
                         const IconComp = LVGL_SYMBOLS[widget.symbol || 'LV_SYMBOL_HOME'] || <Home />;
                         // Scale icon relative to button height/width but keep it contained
                         const iconSize = Math.min(widget.width, widget.height) * 0.6;
-                        return React.cloneElement(IconComp as React.ReactElement, { size: iconSize });
+                        return React.cloneElement(IconComp as React.ReactElement<any>, { size: iconSize });
                      })()
                  ) : (
                      // Render Text
@@ -669,7 +666,7 @@ const Canvas: React.FC<CanvasProps> = ({
              
              return (
                 <div className="flex items-center justify-center w-full h-full text-center">
-                   {React.cloneElement(IconComp as React.ReactElement, { size: iconSize })}
+                   {React.cloneElement(IconComp as React.ReactElement<any>, { size: iconSize })}
                 </div>
              );
           

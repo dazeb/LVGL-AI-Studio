@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { X, FolderOpen, ArrowRight } from 'lucide-react';
 import { SAMPLE_PROJECTS, SampleProject } from '../data/samples';
@@ -49,7 +48,7 @@ const SampleCatalogue: React.FC<SampleCatalogueProps> = ({
                     <div className={`h-24 bg-gradient-to-br ${sample.color} flex items-center justify-center relative`}>
                         <div className="bg-white/10 p-3 rounded-full backdrop-blur-md shadow-lg transform group-hover:scale-110 transition-transform duration-300">
                            <div className="text-white">
-                              {React.cloneElement(sample.icon as React.ReactElement, { size: 28 })}
+                              {React.cloneElement(sample.icon as React.ReactElement<any>, { size: 28 })}
                            </div>
                         </div>
                         <div className="absolute bottom-1 right-1 text-[9px] font-mono bg-black/30 text-white px-1.5 py-0.5 rounded backdrop-blur-sm">

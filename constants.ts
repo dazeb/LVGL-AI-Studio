@@ -111,6 +111,20 @@ export const DEVICE_PRESETS: DevicePreset[] = [
   { id: 'm5_paper', name: 'M5Paper', manufacturer: 'M5Stack', width: 960, height: 540 },
   { id: 'm5_dial', name: 'M5Dial (Round)', manufacturer: 'M5Stack', width: 240, height: 240 },
   
+  // LilyGo
+  { id: 'lilygo_t_display_s3', name: 'T-Display S3', manufacturer: 'LilyGo', width: 320, height: 170 },
+  { id: 'lilygo_t_deck', name: 'T-Deck', manufacturer: 'LilyGo', width: 320, height: 240 },
+  { id: 'lilygo_t_hmi', name: 'T-HMI', manufacturer: 'LilyGo', width: 320, height: 240 },
+  
+  // Sunton (Makerfabs/Espressif)
+  { id: 'sunton_esp32_43', name: 'ESP32-S3 4.3"', manufacturer: 'Sunton', width: 800, height: 480 },
+  { id: 'sunton_esp32_50', name: 'ESP32-S3 5.0"', manufacturer: 'Sunton', width: 800, height: 480 },
+  { id: 'sunton_esp32_70', name: 'ESP32-S3 7.0"', manufacturer: 'Sunton', width: 800, height: 480 },
+
+  // Elecrow
+  { id: 'elecrow_crowpanel_50', name: 'CrowPanel 5.0"', manufacturer: 'Elecrow', width: 800, height: 480 },
+  { id: 'elecrow_crowpanel_70', name: 'CrowPanel 7.0"', manufacturer: 'Elecrow', width: 800, height: 480 },
+  
   // Seeed Studio
   { id: 'wio_terminal', name: 'Wio Terminal', manufacturer: 'Seeed Studio', width: 320, height: 240 },
   
@@ -128,6 +142,11 @@ export const DEVICE_PRESETS: DevicePreset[] = [
   { id: 'wave_70_hdmi', name: '7.0" HDMI LCD', manufacturer: 'Waveshare', width: 1024, height: 600 },
   { id: 'wave_128_round', name: '1.28" Touch LCD', manufacturer: 'Waveshare', width: 240, height: 240 },
   
+  // Riverdi
+  { id: 'riverdi_50_stm32', name: '5.0" STM32 Embedded', manufacturer: 'Riverdi', width: 800, height: 480 },
+  { id: 'riverdi_70_stm32', name: '7.0" STM32 Embedded', manufacturer: 'Riverdi', width: 1024, height: 600 },
+  { id: 'riverdi_101_stm32', name: '10.1" STM32 Embedded', manufacturer: 'Riverdi', width: 1280, height: 800 },
+
   // Generic
   { id: 'gen_st7789', name: 'Generic ST7789 (Square)', manufacturer: 'Generic', width: 240, height: 240 },
   { id: 'gen_ili9341', name: 'Generic ILI9341', manufacturer: 'Generic', width: 320, height: 240 },
