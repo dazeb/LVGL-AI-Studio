@@ -2,9 +2,17 @@
 
 
 
+
+
 # Changelog
 
 All notable changes to the **LVGL Studio AI** project will be documented in this file.
+
+## [0.5.0] - 2025-05-25
+
+### Added
+- **AI Widget Generator** 🧠: Instantly create fully styled widgets by describing them in plain English (e.g., "Red round stop button" or "Blue progress bar at 75%").
+- **Smart Alignment Guidelines** 📏: Visual magenta snap lines appear automatically when dragging widgets to help align edges and centers with other elements on the canvas.
 
 ## [0.4.0] - 2025-05-24
 

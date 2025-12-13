@@ -1,6 +1,8 @@
 
 
 
+
+
 # LVGL Studio AI 🎨✨
 
 **LVGL Studio AI** is a professional, browser-based visual interface designer for embedded systems. It empowers developers to visually build complex **Multi-Screen** GUIs for the **Light and Versatile Graphics Library (LVGL)** using a drag-and-drop interface, and instantly generate production-ready C or MicroPython code using **Google's Gemini AI**, **Anthropic Claude**, **OpenAI**, **DeepSeek**, or **Local LLMs**.
@@ -9,8 +11,10 @@
 
 ## 🌟 Key Features
 
+*   **AI Widget Generator** 🆕🧠: Create widgets instantly by describing them in plain English (e.g., "Red round stop button"). The AI infers type, style, and icon automatically.
+*   **Smart Alignment** 🆕📏: Magnetic guidelines snap widgets to edges and centers of other elements for pixel-perfect layouts.
 *   **Multi-Screen Support**: Create, rename, and manage multiple screens. Visually link buttons to navigate between them.
-*   **Time Travel & History** 🆕: 
+*   **Time Travel & History**: 
     *   **Undo/Redo**: Full state history support (Ctrl+Z / Ctrl+Y).
     *   **History Menu**: View a timeline of your actions and jump back to any previous state instantly.
 *   **Project Persistence**: 
@@ -130,7 +134,7 @@ graph TD
 ## 🛠️ User Guide
 
 ### 1. Saving & Loading 💾
-*   **Auto-Save**: The app automatically saves your workspace state (screens, settings, API keys) to your browser's Local Storage.
+*   **Auto-Save**: The app automatically saves your workspace state (screens, widgets, settings, AI config) to your browser's Local Storage.
 *   **Save Project**: Click the **Save** (Download) icon in the header to download a `.json` file containing your entire project.
 *   **Open Project**: Click the **Open** (Folder) icon to upload a previously saved `.json` file. This will overwrite your current workspace.
 
@@ -148,13 +152,18 @@ Widgets support a robust event system. In the **Properties Panel**:
     *   **CUSTOM CODE**: Injects raw C or Python code (e.g., `printf("Hello");` or `led.on()`).
 4.  Widgets with events display a small yellow "Zap" badge on the canvas.
 
-### 4. Image Handling 🖼️
+### 4. AI Widget Generator 🧠
+1.  In the **Widgets** sidebar, look for the "AI Generator" input at the top.
+2.  Type a description like *"A large red stop button with round corners"* or *"Blue WiFi icon"*.
+3.  Press Enter. The AI will construct the widget JSON and add it to your canvas automatically.
+
+### 5. Image Handling 🖼️
 1.  Add an **Image Widget**.
 2.  In the Properties Panel, click **Upload Image**.
 3.  The image is Base64 encoded for the browser preview.
 4.  The generated code will reference the filename (e.g., `lv_img_set_src(ui_img, "S:my_image.png")`).
 
-### 5. AI Configuration ⚙️
+### 6. AI Configuration ⚙️
 Click the **Settings Icon** in the top header to configure your AI provider.
 *   **Google Gemini**: Default. Supports **Google AI Studio** account integration (via "Connect Google Account") to access **Gemini 3.0 Pro** and **Thinking** models with higher limits.
 *   **DeepSeek**: Enter your API key. Supports **DeepSeek V3** and **R1** (Reasoner).
@@ -162,7 +171,7 @@ Click the **Settings Icon** in the top header to configure your AI provider.
 *   **OpenAI**: Requires `sk-...` key.
 *   **Local LLM**: Connect to local endpoints (e.g., Ollama at `http://localhost:11434/v1`).
 
-### 6. AI Code Generation 🤖
+### 7. AI Code Generation 🤖
 1.  Design your UI.
 2.  Select your **Target Device** (e.g., M5Stack Core2) in Global Settings for optimized resolution.
 3.  Click **Generate Code**.

@@ -2,6 +2,8 @@
 
 
 
+
+
 # Project Context: LVGL Studio AI
 
 This document provides context for AI models (Gemini, GPT, etc.) to understand the codebase structure, data models, and business logic of the **LVGL Studio AI** application.
@@ -71,6 +73,7 @@ interface ProjectFile {
 ### `components/Canvas.tsx`
 - Renders the "Active Screen".
 - Handles Drag-and-Drop (creation), Drag-to-Move, and Resizing.
+- **Smart Alignment**: Implements a magnetic snap system (5px threshold) that aligns moving widgets to the edges and centers of other widgets. Renders magenta guidelines (`#ec4899`) when snapped.
 - Renders LVGL-like HTML approximations of widgets.
 - **Slider Orientation**: Automatically renders as **Vertical** if height > width.
 - **Image Rendering**: Renders Base64 `imageData` if present, otherwise shows a placeholder.
@@ -80,6 +83,10 @@ interface ProjectFile {
 - **Global Mode**: When nothing is selected, edits Active Screen settings, Global Theme, and **Layer Management** (Reorder, Lock, Hide).
 - **Image Upload**: Handles converting `File` inputs to Base64 strings for preview.
 
+### `components/WidgetPalette.tsx`
+- Lists available widgets.
+- **AI Widget Generator**: Contains an input field to accept natural language prompts. Calls `generateSingleWidget` service to create widget JSON on the fly.
+
 ### `services/aiService.ts`
 - **Prompt Engineering**: serialized the `screens` array into a simplified JSON format.
 - **Optimization**: Specifically filters out `imageData` (Base64) from the JSON payload to prevent token limit exhaustion, sending only the `src` filename to the LLM.
@@ -87,6 +94,7 @@ interface ProjectFile {
     - `ui_init()` function.
     - Event callbacks (`ui_event_Button1`).
     - Image references using `src` filename (e.g., `lv_img_set_src(obj, "S:path/" + src)`).
+- **Single Widget Gen**: Implements `generateSingleWidget` which prompts the AI to return a single JSON object (Partial Widget) based on a user description.
 
 ## 5. Themes (`constants.ts`)
 Themes are static configuration objects (`PROJECT_THEMES`) that define color palettes (`primary`, `surface`, `background`, etc.).
