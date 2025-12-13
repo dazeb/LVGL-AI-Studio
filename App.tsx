@@ -850,7 +850,7 @@ const App: React.FC = () => {
         <Canvas 
           widgets={visibleSortedWidgets} 
           layers={currentScreen.layers}
-          settings={{...canvasSettings, backgroundColor: currentScreen.backgroundColor, name: currentScreen.name }}
+          settings={{...canvasSettings, backgroundColor: currentScreen.backgroundColor }}
           zoom={zoom}
           selectedIds={selectedIds}
           onSelectWidget={handleSelectWidget}

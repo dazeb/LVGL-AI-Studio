@@ -1,6 +1,5 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer, DevicePreset } from '../types';
 import { PROJECT_THEMES, DEVICE_PRESETS } from '../constants';
 import { 
@@ -32,6 +31,44 @@ import {
   Smartphone,
   ChevronDown
 } from 'lucide-react';
+
+// --- Smart Input Component to prevent History spam ---
+// commits changes only on blur or Enter key
+interface SmartInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
+  value: string | number;
+  onCommit: (value: string) => void;
+}
+
+const SmartInput: React.FC<SmartInputProps> = ({ value, onCommit, ...props }) => {
+  const [localValue, setLocalValue] = useState<string>(String(value));
+
+  useEffect(() => {
+    setLocalValue(String(value));
+  }, [value]);
+
+  const handleBlur = () => {
+    if (localValue !== String(value)) {
+      onCommit(localValue);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur(); // Triggers handleBlur
+    }
+    if (props.onKeyDown) props.onKeyDown(e);
+  };
+
+  return (
+    <input
+      {...props}
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+    />
+  );
+};
 
 interface PropertiesPanelProps {
   selectedWidgets: Widget[];
@@ -153,10 +190,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <div className="p-4 space-y-4">
           <div>
              <label className="block text-xs font-medium text-slate-400 mb-1">Screen Name</label>
-             <input 
+             <SmartInput 
                type="text" 
                value={currentScreen.name}
-               onChange={(e) => onUpdateScreen({ name: e.target.value })}
+               onCommit={(val) => onUpdateScreen({ name: val })}
                className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
              />
           </div>
@@ -170,10 +207,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                 onChange={(e) => onUpdateScreen({ backgroundColor: e.target.value })}
                 className="h-8 w-8 bg-transparent border-0 cursor-pointer"
               />
-              <input 
+              <SmartInput 
                 type="text" 
                 value={currentScreen.backgroundColor}
-                onChange={(e) => onUpdateScreen({ backgroundColor: e.target.value })}
+                onCommit={(val) => onUpdateScreen({ backgroundColor: val })}
                 className="flex-1 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
               />
             </div>
@@ -327,10 +364,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">Project Name</label>
-            <input 
+            <SmartInput 
               type="text" 
               value={settings.projectName}
-              onChange={(e) => onUpdateSettings({...settings, projectName: e.target.value})}
+              onCommit={(val) => onUpdateSettings({...settings, projectName: val})}
               className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
             />
           </div>
@@ -361,21 +398,21 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs font-medium text-slate-400 mb-1">Width</label>
-                <input 
+                <SmartInput 
                   type="number" 
                   min="0"
                   value={settings.width}
-                  onChange={(e) => onUpdateSettings({...settings, width: Math.max(0, parseInt(e.target.value) || 0), targetDevice: 'custom'})}
+                  onCommit={(val) => onUpdateSettings({...settings, width: Math.max(0, parseInt(val) || 0), targetDevice: 'custom'})}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-400 mb-1">Height</label>
-                <input 
+                <SmartInput 
                   type="number" 
                   min="0"
                   value={settings.height}
-                  onChange={(e) => onUpdateSettings({...settings, height: Math.max(0, parseInt(e.target.value) || 0), targetDevice: 'custom'})}
+                  onCommit={(val) => onUpdateSettings({...settings, height: Math.max(0, parseInt(val) || 0), targetDevice: 'custom'})}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
                 />
               </div>
@@ -616,11 +653,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                    ) : (
                       <div className="relative">
                          <Code size={12} className="absolute top-1.5 left-1.5 text-slate-500" />
-                         <input 
+                         <SmartInput 
                            type="text" 
                            placeholder="Code (e.g. printf('Clicked'))"
                            value={evt.customCode || ''}
-                           onChange={(e) => handleUpdateEvent(evt.id, { customCode: e.target.value })}
+                           onCommit={(val) => handleUpdateEvent(evt.id, { customCode: val })}
                            className="w-full bg-slate-900 border border-slate-600 rounded pl-5 pr-2 py-1 text-xs text-white focus:outline-none font-mono"
                          />
                       </div>
@@ -699,41 +736,41 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <div className="grid grid-cols-2 gap-3">
              <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">X Pos</label>
-              <input 
+              <SmartInput 
                 type="number" 
                 min="0"
                 value={widget.x}
-                onChange={(e) => onUpdateWidget(widget.id, { x: Math.max(0, parseInt(e.target.value) || 0) })}
+                onCommit={(val) => onUpdateWidget(widget.id, { x: Math.max(0, parseInt(val) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Y Pos</label>
-              <input 
+              <SmartInput 
                 type="number" 
                 min="0"
                 value={widget.y}
-                onChange={(e) => onUpdateWidget(widget.id, { y: Math.max(0, parseInt(e.target.value) || 0) })}
+                onCommit={(val) => onUpdateWidget(widget.id, { y: Math.max(0, parseInt(val) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
              <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Width</label>
-              <input 
+              <SmartInput 
                 type="number" 
                 min="0"
                 value={widget.width}
-                onChange={(e) => onUpdateWidget(widget.id, { width: Math.max(0, parseInt(e.target.value) || 0) })}
+                onCommit={(val) => onUpdateWidget(widget.id, { width: Math.max(0, parseInt(val) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">Height</label>
-              <input 
+              <SmartInput 
                 type="number" 
                 min="0"
                 value={widget.height}
-                onChange={(e) => onUpdateWidget(widget.id, { height: Math.max(0, parseInt(e.target.value) || 0) })}
+                onCommit={(val) => onUpdateWidget(widget.id, { height: Math.max(0, parseInt(val) || 0) })}
                 className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
               />
             </div>
@@ -780,10 +817,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                  ) : (
                     <div>
                       <label className="block text-xs font-medium text-slate-400 mb-1">Button Text</label>
-                      <input 
+                      <SmartInput 
                         type="text" 
                         value={widget.text || ''}
-                        onChange={(e) => onUpdateWidget(widget.id, { text: e.target.value })}
+                        onCommit={(val) => onUpdateWidget(widget.id, { text: val })}
                         className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                       />
                     </div>
@@ -794,10 +831,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
              {(widget.type === WidgetType.LABEL || widget.type === WidgetType.CHECKBOX || widget.type === WidgetType.TEXT_AREA) && (
               <div>
                 <label className="block text-xs font-medium text-slate-400 mb-1">Text</label>
-                <input 
+                <SmartInput 
                   type="text" 
                   value={widget.text || ''}
-                  onChange={(e) => onUpdateWidget(widget.id, { text: e.target.value })}
+                  onCommit={(val) => onUpdateWidget(widget.id, { text: val })}
                   className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                 />
               </div>
@@ -806,19 +843,19 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
               <div className="grid grid-cols-2 gap-2">
                  <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Value</label>
-                  <input 
+                  <SmartInput 
                     type="number" 
                     value={widget.value || 0}
-                    onChange={(e) => onUpdateWidget(widget.id, { value: parseInt(e.target.value) || 0 })}
+                    onCommit={(val) => onUpdateWidget(widget.id, { value: parseInt(val) || 0 })}
                     className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                   />
                 </div>
                  <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Max</label>
-                  <input 
+                  <SmartInput 
                     type="number" 
                     value={widget.max || 100}
-                    onChange={(e) => onUpdateWidget(widget.id, { max: parseInt(e.target.value) || 100 })}
+                    onCommit={(val) => onUpdateWidget(widget.id, { max: parseInt(val) || 100 })}
                     className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                   />
                 </div>
@@ -831,7 +868,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   <label className="block text-xs font-medium text-slate-400 mb-1">Options (One per line)</label>
                   <textarea 
                      value={widget.options || ''}
-                     onChange={(e) => onUpdateWidget(widget.id, { options: e.target.value })}
+                     onChange={(e) => {}} // Controlled by onBlur below, but need state if using SmartInput logic.
+                     // Custom logic for TextArea since SmartInput is Input based
+                     onBlur={(e) => onUpdateWidget(widget.id, { options: e.target.value })}
+                     // Use defaultValue to allow editing without controlling every keystroke via parent
+                     defaultValue={widget.options || ''}
+                     key={widget.id + '_options'} // Force re-render if widget changes
                      className="w-full h-24 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
                      placeholder="Option 1&#10;Option 2"
                   />
@@ -882,10 +924,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
                 <div>
                    <label className="block text-xs font-medium text-slate-400 mb-1">Path/Filename Reference</label>
-                   <input 
+                   <SmartInput 
                      type="text" 
                      value={widget.src || ''}
-                     onChange={(e) => onUpdateWidget(widget.id, { src: e.target.value })}
+                     onCommit={(val) => onUpdateWidget(widget.id, { src: val })}
                      className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
                      placeholder="path/to/image.png"
                    />
@@ -994,6 +1036,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                            max="10"
                            step="1"
                            value={widget.style.borderWidth || 1}
+                           // Range slider is tricky for "commit on release", keep standard onChange for now or wrap in SmartInput logic if needed
+                           // Standard input range fires onInput. onChange is usually sufficient for drag end in React? No, React standardizes it to onInput.
+                           // Use onMouseUp to commit? For simplicity, leaving as is, or can use onMouseUp logic later.
+                           // Given the user emphasized Drag/Move on canvas, leaving range slider live is better UX for "Style" tweaking.
                            onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderWidth: parseInt(e.target.value) } })}
                            className="flex-1 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                         />
@@ -1005,21 +1051,21 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
              <div className="grid grid-cols-2 gap-3 pt-2">
                <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Corner Radius</label>
-                  <input 
+                  <SmartInput 
                     type="number" 
                     min="0"
                     value={widget.style.borderRadius || 0}
-                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderRadius: Math.max(0, parseInt(e.target.value) || 0) } })}
+                    onCommit={(val) => onUpdateWidget(widget.id, { style: { ...widget.style, borderRadius: Math.max(0, parseInt(val) || 0) } })}
                     className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
                   />
                </div>
                <div>
                   <label className="block text-xs font-medium text-slate-400 mb-1">Font Size</label>
-                  <input 
+                  <SmartInput 
                     type="number" 
                     min="0"
                     value={widget.style.fontSize || 14}
-                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, fontSize: Math.max(0, parseInt(e.target.value) || 0) } })}
+                    onCommit={(val) => onUpdateWidget(widget.id, { style: { ...widget.style, fontSize: Math.max(0, parseInt(val) || 0) } })}
                     className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
                   />
                </div>

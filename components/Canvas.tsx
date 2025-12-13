@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Widget, CanvasSettings, WidgetType, Layer } from '../types';
 import { 
@@ -119,6 +120,11 @@ const Canvas: React.FC<CanvasProps> = ({
     aspectRatio: number;
   } | null>(null);
 
+  // Transient state for smooth rendering without history spam
+  const [transientChanges, setTransientChanges] = useState<Record<string, Partial<Widget>>>({});
+  // Ref needed to access latest changes in event cleanup without stale closures
+  const transientChangesRef = useRef<Record<string, Partial<Widget>>>({});
+
   const isLayerLocked = (layerId: string) => {
     return layers.find(l => l.id === layerId)?.locked ?? false;
   };
@@ -134,8 +140,6 @@ const Canvas: React.FC<CanvasProps> = ({
 
     // Select widget (with Shift logic)
     onSelectWidget(widget.id, e.shiftKey);
-    
-    const canvasRect = ((e.currentTarget as HTMLElement).offsetParent as HTMLElement).getBoundingClientRect();
     
     let effectiveSelectedIds = [...selectedIds];
     const isAlreadySelected = selectedIds.includes(widget.id);
@@ -288,10 +292,10 @@ const Canvas: React.FC<CanvasProps> = ({
         if (newWidth < 10) newWidth = 10;
         if (newHeight < 10) newHeight = 10;
 
-        onUpdateWidgets([{ 
-          id: resizeState.widgetId, 
-          changes: { x: newX, y: newY, width: newWidth, height: newHeight }
-        }]);
+        // UPDATE TRANSIENT STATE ONLY (Don't commit to history yet)
+        const updates = { [resizeState.widgetId]: { x: newX, y: newY, width: newWidth, height: newHeight } };
+        setTransientChanges(prev => ({ ...prev, ...updates }));
+        transientChangesRef.current = { ...transientChangesRef.current, ...updates };
         return;
       }
 
@@ -301,7 +305,7 @@ const Canvas: React.FC<CanvasProps> = ({
         const deltaX = (e.clientX - dragState.startMouse.x) / zoom;
         const deltaY = (e.clientY - dragState.startMouse.y) / zoom;
 
-        const updates: {id: string, changes: Partial<Widget>}[] = [];
+        const updates: Record<string, Partial<Widget>> = {};
 
         Object.entries(dragState.initialPositions).forEach(([id, initPos]) => {
             const pos = initPos as { x: number, y: number };
@@ -312,18 +316,30 @@ const Canvas: React.FC<CanvasProps> = ({
             newX = Math.round(newX / 10) * 10;
             newY = Math.round(newY / 10) * 10;
 
-            updates.push({ id, changes: { x: newX, y: newY }});
+            updates[id] = { x: newX, y: newY };
         });
         
-        if (updates.length > 0) {
-          onUpdateWidgets(updates);
-        }
+        // UPDATE TRANSIENT STATE ONLY
+        setTransientChanges(prev => ({ ...prev, ...updates }));
+        transientChangesRef.current = { ...transientChangesRef.current, ...updates };
       }
     };
 
     const handleGlobalMouseUp = () => {
+      // Commit changes to history on MouseUp
+      const changesToCommit = Object.entries(transientChangesRef.current).map(([id, changes]) => ({
+          id,
+          changes
+      }));
+
+      if (changesToCommit.length > 0) {
+          onUpdateWidgets(changesToCommit);
+      }
+
       setDragState(null);
       setResizeState(null);
+      setTransientChanges({});
+      transientChangesRef.current = {};
     };
 
     if (dragState || resizeState) {
@@ -339,7 +355,11 @@ const Canvas: React.FC<CanvasProps> = ({
 
 
   // Rendering Helpers
-  const renderWidget = (widget: Widget) => {
+  const renderWidget = (originalWidget: Widget) => {
+    // Merge original widget with any transient (in-progress) changes
+    const transient = transientChanges[originalWidget.id];
+    const widget = transient ? { ...originalWidget, ...transient } : originalWidget;
+
     const isSelected = selectedIds.includes(widget.id);
     const isSingleSelection = selectedIds.length === 1 && isSelected;
     const locked = isLayerLocked(widget.layerId);
