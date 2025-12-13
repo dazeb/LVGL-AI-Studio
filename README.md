@@ -22,11 +22,7 @@
 
 ## 🚀 Running Locally
 
-This project uses modern ES Modules directly in the browser via `importmap`. No complex build step (Webpack/Vite) is strictly required for development, but you need a local server to handle module loading correctly (opening `index.html` directly via file system will result in CORS errors).
-
-### Prerequisites
-*   A modern browser (Chrome, Edge, Firefox).
-*   A method to serve static files (Python, Node.js, or VS Code).
+To run the application locally, you need **Node.js** installed.
 
 ### Steps
 
@@ -36,24 +32,24 @@ This project uses modern ES Modules directly in the browser via `importmap`. No 
     cd lvgl-studio-ai
     ```
 
-2.  **Serve the directory**:
-    
-    *   **Using Python (Recommended)**:
-        ```bash
-        # Python 3
-        python3 -m http.server 8000
-        ```
-    
-    *   **Using Node.js**:
-        ```bash
-        npx serve .
-        ```
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
 
-    *   **Using VS Code**:
-        Install the **Live Server** extension, right-click `index.html`, and select "Open with Live Server".
+3.  **Start Development Server**:
+    ```bash
+    npm run dev
+    ```
 
-3.  **Open in Browser**:
-    Navigate to `http://localhost:8000` (or the port provided by your server).
+4.  **Open in Browser**:
+    Navigate to `http://localhost:5173`.
+
+### Environment Variables
+To use Gemini API, create a `.env` file in the root directory:
+```
+API_KEY=your_google_gemini_api_key
+```
 
 ---
 

@@ -59,6 +59,7 @@ export interface Widget {
   width: number;
   height: number;
   text?: string;
+  contentMode?: 'text' | 'icon'; // For Button: toggle text vs icon
   value?: number; // For slider/arc
   checked?: boolean; // For switch/checkbox
   style: WidgetStyle;

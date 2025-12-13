@@ -1,4 +1,5 @@
 
+
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle, Layer, AISettings, Screen, Theme } from './types';
 import { DEFAULT_CANVAS_SETTINGS, DEFAULT_WIDGET_PROPS, PROJECT_THEMES } from './constants';
@@ -7,8 +8,11 @@ import Canvas from './components/Canvas';
 import PropertiesPanel from './components/PropertiesPanel';
 import CodeViewer from './components/CodeViewer';
 import SettingsDialog from './components/SettingsDialog';
+import ConfirmDialog from './components/ConfirmDialog';
+import SampleCatalogue from './components/SampleCatalogue';
+import { SampleProject } from './data/samples';
 import { generateLVGLCode } from './services/aiService';
-import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, FolderOpen } from 'lucide-react';
 
 const App: React.FC = () => {
   // --- Global App State ---
@@ -37,6 +41,7 @@ const App: React.FC = () => {
   // UI State
   const [showCode, setShowCode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSamples, setShowSamples] = useState(false);
   const [code, setCode] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('c');
@@ -45,6 +50,19 @@ const App: React.FC = () => {
     apiKey: '',
     baseUrl: '',
     model: 'gemini-2.5-flash'
+  });
+
+  // Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
   });
 
   // Presets
@@ -71,6 +89,36 @@ const App: React.FC = () => {
      }
   }, [activeScreenId, currentScreen]);
 
+  // --- Sample Loading ---
+  const handleLoadSample = (sample: SampleProject) => {
+    // Confirm overwrite if current project is not empty (simple check: more than 0 widgets)
+    const hasWork = screens.some(s => s.widgets.length > 0);
+    
+    const loadLogic = () => {
+       // Deep copy to avoid reference issues
+       const screensCopy = JSON.parse(JSON.stringify(sample.screens));
+       const settingsCopy = JSON.parse(JSON.stringify(sample.settings));
+       
+       setScreens(screensCopy);
+       setCanvasSettings(settingsCopy);
+       setActiveScreenId(screensCopy[0].id);
+       setActiveLayerId(screensCopy[0].layers[0].id);
+       setSelectedIds([]);
+       setShowSamples(false);
+    };
+
+    if (hasWork) {
+       setConfirmDialog({
+          isOpen: true,
+          title: 'Overwrite Project?',
+          message: 'Loading this template will discard your current project. Are you sure?',
+          onConfirm: loadLogic
+       });
+    } else {
+       loadLogic();
+    }
+  };
+
   // --- Screen Management ---
 
   const handleAddScreen = () => {
@@ -88,7 +136,7 @@ const App: React.FC = () => {
      setSelectedIds([]);
   };
 
-  const handleDeleteScreen = (id: string) => {
+  const performDeleteScreen = (id: string) => {
      if (screens.length <= 1) return;
      const remaining = screens.filter(s => s.id !== id);
      setScreens(remaining);
@@ -96,6 +144,15 @@ const App: React.FC = () => {
         setActiveScreenId(remaining[0].id);
         setActiveLayerId(remaining[0].layers[0].id);
      }
+  };
+
+  const handleDeleteScreen = (id: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Screen',
+      message: 'Are you sure you want to delete this screen? All widgets inside it will be permanently lost.',
+      onConfirm: () => performDeleteScreen(id)
+    });
   };
 
   const handleUpdateScreen = (updates: Partial<Screen>) => {
@@ -254,7 +311,7 @@ const App: React.FC = () => {
     }));
   }, [activeScreenId]);
 
-  const handleDeleteWidgets = (ids: string[]) => {
+  const performDeleteWidgets = (ids: string[]) => {
     setScreens(prev => prev.map(s => {
        if (s.id === activeScreenId) {
           return { ...s, widgets: s.widgets.filter(w => !ids.includes(w.id)) };
@@ -263,6 +320,16 @@ const App: React.FC = () => {
     }));
     setSelectedIds([]);
   };
+
+  const handleDeleteWidgets = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Widgets',
+      message: `Are you sure you want to delete ${ids.length} widget${ids.length > 1 ? 's' : ''}?`,
+      onConfirm: () => performDeleteWidgets(ids)
+    });
+  }, [activeScreenId]); // Add dependency if performDeleteWidgets depends on it (it doesn't directly but uses setState callback, but safe to include or useCallback properly)
 
   const handleGroup = () => {
     if (selectedIds.length < 2) return;
@@ -378,6 +445,11 @@ const App: React.FC = () => {
                     newStyle.borderColor = theme.colors.border;
                     newStyle.borderRadius = theme.borderRadius;
                     break;
+                 case WidgetType.CONTAINER:
+                    newStyle.backgroundColor = theme.colors.surface;
+                    newStyle.borderColor = theme.colors.border;
+                    newStyle.borderRadius = theme.borderRadius;
+                    break;
                  case WidgetType.TEXT_AREA:
                     newStyle.backgroundColor = theme.colors.surface;
                     newStyle.textColor = theme.colors.text;
@@ -468,6 +540,11 @@ const App: React.FC = () => {
       const activeTag = document.activeElement?.tagName.toLowerCase();
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
 
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+          handleDeleteWidgets(selectedIds);
+          return;
+      }
+
       let dx = 0;
       let dy = 0;
       const step = e.shiftKey ? 10 : 1; 
@@ -495,7 +572,7 @@ const App: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, currentScreen, handleUpdateWidgets]);
+  }, [selectedIds, currentScreen, handleUpdateWidgets, handleDeleteWidgets]);
 
 
   return (
@@ -543,6 +620,14 @@ const App: React.FC = () => {
           </div>
           
           <div className="h-6 w-px bg-slate-700 mx-2 hidden md:block"></div>
+
+          <button 
+            onClick={() => setShowSamples(true)}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-slate-700"
+            title="Browse Templates"
+          >
+            <FolderOpen size={16} className="text-blue-400" /> Templates
+          </button>
 
           <div className="flex items-center gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
              <select 
@@ -646,6 +731,22 @@ const App: React.FC = () => {
         onClose={() => setShowSettings(false)}
         settings={aiSettings}
         onSave={setAiSettings}
+      />
+
+      {/* Sample Catalogue Modal */}
+      <SampleCatalogue 
+        isOpen={showSamples}
+        onClose={() => setShowSamples(false)}
+        onSelectSample={handleLoadSample}
+      />
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog 
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        onConfirm={confirmDialog.onConfirm}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
       />
     </div>
   );

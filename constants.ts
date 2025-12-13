@@ -147,6 +147,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     width: 120,
     height: 40,
     text: 'Button',
+    contentMode: 'text',
+    symbol: 'LV_SYMBOL_HOME',
     events: [],
     style: { 
         backgroundColor: '#2196F3', 

@@ -1,0 +1,448 @@
+
+import React from 'react';
+import { Screen, CanvasSettings, WidgetType, Layer } from '../types';
+import { PROJECT_THEMES } from '../constants';
+import { Thermometer, Music, Gauge, Activity, Wifi } from 'lucide-react';
+
+export interface SampleProject {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  color: string;
+  settings: CanvasSettings;
+  screens: Screen[];
+}
+
+const createLayer = (id: string) => ({ id, name: 'Main Layer', visible: true, locked: false });
+
+export const SAMPLE_PROJECTS: SampleProject[] = [
+  {
+    id: 'thermostat',
+    name: 'Smart Thermostat',
+    description: 'A modern, round interface for HVAC control with temperature arc and mode switching.',
+    icon: <Thermometer size={24} />,
+    color: 'from-orange-500 to-red-500',
+    settings: {
+      width: 240,
+      height: 240,
+      defaultBackgroundColor: '#1a1a1a',
+      projectName: 'Thermostat_V1',
+      theme: 'dark',
+      targetDevice: 'm5_dial'
+    },
+    screens: [
+      {
+        id: 'scr_therm_1',
+        name: 'Main Control',
+        backgroundColor: '#1a1a1a',
+        layers: [createLayer('l_therm_1')],
+        widgets: [
+          {
+            id: 'w_arc_temp',
+            layerId: 'l_therm_1',
+            type: WidgetType.ARC,
+            name: 'TempArc',
+            x: 20, y: 20, width: 200, height: 200,
+            value: 72, min: 50, max: 90,
+            events: [],
+            style: { borderColor: '#f97316', backgroundColor: '#333', borderWidth: 15, borderRadius: 0 }
+          },
+          {
+            id: 'w_lbl_val',
+            layerId: 'l_therm_1',
+            type: WidgetType.LABEL,
+            name: 'TempLabel',
+            x: 85, y: 90, width: 70, height: 40,
+            text: '72°',
+            events: [],
+            style: { textColor: '#ffffff', fontSize: 32, backgroundColor: 'transparent' }
+          },
+          {
+            id: 'w_btn_cool',
+            layerId: 'l_therm_1',
+            type: WidgetType.BUTTON,
+            name: 'BtnCool',
+            x: 40, y: 160, width: 40, height: 40,
+            text: '',
+            contentMode: 'icon',
+            symbol: 'LV_SYMBOL_HOME', // Representing Cool
+            events: [],
+            style: { backgroundColor: '#3b82f6', borderRadius: 20, textColor: '#fff' }
+          },
+          {
+            id: 'w_btn_heat',
+            layerId: 'l_therm_1',
+            type: WidgetType.BUTTON,
+            name: 'BtnHeat',
+            x: 160, y: 160, width: 40, height: 40,
+            text: '',
+            contentMode: 'icon',
+            symbol: 'LV_SYMBOL_CHARGE', // Representing Heat
+            events: [],
+            style: { backgroundColor: '#ef4444', borderRadius: 20, textColor: '#fff' }
+          },
+          {
+             id: 'w_lbl_status',
+             layerId: 'l_therm_1',
+             type: WidgetType.LABEL,
+             name: 'Status',
+             x: 90, y: 130, width: 60, height: 20,
+             text: 'HEATING',
+             events: [],
+             style: { textColor: '#f97316', fontSize: 12, backgroundColor: 'transparent' }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'audio_player',
+    name: 'HiFi Audio Player',
+    description: 'Music playback controls with album art placeholder and progress slider.',
+    icon: <Music size={24} />,
+    color: 'from-purple-500 to-indigo-500',
+    settings: {
+      width: 320,
+      height: 240,
+      defaultBackgroundColor: '#0f172a',
+      projectName: 'AudioPlayer',
+      theme: 'midnight',
+      targetDevice: 'm5_core'
+    },
+    screens: [
+      {
+        id: 'scr_audio_1',
+        name: 'Now Playing',
+        backgroundColor: '#0f172a',
+        layers: [createLayer('l_audio_1')],
+        widgets: [
+          {
+            id: 'w_cover_bg',
+            layerId: 'l_audio_1',
+            type: WidgetType.CONTAINER,
+            name: 'CoverArt',
+            x: 110, y: 20, width: 100, height: 100,
+            events: [],
+            style: { backgroundColor: '#334155', borderRadius: 12, borderColor: '#475569', borderWidth: 1 }
+          },
+          {
+             id: 'w_icon_note',
+             layerId: 'l_audio_1',
+             type: WidgetType.ICON,
+             name: 'NoteIcon',
+             x: 145, y: 55, width: 30, height: 30,
+             symbol: 'LV_SYMBOL_SHUFFLE', // Abstract rep
+             events: [],
+             style: { textColor: '#64748b', fontSize: 24, backgroundColor: 'transparent' }
+          },
+          {
+            id: 'w_lbl_song',
+            layerId: 'l_audio_1',
+            type: WidgetType.LABEL,
+            name: 'SongTitle',
+            x: 60, y: 130, width: 200, height: 24,
+            text: 'Midnight Synthwave',
+            events: [],
+            style: { textColor: '#e2e8f0', fontSize: 16, backgroundColor: 'transparent' }
+          },
+          {
+            id: 'w_lbl_artist',
+            layerId: 'l_audio_1',
+            type: WidgetType.LABEL,
+            name: 'Artist',
+            x: 60, y: 150, width: 200, height: 20,
+            text: 'Neon Dreams',
+            events: [],
+            style: { textColor: '#94a3b8', fontSize: 12, backgroundColor: 'transparent' }
+          },
+          {
+            id: 'w_slider_prog',
+            layerId: 'l_audio_1',
+            type: WidgetType.SLIDER,
+            name: 'Progress',
+            x: 40, y: 180, width: 240, height: 8,
+            value: 45, max: 100,
+            events: [],
+            style: { backgroundColor: '#1e293b', borderColor: '#6366f1', borderRadius: 4 }
+          },
+          {
+            id: 'w_btn_prev',
+            layerId: 'l_audio_1',
+            type: WidgetType.BUTTON,
+            name: 'Prev',
+            x: 80, y: 200, width: 32, height: 32,
+            contentMode: 'icon',
+            symbol: 'LV_SYMBOL_PREV',
+            events: [],
+            style: { backgroundColor: 'transparent', textColor: '#e2e8f0', borderRadius: 99 }
+          },
+          {
+            id: 'w_btn_play',
+            layerId: 'l_audio_1',
+            type: WidgetType.BUTTON,
+            name: 'Play',
+            x: 144, y: 196, width: 40, height: 40,
+            contentMode: 'icon',
+            symbol: 'LV_SYMBOL_PLAY',
+            events: [],
+            style: { backgroundColor: '#6366f1', textColor: '#fff', borderRadius: 99 }
+          },
+          {
+            id: 'w_btn_next',
+            layerId: 'l_audio_1',
+            type: WidgetType.BUTTON,
+            name: 'Next',
+            x: 208, y: 200, width: 32, height: 32,
+            contentMode: 'icon',
+            symbol: 'LV_SYMBOL_NEXT',
+            events: [],
+            style: { backgroundColor: 'transparent', textColor: '#e2e8f0', borderRadius: 99 }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ebike_dash',
+    name: 'E-Bike Dashboard',
+    description: 'Digital instrument cluster showing speed, battery, and trip info.',
+    icon: <Gauge size={24} />,
+    color: 'from-blue-500 to-cyan-500',
+    settings: {
+      width: 480,
+      height: 320,
+      defaultBackgroundColor: '#000000',
+      projectName: 'EBike_Cluster',
+      theme: 'cyber',
+      targetDevice: 'wave_35_ips'
+    },
+    screens: [
+      {
+        id: 'scr_dash_1',
+        name: 'Dashboard',
+        backgroundColor: '#000000',
+        layers: [createLayer('l_dash_1')],
+        widgets: [
+          // Speedometer
+          {
+            id: 'w_arc_speed',
+            layerId: 'l_dash_1',
+            type: WidgetType.ARC,
+            name: 'SpeedArc',
+            x: 140, y: 60, width: 200, height: 200,
+            value: 65, min: 0, max: 100,
+            events: [],
+            style: { borderColor: '#22d3ee', backgroundColor: '#111', borderWidth: 10, borderRadius: 0 }
+          },
+          {
+            id: 'w_lbl_speed',
+            layerId: 'l_dash_1',
+            type: WidgetType.LABEL,
+            name: 'SpeedVal',
+            x: 190, y: 120, width: 100, height: 50,
+            text: '42',
+            events: [],
+            style: { textColor: '#ffffff', fontSize: 48, backgroundColor: 'transparent' }
+          },
+          {
+            id: 'w_lbl_unit',
+            layerId: 'l_dash_1',
+            type: WidgetType.LABEL,
+            name: 'Unit',
+            x: 220, y: 170, width: 40, height: 20,
+            text: 'KM/H',
+            events: [],
+            style: { textColor: '#22d3ee', fontSize: 14, backgroundColor: 'transparent' }
+          },
+          // Sidebar Left (Battery)
+          {
+            id: 'w_bar_batt',
+            layerId: 'l_dash_1',
+            type: WidgetType.SLIDER, // Visualizing as bar
+            name: 'Battery',
+            x: 40, y: 80, width: 20, height: 160,
+            value: 80, max: 100,
+            events: [],
+            style: { backgroundColor: '#111', borderColor: '#22c55e', borderRadius: 4 }
+          },
+          {
+             id: 'w_icon_batt',
+             layerId: 'l_dash_1',
+             type: WidgetType.ICON,
+             name: 'IconBatt',
+             x: 35, y: 250, width: 30, height: 30,
+             symbol: 'LV_SYMBOL_BATTERY_3',
+             events: [],
+             style: { textColor: '#22c55e', fontSize: 20, backgroundColor: 'transparent' }
+          },
+          // Sidebar Right (Mode)
+          {
+             id: 'w_btn_mode',
+             layerId: 'l_dash_1',
+             type: WidgetType.BUTTON,
+             name: 'Mode',
+             x: 380, y: 100, width: 60, height: 40,
+             text: 'ECO',
+             events: [],
+             style: { backgroundColor: '#22c55e', textColor: '#000', borderRadius: 4 }
+          },
+          {
+             id: 'w_btn_sport',
+             layerId: 'l_dash_1',
+             type: WidgetType.BUTTON,
+             name: 'ModeSport',
+             x: 380, y: 150, width: 60, height: 40,
+             text: 'SPORT',
+             events: [],
+             style: { backgroundColor: '#333', textColor: '#666', borderRadius: 4 }
+          }
+        ]
+      }
+    ]
+  },
+  {
+      id: 'wifi_settings',
+      name: 'Settings Menu',
+      description: 'Nested navigation example with toggle switches and list items.',
+      icon: <Wifi size={24} />,
+      color: 'from-slate-500 to-slate-700',
+      settings: {
+        width: 320,
+        height: 240,
+        defaultBackgroundColor: '#f0f2f5',
+        projectName: 'Settings_Menu',
+        theme: 'light',
+        targetDevice: 'm5_core'
+      },
+      screens: [
+        {
+          id: 'scr_set_1',
+          name: 'Main Menu',
+          backgroundColor: '#f0f2f5',
+          layers: [createLayer('l_set_1')],
+          widgets: [
+             {
+                id: 'w_hdr_1',
+                layerId: 'l_set_1',
+                type: WidgetType.CONTAINER,
+                name: 'Header',
+                x: 0, y: 0, width: 320, height: 40,
+                events: [],
+                style: { backgroundColor: '#ffffff', borderRadius: 0, borderWidth: 0 }
+             },
+             {
+                id: 'w_lbl_title',
+                layerId: 'l_set_1',
+                type: WidgetType.LABEL,
+                name: 'Title',
+                x: 10, y: 10, width: 100, height: 20,
+                text: 'Settings',
+                events: [],
+                style: { textColor: '#1f2937', fontSize: 16, backgroundColor: 'transparent' }
+             },
+             // List Item 1
+             {
+                id: 'w_cont_wifi',
+                layerId: 'l_set_1',
+                type: WidgetType.BUTTON,
+                name: 'BtnWifi',
+                x: 10, y: 50, width: 300, height: 50,
+                text: '       Wi-Fi Networks',
+                events: [{ id: 'evt_nav_wifi', trigger: 'CLICKED', action: 'NAVIGATE', targetScreenId: 'scr_set_2' }],
+                style: { backgroundColor: '#ffffff', borderRadius: 8, textColor: '#1f2937', borderWidth: 1, borderColor: '#e5e7eb' }
+             },
+             {
+                id: 'w_icon_wifi',
+                layerId: 'l_set_1',
+                type: WidgetType.ICON,
+                name: 'IconWifi',
+                x: 25, y: 65, width: 20, height: 20,
+                symbol: 'LV_SYMBOL_WIFI',
+                events: [],
+                style: { textColor: '#2196F3', fontSize: 18, backgroundColor: 'transparent' }
+             },
+             // List Item 2
+             {
+                id: 'w_cont_bt',
+                layerId: 'l_set_1',
+                type: WidgetType.BUTTON,
+                name: 'BtnBT',
+                x: 10, y: 110, width: 300, height: 50,
+                text: '       Bluetooth',
+                events: [],
+                style: { backgroundColor: '#ffffff', borderRadius: 8, textColor: '#1f2937', borderWidth: 1, borderColor: '#e5e7eb' }
+             },
+             {
+                id: 'w_icon_bt',
+                layerId: 'l_set_1',
+                type: WidgetType.ICON,
+                name: 'IconBT',
+                x: 25, y: 125, width: 20, height: 20,
+                symbol: 'LV_SYMBOL_BLUETOOTH',
+                events: [],
+                style: { textColor: '#2196F3', fontSize: 18, backgroundColor: 'transparent' }
+             }
+          ]
+        },
+        {
+          id: 'scr_set_2',
+          name: 'Wi-Fi Networks',
+          backgroundColor: '#f0f2f5',
+          layers: [createLayer('l_set_2')],
+          widgets: [
+             {
+                id: 'w_hdr_2',
+                layerId: 'l_set_2',
+                type: WidgetType.CONTAINER,
+                name: 'Header2',
+                x: 0, y: 0, width: 320, height: 40,
+                events: [],
+                style: { backgroundColor: '#ffffff', borderRadius: 0, borderWidth: 0 }
+             },
+             {
+                id: 'w_btn_back',
+                layerId: 'l_set_2',
+                type: WidgetType.BUTTON,
+                name: 'Back',
+                x: 5, y: 5, width: 40, height: 30,
+                contentMode: 'icon',
+                symbol: 'LV_SYMBOL_PREV',
+                events: [{ id: 'evt_back', trigger: 'CLICKED', action: 'NAVIGATE', targetScreenId: 'scr_set_1' }],
+                style: { backgroundColor: 'transparent', textColor: '#1f2937' }
+             },
+             {
+                id: 'w_lbl_title2',
+                layerId: 'l_set_2',
+                type: WidgetType.LABEL,
+                name: 'Title2',
+                x: 50, y: 10, width: 100, height: 20,
+                text: 'Wi-Fi',
+                events: [],
+                style: { textColor: '#1f2937', fontSize: 16, backgroundColor: 'transparent' }
+             },
+             {
+                id: 'w_sw_wifi',
+                layerId: 'l_set_2',
+                type: WidgetType.SWITCH,
+                name: 'Toggle',
+                x: 250, y: 5, width: 50, height: 25,
+                checked: true,
+                events: [],
+                style: { backgroundColor: '#e5e7eb', borderColor: '#22c55e', borderRadius: 99 }
+             },
+             {
+                id: 'w_lbl_scan',
+                layerId: 'l_set_2',
+                type: WidgetType.LABEL,
+                name: 'Scan',
+                x: 20, y: 60, width: 200, height: 20,
+                text: 'Searching for networks...',
+                events: [],
+                style: { textColor: '#6b7280', fontSize: 12, backgroundColor: 'transparent' }
+             }
+          ]
+        }
+      ]
+  }
+];

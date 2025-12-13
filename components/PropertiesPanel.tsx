@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer, DevicePreset } from '../types';
 import { PROJECT_THEMES, DEVICE_PRESETS } from '../constants';
@@ -676,7 +677,54 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         <section>
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Content</h3>
           <div className="space-y-3">
-             {(widget.type === WidgetType.BUTTON || widget.type === WidgetType.LABEL || widget.type === WidgetType.CHECKBOX || widget.type === WidgetType.TEXT_AREA) && (
+             {(widget.type === WidgetType.BUTTON) && (
+               <>
+                 <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Content Type</label>
+                    <div className="flex bg-slate-800 rounded p-1 border border-slate-600">
+                       <button 
+                         onClick={() => onUpdateWidget(widget.id, { contentMode: 'text' })}
+                         className={`flex-1 py-1 text-xs rounded transition-colors ${widget.contentMode !== 'icon' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                       >
+                         Text
+                       </button>
+                       <button 
+                         onClick={() => onUpdateWidget(widget.id, { contentMode: 'icon' })}
+                         className={`flex-1 py-1 text-xs rounded transition-colors ${widget.contentMode === 'icon' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                       >
+                         Icon
+                       </button>
+                    </div>
+                 </div>
+
+                 {widget.contentMode === 'icon' ? (
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Icon Symbol</label>
+                      <select 
+                         value={widget.symbol || 'LV_SYMBOL_HOME'}
+                         onChange={(e) => onUpdateWidget(widget.id, { symbol: e.target.value })}
+                         className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:outline-none"
+                      >
+                         {LVGL_SYMBOLS_LIST.map(sym => (
+                            <option key={sym} value={sym}>{sym.replace('LV_SYMBOL_', '')}</option>
+                         ))}
+                      </select>
+                    </div>
+                 ) : (
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">Button Text</label>
+                      <input 
+                        type="text" 
+                        value={widget.text || ''}
+                        onChange={(e) => onUpdateWidget(widget.id, { text: e.target.value })}
+                        className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
+                      />
+                    </div>
+                 )}
+               </>
+            )}
+
+             {(widget.type === WidgetType.LABEL || widget.type === WidgetType.CHECKBOX || widget.type === WidgetType.TEXT_AREA) && (
               <div>
                 <label className="block text-xs font-medium text-slate-400 mb-1">Text</label>
                 <input 

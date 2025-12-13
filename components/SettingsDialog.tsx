@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Save, RotateCcw, Shield, Server, Cpu, Key, ExternalLink, Zap } from 'lucide-react';
 import { AISettings, AIProvider } from '../types';
@@ -113,20 +112,36 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
            </div>
 
            {/* API Key */}
-           <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
-                 <Key size={14} /> API Key
-              </label>
-              <input 
-                 type="password"
-                 value={localSettings.apiKey}
-                 placeholder={localSettings.provider === 'gemini' ? "Leave empty to use env/account key" : "Enter API Key..."}
-                 onChange={(e) => handleChange('apiKey', e.target.value)}
-                 className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-slate-600"
-              />
-              
-              {/* Google Auth Button */}
-              {localSettings.provider === 'gemini' && (
+           {localSettings.provider !== 'gemini' && (
+             <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
+                   <Key size={14} /> API Key
+                </label>
+                <input 
+                   type="password"
+                   value={localSettings.apiKey}
+                   placeholder="Enter API Key..."
+                   onChange={(e) => handleChange('apiKey', e.target.value)}
+                   className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 placeholder-slate-600"
+                />
+                
+                <p className="text-[10px] text-slate-500 mt-1">
+                   {localSettings.provider === 'anthropic' 
+                      ? "Required for Anthropic Claude models."
+                      : localSettings.provider === 'deepseek'
+                      ? "Required. Uses DeepSeek's OpenAI-compatible API."
+                      : "Required for OpenAI. Optional for some local endpoints."}
+                </p>
+             </div>
+           )}
+
+           {localSettings.provider === 'gemini' && (
+               <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
+                     <Key size={14} /> API Key
+                  </label>
+                  
+                  {/* Google Auth Button */}
                   <div className="mt-2">
                     <button 
                         onClick={handleGoogleAuth}
@@ -135,18 +150,12 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         <Zap size={12} className="fill-current" /> Connect Google Account (Pro Tokens)
                     </button>
                   </div>
-              )}
-              
-              <p className="text-[10px] text-slate-500 mt-1">
-                 {localSettings.provider === 'gemini' 
-                    ? "Leave empty to use the connected account or environment variable."
-                    : localSettings.provider === 'anthropic' 
-                    ? "Required for Anthropic Claude models."
-                    : localSettings.provider === 'deepseek'
-                    ? "Required. Uses DeepSeek's OpenAI-compatible API."
-                    : "Required for OpenAI. Optional for some local endpoints."}
-              </p>
-           </div>
+                  
+                  <p className="text-[10px] text-slate-500 mt-1">
+                     API Key is handled automatically via Google Account or Environment Variables.
+                  </p>
+               </div>
+           )}
 
            {/* Base URL (Conditional) */}
            {localSettings.provider !== 'gemini' && (

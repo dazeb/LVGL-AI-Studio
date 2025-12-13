@@ -91,15 +91,16 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
         - Assume the image is a file.
         - In C: Use \`lv_img_set_src(img_obj, "S:path/to/" + src_filename)\` or refer to a declared image descriptor pointer if common (e.g. \`&ui_img_filename_png\`). Prefer the declared pointer variable style \`&ui_img_FILENAME_png\` for standard converted images.
         - In MicroPython: Use \`img.set_src("path/to/" + src_filename)\`.
+      - For Buttons (lv_btn):
+        - If \`contentMode\` is 'icon', create a child Label object on the button. Set the label's text to the \`symbol\` property (e.g. \`LV_SYMBOL_PLAY\`) and center it.
+        - If \`contentMode\` is 'text' (default), create a child Label object and set its text to the \`text\` property.
     `;
 };
 
 // -- Gemini Implementation --
 const generateGemini = async (prompt: string, settings: AISettings): Promise<string> => {
-    const key = settings.apiKey || process.env.API_KEY;
-    if (!key) throw new Error("Missing API Key for Gemini. Please set it in Settings or Environment.");
-
-    const ai = new GoogleGenAI({ apiKey: key });
+    // Guidelines: Use process.env.API_KEY directly.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
         model: settings.model || 'gemini-2.5-flash',
         contents: prompt,

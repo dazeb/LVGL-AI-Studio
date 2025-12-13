@@ -1,4 +1,5 @@
 
+
 import React, { useRef, useState, useEffect } from 'react';
 import { Widget, CanvasSettings, WidgetType, Layer } from '../types';
 import { 
@@ -381,11 +382,23 @@ const Canvas: React.FC<CanvasProps> = ({
     const renderInner = () => {
         switch (widget.type) {
           case WidgetType.BUTTON:
+            const isIconMode = widget.contentMode === 'icon';
             return (
               <div className="w-full h-full flex items-center justify-center shadow-md relative overflow-hidden group">
                  {/* Gradient sheen effect simulation */}
                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none"></div>
-                 <span className="relative font-medium">{widget.text}</span>
+                 {isIconMode ? (
+                     // Render Icon
+                     (() => {
+                        const IconComp = LVGL_SYMBOLS[widget.symbol || 'LV_SYMBOL_HOME'] || <Home />;
+                        // Scale icon relative to button height/width but keep it contained
+                        const iconSize = Math.min(widget.width, widget.height) * 0.6;
+                        return React.cloneElement(IconComp as React.ReactElement, { size: iconSize });
+                     })()
+                 ) : (
+                     // Render Text
+                     <span className="relative font-medium">{widget.text}</span>
+                 )}
               </div>
             );
           
