@@ -326,6 +326,15 @@ const App: React.FC = () => {
      setSelectedIds(prev => prev.filter(pid => !layerWidgets.includes(pid)));
   };
 
+  const handleRenameLayer = (layerId: string, newName: string) => {
+     setScreens(prev => prev.map(s => {
+        if (s.id === activeScreenId) {
+           return { ...s, layers: s.layers.map(l => l.id === layerId ? { ...l, name: newName } : l) };
+        }
+        return s;
+     }));
+  };
+
   const handleReorderLayers = (draggedId: string, targetId: string) => {
      setScreens(prev => prev.map(s => {
         if (s.id === activeScreenId) {
@@ -839,6 +848,7 @@ const App: React.FC = () => {
           onDeleteLayer={handleDeleteLayer}
           onToggleLayerVisible={handleToggleLayerVisible}
           onToggleLayerLock={handleToggleLayerLock}
+          onRenameLayer={handleRenameLayer}
           onReorderLayers={handleReorderLayers}
         />
       </main>

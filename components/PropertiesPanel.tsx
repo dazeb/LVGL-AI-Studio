@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer, DevicePreset } from '../types';
 import { PROJECT_THEMES, DEVICE_PRESETS } from '../constants';
@@ -57,6 +58,7 @@ interface PropertiesPanelProps {
   onDeleteLayer: (id: string) => void;
   onToggleLayerVisible: (id: string) => void;
   onToggleLayerLock: (id: string) => void;
+  onRenameLayer: (id: string, name: string) => void;
   onReorderLayers: (draggedId: string, targetId: string) => void;
 }
 
@@ -95,9 +97,25 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onDeleteLayer,
   onToggleLayerVisible,
   onToggleLayerLock,
+  onRenameLayer,
   onReorderLayers
 }) => {
   const [isPresetDropdownOpen, setIsPresetDropdownOpen] = useState(false);
+  const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
+  const [tempLayerName, setTempLayerName] = useState('');
+
+  // Helper functions
+  const handleStartRename = (id: string, name: string) => {
+    setEditingLayerId(id);
+    setTempLayerName(name);
+  };
+
+  const handleFinishRename = () => {
+    if (editingLayerId && tempLayerName.trim()) {
+        onRenameLayer(editingLayerId, tempLayerName.trim());
+    }
+    setEditingLayerId(null);
+  };
   
   // Case 1: No selection -> Screen Settings
   if (selectedWidgets.length === 0) {
@@ -210,9 +228,32 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                      </div>
                      
                      <div className="flex-1 min-w-0">
-                        <div className={`text-xs font-medium truncate ${activeLayerId === layer.id ? 'text-white' : 'text-slate-300'}`}>
-                           {layer.name}
-                        </div>
+                        {editingLayerId === layer.id ? (
+                             <input 
+                                type="text"
+                                value={tempLayerName}
+                                onChange={(e) => setTempLayerName(e.target.value)}
+                                onBlur={handleFinishRename}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleFinishRename();
+                                    if (e.key === 'Escape') setEditingLayerId(null);
+                                }}
+                                autoFocus
+                                className="w-full bg-slate-900 border border-blue-500 rounded px-1 py-0.5 text-xs text-white focus:outline-none"
+                                onClick={(e) => e.stopPropagation()}
+                             />
+                        ) : (
+                            <div 
+                               className={`text-xs font-medium truncate ${activeLayerId === layer.id ? 'text-white' : 'text-slate-300'}`}
+                               onDoubleClick={(e) => {
+                                   e.stopPropagation();
+                                   handleStartRename(layer.id, layer.name);
+                               }}
+                               title="Double-click to rename"
+                            >
+                               {layer.name}
+                            </div>
+                        )}
                      </div>
                      
                      <div className="flex items-center gap-1">
