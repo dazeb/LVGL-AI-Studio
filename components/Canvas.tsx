@@ -50,6 +50,7 @@ interface CanvasProps {
   onSelectWidget: (id: string | string[] | null, isShift: boolean) => void;
   onUpdateWidgets: (updates: {id: string, changes: Partial<Widget>}[]) => void;
   onAddWidget: (type: WidgetType, x?: number, y?: number) => void;
+  onContextMenu: (e: React.MouseEvent, widgetId: string) => void;
 }
 
 interface Guideline {
@@ -116,7 +117,8 @@ const Canvas: React.FC<CanvasProps> = ({
   selectedIds, 
   onSelectWidget, 
   onUpdateWidgets, 
-  onAddWidget
+  onAddWidget,
+  onContextMenu
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
   
@@ -1014,6 +1016,10 @@ const Canvas: React.FC<CanvasProps> = ({
         style={containerStyle}
         className={`${selectionRing}`}
         onMouseDown={(e) => handleMouseDown(e, widget)}
+        onContextMenu={(e) => {
+            e.preventDefault();
+            onContextMenu(e, widget.id);
+        }}
       >
         <div style={innerStyle}>
            {renderInner()}

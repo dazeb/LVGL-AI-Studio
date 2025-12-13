@@ -11,6 +11,7 @@ import ConfirmDialog from './components/ConfirmDialog';
 import SampleCatalogue from './components/SampleCatalogue';
 import HistoryMenu from './components/HistoryMenu';
 import HelpDialog from './components/HelpDialog';
+import ContextMenu from './components/ContextMenu';
 import { useHistory } from './hooks/useHistory';
 import { SampleProject } from './data/samples';
 import { generateLVGLCode } from './services/aiService';
@@ -105,7 +106,8 @@ const App: React.FC = () => {
   const [code, setCode] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('c');
-  
+  const [contextMenu, setContextMenu] = useState<{ isOpen: boolean; x: number; y: number } | null>(null);
+
   const [aiSettings, setAiSettings] = useState<AISettings>(() => {
      return storedData?.aiSettings || {
       provider: 'gemini',
@@ -621,6 +623,19 @@ const App: React.FC = () => {
 
   const handleDeleteWidgets = useCallback((ids: string[]) => {
     if (ids.length === 0) return;
+    
+    // Check if we are in a confirmation dialog context or just direct call (like keyboard)
+    // For direct keyboard deletes, we skip confirmation for single item for better flow, 
+    // or we can keep it strict. Let's rely on caller to show dialog if needed.
+    // The PropertiesPanel calls this directly, and there's a delete button there.
+    
+    // We'll wrap this logic in a function that does the state update, 
+    // but the UI trigger (button click) handles the confirmation dialog.
+    // WAIT: handleDeleteWidgets is passed to PropertiesPanel, which binds it to a trash icon.
+    // Let's make this function perform the delete immediately, and move confirmation to the caller UI if needed.
+    // ACTUALLY: The existing code in PropertiesPanel had onDeleteWidgets call directly.
+    // Let's keep the confirm dialog check HERE to be safe for all entry points (keyboard, button, menu).
+    
     setConfirmDialog({
       isOpen: true,
       title: 'Delete Widgets',
@@ -639,6 +654,30 @@ const App: React.FC = () => {
       }
     });
   }, [updateProject]);
+
+  const handleDuplicateWidgets = () => {
+    if (selectedWidgets.length === 0) return;
+    
+    const newWidgets: Widget[] = selectedWidgets.map((w, i) => ({
+        ...w,
+        id: `widget_${Date.now()}_${i}`,
+        name: `${w.name}_copy`,
+        x: w.x + 20,
+        y: w.y + 20
+    }));
+    
+    updateProject('Duplicate Widgets', prev => ({
+        ...prev,
+        screens: prev.screens.map(s => {
+            if (s.id === prev.activeScreenId) {
+                return { ...s, widgets: [...s.widgets, ...newWidgets] };
+            }
+            return s;
+        })
+    }));
+    
+    setSelectedIds(newWidgets.map(w => w.id));
+  };
 
   const handleGroup = () => {
     if (selectedIds.length < 2) return;
@@ -686,6 +725,14 @@ const App: React.FC = () => {
             return s;
         })
     }));
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, widgetId: string) => {
+    e.preventDefault();
+    if (!selectedIds.includes(widgetId)) {
+        handleSelectWidget(widgetId, false);
+    }
+    setContextMenu({ isOpen: true, x: e.clientX, y: e.clientY });
   };
 
   // --- Theme & Settings ---
@@ -910,6 +957,7 @@ const App: React.FC = () => {
           onSelectWidget={handleSelectWidget}
           onUpdateWidgets={handleUpdateWidgets}
           onAddWidget={handleAddWidget}
+          onContextMenu={handleContextMenu}
         />
         
         <PropertiesPanel 
@@ -953,6 +1001,17 @@ const App: React.FC = () => {
       <SampleCatalogue isOpen={showSamples} onClose={() => setShowSamples(false)} onSelectSample={handleLoadSample} />
       <ConfirmDialog isOpen={confirmDialog.isOpen} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} />
       <HelpDialog isOpen={showHelp} onClose={() => setShowHelp(false)} />
+      
+      {contextMenu && (
+        <ContextMenu 
+            x={contextMenu.x} 
+            y={contextMenu.y} 
+            onClose={() => setContextMenu(null)}
+            onDuplicate={handleDuplicateWidgets}
+            onDelete={() => handleDeleteWidgets(selectedIds)}
+            onLayerAction={handleLayerAction}
+        />
+      )}
     </div>
   );
 };
