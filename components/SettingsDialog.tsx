@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Save, RotateCcw, Shield, Server, Cpu, Key, ExternalLink, Zap, FolderOpen, Download, Layout, Settings } from 'lucide-react';
 import { AISettings, AIProvider } from '../types';
 import { AI_MODELS } from '../constants';
+import InfoTooltip from './InfoTooltip';
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -170,7 +171,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                  <div className="space-y-5">
                     {/* Provider */}
                     <div>
-                       <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Provider</label>
+                       <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                         Provider
+                         <InfoTooltip text="Select the AI service to use for code generation." />
+                       </label>
                        <div className="flex flex-wrap gap-2">
                           {(['gemini', 'openai', 'anthropic', 'deepseek', 'custom'] as AIProvider[]).map(p => (
                              <button
@@ -193,6 +197,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                       <div>
                          <label className="block text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                             <Key size={14} /> API Key
+                            <InfoTooltip text="Your private API key. Stored locally in your browser." />
                          </label>
                          <input 
                             type="password"
@@ -208,6 +213,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         <div>
                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                               <Key size={14} /> API Key
+                              <InfoTooltip text="Authenticate securely with Google." />
                            </label>
                            <div className="mt-2">
                              <button 
@@ -225,6 +231,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                         <div>
                            <label className="block text-xs font-bold text-slate-400 uppercase mb-2 flex items-center gap-2">
                               <Server size={14} /> Base URL
+                              <InfoTooltip text="Optional override. Use 'http://localhost:11434/v1' for local Ollama." />
                            </label>
                            <input 
                               type="text"
@@ -237,7 +244,10 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
                     {/* Model */}
                     <div>
-                       <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Model</label>
+                       <label className="block text-xs font-bold text-slate-400 uppercase mb-2">
+                         Model
+                         <InfoTooltip text="The specific AI model ID to use (e.g. gpt-4o, claude-3-5-sonnet)." />
+                       </label>
                        <div className="flex flex-wrap gap-2 mb-2">
                          {AI_MODELS[localSettings.provider]?.map(m => (
                              <button

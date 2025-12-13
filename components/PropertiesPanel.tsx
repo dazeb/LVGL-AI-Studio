@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer, DevicePreset } from '../types';
 import { PROJECT_THEMES, DEVICE_PRESETS } from '../constants';
+import InfoTooltip from './InfoTooltip';
 import { 
   Settings, 
   Trash2, 
@@ -210,7 +211,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         </div>
         <div className="p-4 space-y-4">
           <div>
-             <label className="block text-xs font-medium text-slate-400 mb-1">Screen Name</label>
+             <label className="block text-xs font-medium text-slate-400 mb-1">
+               Screen Name
+               <InfoTooltip text="Unique identifier for this screen in the generated code." />
+             </label>
              <SmartInput 
                type="text" 
                value={currentScreen.name}
@@ -220,7 +224,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Background Color</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">
+              Background Color
+              <InfoTooltip text="Global background color for this specific screen." />
+            </label>
             <div className="flex gap-2">
               <input 
                 type="color" 
@@ -244,6 +251,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
                    <Layers size={12} /> Layers
+                   <InfoTooltip text="Manage Z-index ordering. Drag to reorder. Lock to prevent editing. Hide to exclude from AI context." />
                 </h3>
                 <button 
                    onClick={onAddLayer}
@@ -355,6 +363,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
 
           <h3 className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
             <Palette size={12} /> Project Theme
+            <InfoTooltip text="Applies a predefined color scheme to ALL widgets in the project. Useful for quick styling." />
           </h3>
           
           <div className="grid grid-cols-2 gap-2">
@@ -384,7 +393,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <h3 className="text-xs font-bold text-slate-500 uppercase">Global Project Settings</h3>
           
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Project Name</label>
+            <label className="block text-xs font-medium text-slate-400 mb-1">
+              Project Name
+              <InfoTooltip text="Used for the filename when exporting or saving your project." />
+            </label>
             <SmartInput 
               type="text" 
               value={settings.projectName}
@@ -396,6 +408,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <div>
              <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-2">
                 <Smartphone size={12} /> Target Device
+                <InfoTooltip text="Sets the canvas dimensions to match popular embedded display modules." />
              </label>
              <select 
                 value={settings.targetDevice || 'custom'}
@@ -616,6 +629,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
            <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-2">
                  <Zap size={12} /> Events
+                 <InfoTooltip text="Define logic for user interactions like Clicks or Value Changes." />
               </h3>
               <button 
                  onClick={handleAddEvent}
@@ -693,6 +707,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
           <div className="flex items-center justify-between mb-3">
              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
                <Bookmark size={12} /> Style Presets
+               <InfoTooltip text="Save the current widget's style to reuse on other widgets." />
              </h3>
              <button 
                onClick={handleSaveCurrentAsPreset}
@@ -886,7 +901,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
             {/* Options for List-type widgets */}
             {(widget.type === WidgetType.ROLLER || widget.type === WidgetType.DROPDOWN) && (
                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Options (One per line)</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Options (One per line)
+                    <InfoTooltip text="Enter items separated by new lines." />
+                  </label>
                   <textarea 
                      value={widget.options || ''}
                      onChange={(e) => {}} // Controlled by onBlur below, but need state if using SmartInput logic.
@@ -944,7 +962,10 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                  )}
 
                 <div>
-                   <label className="block text-xs font-medium text-slate-400 mb-1">Path/Filename Reference</label>
+                   <label className="block text-xs font-medium text-slate-400 mb-1">
+                     Path/Filename Reference
+                     <InfoTooltip text="Used in generated code (e.g., 'S:icon.png'). Matches your embedded file system." />
+                   </label>
                    <SmartInput 
                      type="text" 
                      value={widget.src || ''}

@@ -10,10 +10,11 @@ import SettingsDialog from './components/SettingsDialog';
 import ConfirmDialog from './components/ConfirmDialog';
 import SampleCatalogue from './components/SampleCatalogue';
 import HistoryMenu from './components/HistoryMenu';
+import HelpDialog from './components/HelpDialog';
 import { useHistory } from './hooks/useHistory';
 import { SampleProject } from './data/samples';
 import { generateLVGLCode } from './services/aiService';
-import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, RotateCw, FileJson } from 'lucide-react';
+import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, RotateCw, FileJson, CircleHelp } from 'lucide-react';
 
 const STORAGE_KEY = 'lvgl_studio_autosave_v1';
 
@@ -100,6 +101,7 @@ const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showSamples, setShowSamples] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [code, setCode] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('c');
@@ -812,6 +814,16 @@ const App: React.FC = () => {
              <span className="hidden lg:inline text-xs font-medium">Settings</span>
           </button>
 
+          {/* Help Button */}
+          <button 
+            onClick={() => setShowHelp(true)} 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-colors border border-indigo-500 shadow-lg shadow-indigo-900/20" 
+            title="Help"
+          >
+             <CircleHelp size={16} /> 
+             <span className="hidden lg:inline text-xs font-medium">Help</span>
+          </button>
+
           <button onClick={handleGenerateCode} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-medium transition-all shadow-lg shadow-blue-900/20"><Code size={16} /> Generate Code</button>
         </div>
       </header>
@@ -878,6 +890,7 @@ const App: React.FC = () => {
       />
       <SampleCatalogue isOpen={showSamples} onClose={() => setShowSamples(false)} onSelectSample={handleLoadSample} />
       <ConfirmDialog isOpen={confirmDialog.isOpen} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} />
+      <HelpDialog isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   );
 };
