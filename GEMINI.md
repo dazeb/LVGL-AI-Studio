@@ -1,4 +1,5 @@
 
+
 # Project Context: LVGL Studio AI
 
 This document provides context for AI models (Gemini, GPT, etc.) to understand the codebase structure, data models, and business logic of the **LVGL Studio AI** application.
@@ -11,6 +12,7 @@ LVGL Studio AI is a React 19 web application that allows users to visually desig
 - **Icons**: Lucide React.
 - **AI SDK**: `@google/genai` (Gemini).
 - **Build System**: ES Modules via `importmap` (No bundler required for dev).
+- **Persistence**: LocalStorage for auto-save, JSON file Export/Import for projects.
 
 ## 3. Data Model (`types.ts`)
 
@@ -38,11 +40,11 @@ interface Widget {
   // ... coordinates (x, y, width, height)
 }
 
-interface WidgetEvent {
-  trigger: 'CLICKED' | 'PRESSED' | ...;
-  action: 'NAVIGATE' | 'CUSTOM_CODE';
-  targetScreenId?: string;
-  customCode?: string;
+interface ProjectFile {
+    version: string;
+    screens: Screen[];
+    settings: CanvasSettings;
+    // ... styles, etc
 }
 ```
 
@@ -50,13 +52,17 @@ interface WidgetEvent {
 
 ### `App.tsx`
 - Holds the root state: `screens[]`, `activeScreenId`, `canvasSettings`.
+- **State Persistence**: 
+    - Lazily initializes state from `localStorage` on mount.
+    - Updates `localStorage` on every state change.
+    - Handles JSON file Import/Export logic (`FileReader` / `Blob`).
 - Manages global actions (Add Widget, Generate Code, Apply Theme).
-- Handles **Layer Reordering** logic via `handleReorderLayers`.
 
 ### `components/Canvas.tsx`
 - Renders the "Active Screen".
 - Handles Drag-and-Drop (creation), Drag-to-Move, and Resizing.
 - Renders LVGL-like HTML approximations of widgets.
+- **Slider Orientation**: Automatically renders as **Vertical** if height > width.
 - **Image Rendering**: Renders Base64 `imageData` if present, otherwise shows a placeholder.
 
 ### `components/PropertiesPanel.tsx`
@@ -85,3 +91,5 @@ When generating code for this project:
     - Assume images are file-based or pre-declared symbols.
     - Do not try to inline Base64 data in C code.
     - Use the `src` property (filename) to generate the reference.
+5.  **Sliders**: 
+    - If `height > width`, the slider is vertical. In LVGL this often handles itself via sizing, but check if specific flags/styles are needed for the requested version.

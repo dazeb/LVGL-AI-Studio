@@ -8,10 +8,14 @@
 
 ## 🌟 Key Features
 
-*   **Multi-Screen Support** 🆕: Create, rename, and manage multiple screens. Visually link buttons to navigate between them.
-*   **Device Presets** 🆕: Instant canvas resizing for popular hardware including **M5Stack**, **Adafruit**, **Waveshare**, and generic TFT displays.
-*   **Global Theming** 🆕: Instantly style your entire project with presets like *Cyberpunk*, *Midnight*, *Retro*, and more.
-*   **Event System** 🆕: Define logic for Clicked, Pressed, Released, and Value Changed events. Support for Navigation actions or Custom C/Python code.
+*   **Multi-Screen Support**: Create, rename, and manage multiple screens. Visually link buttons to navigate between them.
+*   **Project Persistence** 🆕: 
+    *   **Auto-Save**: Your work is automatically saved to browser storage (LocalStorage) so you never lose progress.
+    *   **Import/Export**: Save your projects to `.json` files and share them or load them later.
+*   **Template Library**: Jumpstart development with high-fidelity, pre-configured templates (Thermostats, Dashboards, Audio Players).
+*   **Device Presets**: Instant canvas resizing for popular hardware including **M5Stack**, **Adafruit**, **Waveshare**, and generic TFT displays.
+*   **Global Theming**: Instantly style your entire project with presets like *Cyberpunk*, *Midnight*, *Retro*, and more.
+*   **Event System**: Define logic for Clicked, Pressed, Released, and Value Changed events. Support for Navigation actions or Custom C/Python code.
 *   **Visual Drag-and-Drop Editor**: Intuitive canvas to place and arrange UI elements with snapping.
 *   **Layer Management**: Create, lock, hide, and **reorder** layers via drag-and-drop to manage complex composite UIs.
 *   **Image Uploads**: Upload images to preview them on the canvas and generate correct file-reference code.
@@ -59,7 +63,8 @@ API_KEY=your_google_gemini_api_key
 graph TD
     User([User Interaction]) -->|Drag & Drop / Keyboard| State[App State Store]
     User -->|Screen & Theme Mgmt| State
-    State -->|JSON Representation| Canvas[Visual Canvas]
+    State -->|Auto-Save| LocalStorage[Local Storage]
+    State -->|Export JSON| File[Project File .json]
     State -->|Context Data| AIService{AI Service}
     AIService -->|Cloud| Gemini[Google Gemini]
     AIService -->|Cloud| DeepSeek[DeepSeek V3/R1]
@@ -79,13 +84,10 @@ graph TD
 
 ## 🛠️ User Guide
 
-### 1. The Workspace Layout
-The interface is divided into three professional zones:
-*   **Left Sidebar**: Widget Palette and Screen List.
-*   **Center (Canvas)**: Your active WYSIWYG design area.
-*   **Right (Properties)**: Context-aware panel.
-    *   *If Widget Selected*: Edit properties, events, and styles.
-    *   *If Canvas Selected*: Edit Screen settings, **Target Device**, Global Theme, and **Layers**.
+### 1. Saving & Loading 💾
+*   **Auto-Save**: The app automatically saves your workspace state (screens, settings, API keys) to your browser's Local Storage.
+*   **Save Project**: Click the **Save** (Download) icon in the header to download a `.json` file containing your entire project.
+*   **Open Project**: Click the **Open** (Folder) icon to upload a previously saved `.json` file. This will overwrite your current workspace.
 
 ### 2. Multi-Screen & Navigation 🧭
 1.  **Add Screen**: Go to the **Screens** tab in the left sidebar and click `+`.
@@ -130,7 +132,7 @@ Click the **Settings Icon** in the top header to configure your AI provider.
 | :--- | :---: | :--- |
 | **Button** | ⏹️ | Text, Color, Radius, Gradient sheen |
 | **Label** | 🔤 | Text content, Font size, Text Color |
-| **Slider** | 🎚️ | Value, Range (Min/Max), Indicator Color, Knob style |
+| **Slider** | 🎚️ | Value, Min/Max, Colors. **Auto-vertical orientation** if H > W. |
 | **Switch** | 🔛 | Checked state, Pill styling, Animation timing |
 | **Checkbox** | ☑️ | Label text, Checked state |
 | **Arc** | ⭕ | Value, Range, Track/Indicator colors, Thickness |

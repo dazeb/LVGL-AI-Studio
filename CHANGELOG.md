@@ -1,7 +1,28 @@
 
+
 # Changelog
 
 All notable changes to the **LVGL Studio AI** project will be documented in this file.
+
+## [0.3.2] - 2025-05-23
+
+### Added
+- **Project Persistence**: Implemented Auto-save functionality using LocalStorage. The entire workspace state (screens, widgets, settings, AI config) persists across browser reloads.
+- **Import/Export**: Added "Save Project" (Download JSON) and "Open Project" (Upload JSON) buttons to the header. Users can now backup and share their designs.
+- **Header UI**: Added Open/Save icon buttons next to the Templates button.
+
+### Changed
+- **State Initialization**: Refactored `App.tsx` to lazily initialize state from LocalStorage if available.
+
+---
+
+## [0.3.1] - 2025-05-23
+
+### Changed
+- **Properties Panel**: Converted Style Presets from pill buttons to a compact Dropdown menu with delete functionality to save vertical space.
+- **Template Catalogue**: Redesigned layout for higher density (5 columns) and updated card visuals for a more modern look.
+- **Canvas Rendering**: Added support for vertical Sliders. If a slider's height is greater than its width, it automatically renders in vertical mode.
+- **Sample Data**: Refined 'Smart Thermostat' and 'E-Bike Dashboard' templates with high-fidelity positioning, colors, and font sizes to match design references.
 
 ## [0.3.0] - 2025-05-22
 

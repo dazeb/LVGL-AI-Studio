@@ -1,7 +1,7 @@
 
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle, Layer, AISettings, Screen, Theme } from './types';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { Widget, CanvasSettings, WidgetType, CodeLanguage, StylePreset, WidgetStyle, Layer, AISettings, Screen, Theme, ProjectFile } from './types';
 import { DEFAULT_CANVAS_SETTINGS, DEFAULT_WIDGET_PROPS, PROJECT_THEMES } from './constants';
 import WidgetPalette from './components/WidgetPalette';
 import Canvas from './components/Canvas';
@@ -12,30 +12,51 @@ import ConfirmDialog from './components/ConfirmDialog';
 import SampleCatalogue from './components/SampleCatalogue';
 import { SampleProject } from './data/samples';
 import { generateLVGLCode } from './services/aiService';
-import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, FolderOpen } from 'lucide-react';
+import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, FolderOpen, Download, Upload, FileJson } from 'lucide-react';
+
+const STORAGE_KEY = 'lvgl_studio_autosave_v1';
 
 const App: React.FC = () => {
+  
+  // --- Lazy Initializers for Persistence ---
+  
+  const getStoredState = () => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch(e) { console.error("Failed to load state", e); }
+    return null;
+  };
+
+  const storedData = getStoredState();
+
   // --- Global App State ---
-  // We now have a list of screens. 
-  // Each screen has its own widgets and layers.
-  const [screens, setScreens] = useState<Screen[]>([
-    {
+  
+  const [screens, setScreens] = useState<Screen[]>(() => {
+    if (storedData?.screens) return storedData.screens;
+    return [{
        id: 'screen_1',
        name: 'Main Screen',
        backgroundColor: DEFAULT_CANVAS_SETTINGS.defaultBackgroundColor,
        widgets: [],
        layers: [{ id: 'layer_1', name: 'Base Layer', visible: true, locked: false }]
+    }];
+  });
+  
+  const [activeScreenId, setActiveScreenId] = useState<string>(() => {
+    if (storedData?.activeScreenId && storedData.screens?.some((s: Screen) => s.id === storedData.activeScreenId)) {
+      return storedData.activeScreenId;
     }
-  ]);
-  
-  const [activeScreenId, setActiveScreenId] = useState<string>('screen_1');
-  const [activeLayerId, setActiveLayerId] = useState<string>('layer_1');
+    return 'screen_1';
+  });
 
-  // Canvas Global Settings (Width/Height)
-  const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>(DEFAULT_CANVAS_SETTINGS);
+  const [activeLayerId, setActiveLayerId] = useState<string>('layer_1'); // Corrected via useEffect later
+
+  const [canvasSettings, setCanvasSettings] = useState<CanvasSettings>(() => {
+     return storedData?.settings || DEFAULT_CANVAS_SETTINGS;
+  });
+
   const [zoom, setZoom] = useState<number>(1);
-  
-  // Selection State (Global IDs, but logic checks active screen)
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   // UI State
@@ -45,14 +66,32 @@ const App: React.FC = () => {
   const [code, setCode] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('c');
-  const [aiSettings, setAiSettings] = useState<AISettings>({
-    provider: 'gemini',
-    apiKey: '',
-    baseUrl: '',
-    model: 'gemini-2.5-flash'
+  
+  const [aiSettings, setAiSettings] = useState<AISettings>(() => {
+     return storedData?.aiSettings || {
+      provider: 'gemini',
+      apiKey: '',
+      baseUrl: '',
+      model: 'gemini-2.5-flash'
+    };
   });
 
-  // Confirmation Dialog State
+  // Presets
+  const [stylePresets, setStylePresets] = useState<StylePreset[]>(() => {
+    if (storedData?.stylePresets) return storedData.stylePresets;
+    return [
+      { id: 'p1', name: 'Primary', style: { backgroundColor: '#3b82f6', textColor: '#ffffff', borderRadius: 8, borderWidth: 0 } },
+      { id: 'p2', name: 'Outline', style: { backgroundColor: 'transparent', textColor: '#3b82f6', borderColor: '#3b82f6', borderWidth: 2, borderRadius: 8 } },
+      { id: 'p3', name: 'Dark Card', style: { backgroundColor: '#1e293b', textColor: '#e2e8f0', borderColor: '#334155', borderWidth: 1, borderRadius: 12 } },
+      { id: 'p4', name: 'Alert', style: { backgroundColor: '#ef4444', textColor: '#ffffff', borderRadius: 4, borderWidth: 0 } },
+      { id: 'p5', name: 'Success', style: { backgroundColor: '#22c55e', textColor: '#ffffff', borderRadius: 6, borderWidth: 0 } },
+      { id: 'p6', name: 'Warning', style: { backgroundColor: '#f59e0b', textColor: '#ffffff', borderRadius: 6, borderWidth: 0 } },
+      { id: 'p7', name: 'Glass', style: { backgroundColor: '#ffffff20', textColor: '#ffffff', borderColor: '#ffffff40', borderWidth: 1, borderRadius: 16 } },
+      { id: 'p8', name: 'Pill', style: { borderRadius: 999, backgroundColor: '#6366f1', textColor: '#ffffff', borderWidth: 0 } },
+      { id: 'p9', name: 'Minimal', style: { backgroundColor: 'transparent', borderWidth: 0, textColor: '#94a3b8' } },
+    ];
+  });
+
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -65,18 +104,17 @@ const App: React.FC = () => {
     onConfirm: () => {}
   });
 
-  // Presets
-  const [stylePresets, setStylePresets] = useState<StylePreset[]>([
-    { id: 'p1', name: 'Primary', style: { backgroundColor: '#3b82f6', textColor: '#ffffff', borderRadius: 8, borderWidth: 0 } },
-    { id: 'p2', name: 'Outline', style: { backgroundColor: 'transparent', textColor: '#3b82f6', borderColor: '#3b82f6', borderWidth: 2, borderRadius: 8 } },
-    { id: 'p3', name: 'Dark Card', style: { backgroundColor: '#1e293b', textColor: '#e2e8f0', borderColor: '#334155', borderWidth: 1, borderRadius: 12 } },
-    { id: 'p4', name: 'Alert', style: { backgroundColor: '#ef4444', textColor: '#ffffff', borderRadius: 4, borderWidth: 0 } },
-    { id: 'p5', name: 'Success', style: { backgroundColor: '#22c55e', textColor: '#ffffff', borderRadius: 6, borderWidth: 0 } },
-    { id: 'p6', name: 'Warning', style: { backgroundColor: '#f59e0b', textColor: '#ffffff', borderRadius: 6, borderWidth: 0 } },
-    { id: 'p7', name: 'Glass', style: { backgroundColor: '#ffffff20', textColor: '#ffffff', borderColor: '#ffffff40', borderWidth: 1, borderRadius: 16 } },
-    { id: 'p8', name: 'Pill', style: { borderRadius: 999, backgroundColor: '#6366f1', textColor: '#ffffff', borderWidth: 0 } },
-    { id: 'p9', name: 'Minimal', style: { backgroundColor: 'transparent', borderWidth: 0, textColor: '#94a3b8' } },
-  ]);
+  // --- Auto-Save Effect ---
+  useEffect(() => {
+    const data = {
+      screens,
+      settings: canvasSettings,
+      stylePresets,
+      aiSettings,
+      activeScreenId
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, [screens, canvasSettings, stylePresets, aiSettings, activeScreenId]);
 
   // Derived State Helpers
   const currentScreen = useMemo(() => screens.find(s => s.id === activeScreenId)!, [screens, activeScreenId]);
@@ -88,6 +126,74 @@ const App: React.FC = () => {
         setActiveLayerId(currentScreen.layers[0].id);
      }
   }, [activeScreenId, currentScreen]);
+
+  // --- File I/O (Save/Load Project) ---
+
+  const handleSaveProject = () => {
+    const projectData: ProjectFile = {
+      version: '1.0.0',
+      timestamp: Date.now(),
+      settings: canvasSettings,
+      screens,
+      stylePresets
+    };
+    
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${canvasSettings.projectName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleOpenProjectClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = event.target?.result as string;
+        const projectData = JSON.parse(json) as ProjectFile;
+        
+        // Basic Validation
+        if (!projectData.screens || !Array.isArray(projectData.screens) || !projectData.settings) {
+          throw new Error("Invalid project file structure.");
+        }
+
+        setConfirmDialog({
+           isOpen: true,
+           title: 'Import Project',
+           message: `Load "${projectData.settings.projectName}"? This will overwrite your current workspace.`,
+           onConfirm: () => {
+              setCanvasSettings(projectData.settings);
+              setScreens(projectData.screens);
+              if (projectData.stylePresets) setStylePresets(projectData.stylePresets);
+              
+              // Reset Selection & Active Screen
+              if (projectData.screens.length > 0) {
+                 setActiveScreenId(projectData.screens[0].id);
+                 setActiveLayerId(projectData.screens[0].layers[0].id);
+              }
+              setSelectedIds([]);
+           }
+        });
+      } catch (err) {
+        alert("Failed to load project: " + (err as Error).message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = ''; // Reset input
+  };
 
   // --- Sample Loading ---
   const handleLoadSample = (sample: SampleProject) => {
@@ -578,6 +684,15 @@ const App: React.FC = () => {
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-200 overflow-hidden font-sans">
       
+      {/* Hidden Input for Open Project */}
+      <input 
+         type="file" 
+         ref={fileInputRef} 
+         onChange={handleFileChange} 
+         accept=".json" 
+         className="hidden" 
+      />
+
       {/* Header */}
       <header className="h-14 bg-slate-900 border-b border-slate-700 flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-2">
@@ -620,13 +735,31 @@ const App: React.FC = () => {
           </div>
           
           <div className="h-6 w-px bg-slate-700 mx-2 hidden md:block"></div>
+          
+          {/* Open / Save Buttons */}
+          <div className="flex items-center gap-1">
+             <button 
+                onClick={handleOpenProjectClick}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-slate-700"
+                title="Open Project (.json)"
+             >
+                <FolderOpen size={16} className="text-amber-500" /> <span className="hidden sm:inline">Open</span>
+             </button>
+             <button 
+                onClick={handleSaveProject}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-slate-700"
+                title="Save Project (.json)"
+             >
+                <Download size={16} className="text-green-500" /> <span className="hidden sm:inline">Save</span>
+             </button>
+          </div>
 
           <button 
             onClick={() => setShowSamples(true)}
             className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-slate-700"
             title="Browse Templates"
           >
-            <FolderOpen size={16} className="text-blue-400" /> Templates
+            <FileJson size={16} className="text-blue-400" /> Templates
           </button>
 
           <div className="flex items-center gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">

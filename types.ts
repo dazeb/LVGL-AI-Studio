@@ -125,3 +125,11 @@ export interface AISettings {
   baseUrl: string;
   model: string;
 }
+
+export interface ProjectFile {
+  version: string;
+  timestamp: number;
+  settings: CanvasSettings;
+  screens: Screen[];
+  stylePresets: StylePreset[];
+}
