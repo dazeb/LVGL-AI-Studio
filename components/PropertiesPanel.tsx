@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer, DevicePreset } from '../types';
 import { PROJECT_THEMES, DEVICE_PRESETS } from '../constants';
@@ -856,50 +857,105 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
         {/* Style Properties */}
         <section>
           <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Style</h3>
-          <div className="space-y-3">
+          <div className="space-y-4">
+             {/* Background Row */}
              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-400">Background</label>
+                <div className="flex items-center gap-2">
+                   <input 
+                      type="checkbox"
+                      id="bg_toggle"
+                      checked={widget.style.backgroundColor !== 'transparent'}
+                      onChange={(e) => {
+                          const newColor = e.target.checked ? '#ffffff' : 'transparent';
+                          onUpdateWidget(widget.id, { style: { ...widget.style, backgroundColor: newColor } });
+                      }}
+                      className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-offset-slate-900"
+                   />
+                   <label htmlFor="bg_toggle" className="text-xs font-medium text-slate-400 cursor-pointer select-none">Background</label>
+                </div>
                 <div className="flex gap-2">
                    <input 
                     type="color" 
-                    value={widget.style.backgroundColor || '#000000'}
+                    value={widget.style.backgroundColor !== 'transparent' ? widget.style.backgroundColor : '#000000'}
+                    disabled={widget.style.backgroundColor === 'transparent'}
                     onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, backgroundColor: e.target.value } })}
-                    className="h-6 w-6 bg-transparent border-0 cursor-pointer"
+                    className={`h-6 w-6 bg-transparent border-0 cursor-pointer ${widget.style.backgroundColor === 'transparent' ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    title="Background Color"
                   />
                 </div>
              </div>
+
+             {/* Text Color Row (Always enabled usually) */}
              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-400">Text/FG Color</label>
+                <div className="pl-6">
+                    <label className="text-xs font-medium text-slate-400">Text / Icon Color</label>
+                </div>
                 <div className="flex gap-2">
                    <input 
                     type="color" 
                     value={widget.style.textColor || '#000000'}
                     onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, textColor: e.target.value } })}
                     className="h-6 w-6 bg-transparent border-0 cursor-pointer"
+                    title="Text Color"
                   />
                 </div>
              </div>
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-400">Border/Accent</label>
-                <div className="flex gap-2">
-                   <input 
-                    type="color" 
-                    value={widget.style.borderColor || '#000000'}
-                    onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderColor: e.target.value } })}
-                    className="h-6 w-6 bg-transparent border-0 cursor-pointer"
-                  />
-                </div>
+
+             {/* Border Row */}
+             <div className="space-y-2">
+                 <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                       <input 
+                          type="checkbox"
+                          id="border_toggle"
+                          checked={(widget.style.borderWidth || 0) > 0}
+                          onChange={(e) => {
+                              const newWidth = e.target.checked ? 1 : 0;
+                              onUpdateWidget(widget.id, { style: { ...widget.style, borderWidth: newWidth } });
+                          }}
+                          className="h-4 w-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-offset-slate-900"
+                       />
+                       <label htmlFor="border_toggle" className="text-xs font-medium text-slate-400 cursor-pointer select-none">Border</label>
+                    </div>
+                    <div className="flex gap-2">
+                       <input 
+                        type="color" 
+                        value={widget.style.borderColor || '#000000'}
+                        disabled={(widget.style.borderWidth || 0) === 0}
+                        onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderColor: e.target.value } })}
+                        className={`h-6 w-6 bg-transparent border-0 cursor-pointer ${(widget.style.borderWidth || 0) === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                        title="Border Color"
+                      />
+                    </div>
+                 </div>
+                 
+                 {/* Border Width (Conditional) */}
+                 {(widget.style.borderWidth || 0) > 0 && (
+                     <div className="flex items-center gap-3 pl-6 pr-1">
+                        <span className="text-[10px] text-slate-500">Thickness</span>
+                        <input 
+                           type="range" 
+                           min="1" 
+                           max="10"
+                           step="1"
+                           value={widget.style.borderWidth || 1}
+                           onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderWidth: parseInt(e.target.value) } })}
+                           className="flex-1 h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                        />
+                        <span className="text-[10px] font-mono text-slate-400 w-3 text-right">{widget.style.borderWidth}</span>
+                     </div>
+                 )}
              </div>
              
-             <div className="grid grid-cols-2 gap-3">
+             <div className="grid grid-cols-2 gap-3 pt-2">
                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Radius</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Corner Radius</label>
                   <input 
                     type="number" 
                     min="0"
                     value={widget.style.borderRadius || 0}
                     onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, borderRadius: Math.max(0, parseInt(e.target.value) || 0) } })}
-                    className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
+                    className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
                   />
                </div>
                <div>
@@ -909,7 +965,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     min="0"
                     value={widget.style.fontSize || 14}
                     onChange={(e) => onUpdateWidget(widget.id, { style: { ...widget.style, fontSize: Math.max(0, parseInt(e.target.value) || 0) } })}
-                    className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white"
+                    className="w-full bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white focus:border-blue-500 focus:outline-none"
                   />
                </div>
              </div>
