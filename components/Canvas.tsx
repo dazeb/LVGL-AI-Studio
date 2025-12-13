@@ -418,6 +418,31 @@ const Canvas: React.FC<CanvasProps> = ({
              const sliderMax = widget.max || 100;
              const sliderPercent = Math.min(100, Math.max(0, ((sliderVal - sliderMin) / (sliderMax - sliderMin)) * 100));
              
+             // Detect Orientation
+             const isVertical = widget.height > widget.width;
+
+             if (isVertical) {
+                return (
+                   <div className="w-full h-full flex items-center justify-center py-1">
+                     <div className="relative h-full w-2 rounded-full overflow-visible" style={{ backgroundColor: widget.style.backgroundColor || '#e5e7eb' }}>
+                        {/* Indicator (Bottom up) */}
+                        <div 
+                          className="absolute left-0 bottom-0 w-full rounded-full" 
+                          style={{ height: `${sliderPercent}%`, backgroundColor: widget.style.borderColor || '#3b82f6' }}
+                        ></div>
+                        {/* Knob */}
+                        <div 
+                          className="absolute left-1/2 -translate-x-1/2 w-5 h-5 bg-white rounded-full shadow-md border border-slate-200"
+                          style={{ 
+                            bottom: `calc(${sliderPercent}% - 10px)`, 
+                            cursor: 'pointer' 
+                          }}
+                        ></div>
+                     </div>
+                   </div>
+                );
+             }
+
              return (
                <div className="w-full h-full flex items-center justify-center px-1">
                  <div className="relative w-full h-2 rounded-full overflow-visible" style={{ backgroundColor: widget.style.backgroundColor || '#e5e7eb' }}>

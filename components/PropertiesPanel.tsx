@@ -1,6 +1,4 @@
-
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Widget, CanvasSettings, WidgetType, StylePreset, WidgetStyle, Screen, WidgetEvent, EventTrigger, EventAction, Layer, DevicePreset } from '../types';
 import { PROJECT_THEMES, DEVICE_PRESETS } from '../constants';
 import { 
@@ -29,7 +27,8 @@ import {
   GripVertical,
   Upload,
   Image as ImageIcon,
-  Smartphone
+  Smartphone,
+  ChevronDown
 } from 'lucide-react';
 
 interface PropertiesPanelProps {
@@ -97,6 +96,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
   onToggleLayerLock,
   onReorderLayers
 }) => {
+  const [isPresetDropdownOpen, setIsPresetDropdownOpen] = useState(false);
   
   // Case 1: No selection -> Screen Settings
   if (selectedWidgets.length === 0) {
@@ -588,7 +588,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
            </div>
         </section>
 
-        {/* Presets */}
+        {/* Presets - Updated to Dropdown */}
         <section>
           <div className="flex items-center justify-between mb-3">
              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
@@ -602,25 +602,50 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                <Plus size={12} /> Save
              </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {stylePresets.map(preset => (
-              <div 
-                key={preset.id} 
-                className="group relative flex items-center bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full pl-3 pr-1 py-1 transition-all cursor-pointer"
-              >
-                <span onClick={() => handleApplyPreset(preset)} className="text-xs text-slate-300 mr-2 select-none hover:text-white">
-                   {preset.name}
-                </span>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onDeletePreset(preset.id); }}
-                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-slate-600 rounded-full text-slate-400 hover:text-red-400 transition-all"
-                  title="Delete preset"
-                >
-                   <XIcon size={12} />
-                </button>
-              </div>
-            ))}
-            {stylePresets.length === 0 && <div className="text-xs text-slate-500 italic">No presets saved</div>}
+          
+          <div className="relative">
+             {/* Invisible Backdrop for click-outside */}
+             {isPresetDropdownOpen && (
+               <div className="fixed inset-0 z-40" onClick={() => setIsPresetDropdownOpen(false)}></div>
+             )}
+
+             <button 
+               onClick={() => setIsPresetDropdownOpen(!isPresetDropdownOpen)}
+               className="w-full bg-slate-800 border border-slate-600 rounded px-3 py-2 text-sm text-white flex justify-between items-center focus:outline-none focus:border-blue-500 hover:bg-slate-750 transition-colors relative z-50"
+             >
+               <span className="text-slate-300">Apply a preset...</span>
+               <ChevronDown size={14} className={`transition-transform duration-200 ${isPresetDropdownOpen ? 'rotate-180' : ''}`} />
+             </button>
+
+             {isPresetDropdownOpen && (
+               <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-xl z-50 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95 duration-100">
+                  {stylePresets.length === 0 ? (
+                    <div className="p-3 text-xs text-slate-500 italic text-center">No presets saved</div>
+                  ) : (
+                    stylePresets.map(preset => (
+                      <div 
+                        key={preset.id} 
+                        className="flex items-center justify-between p-2 hover:bg-slate-700 group transition-colors cursor-pointer border-b border-slate-700/50 last:border-0"
+                        onClick={() => {
+                           handleApplyPreset(preset);
+                           setIsPresetDropdownOpen(false);
+                        }}
+                      >
+                        <span className="flex-1 text-xs text-slate-300 hover:text-white truncate">
+                           {preset.name}
+                        </span>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onDeletePreset(preset.id); }}
+                          className="text-slate-500 hover:text-red-400 p-1 rounded hover:bg-slate-600 transition-colors"
+                          title="Delete preset"
+                        >
+                           <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+               </div>
+             )}
           </div>
         </section>
 

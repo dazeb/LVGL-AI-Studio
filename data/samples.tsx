@@ -44,53 +44,153 @@ export const SAMPLE_PROJECTS: SampleProject[] = [
             type: WidgetType.ARC,
             name: 'TempArc',
             x: 20, y: 20, width: 200, height: 200,
-            value: 72, min: 50, max: 90,
+            value: 75, min: 50, max: 90,
             events: [],
-            style: { borderColor: '#f97316', backgroundColor: '#333', borderWidth: 15, borderRadius: 0 }
+            style: { borderColor: '#f97316', backgroundColor: '#262626', borderWidth: 20, borderRadius: 0 }
           },
           {
             id: 'w_lbl_val',
             layerId: 'l_therm_1',
             type: WidgetType.LABEL,
             name: 'TempLabel',
-            x: 85, y: 90, width: 70, height: 40,
+            x: 75, y: 75, width: 90, height: 50,
             text: '72°',
             events: [],
-            style: { textColor: '#ffffff', fontSize: 32, backgroundColor: 'transparent' }
-          },
-          {
-            id: 'w_btn_cool',
-            layerId: 'l_therm_1',
-            type: WidgetType.BUTTON,
-            name: 'BtnCool',
-            x: 40, y: 160, width: 40, height: 40,
-            text: '',
-            contentMode: 'icon',
-            symbol: 'LV_SYMBOL_HOME', // Representing Cool
-            events: [],
-            style: { backgroundColor: '#3b82f6', borderRadius: 20, textColor: '#fff' }
-          },
-          {
-            id: 'w_btn_heat',
-            layerId: 'l_therm_1',
-            type: WidgetType.BUTTON,
-            name: 'BtnHeat',
-            x: 160, y: 160, width: 40, height: 40,
-            text: '',
-            contentMode: 'icon',
-            symbol: 'LV_SYMBOL_CHARGE', // Representing Heat
-            events: [],
-            style: { backgroundColor: '#ef4444', borderRadius: 20, textColor: '#fff' }
+            style: { textColor: '#ffffff', fontSize: 52, backgroundColor: 'transparent' }
           },
           {
              id: 'w_lbl_status',
              layerId: 'l_therm_1',
              type: WidgetType.LABEL,
              name: 'Status',
-             x: 90, y: 130, width: 60, height: 20,
+             x: 92, y: 130, width: 60, height: 20,
              text: 'HEATING',
              events: [],
              style: { textColor: '#f97316', fontSize: 12, backgroundColor: 'transparent' }
+          },
+          {
+            id: 'w_btn_cool',
+            layerId: 'l_therm_1',
+            type: WidgetType.BUTTON,
+            name: 'BtnHome',
+            x: 55, y: 155, width: 44, height: 44,
+            text: '',
+            contentMode: 'icon',
+            symbol: 'LV_SYMBOL_HOME', 
+            events: [],
+            style: { backgroundColor: '#3b82f6', borderRadius: 22, textColor: '#fff', borderWidth: 0 }
+          },
+          {
+            id: 'w_btn_heat',
+            layerId: 'l_therm_1',
+            type: WidgetType.BUTTON,
+            name: 'BtnPower',
+            x: 141, y: 155, width: 44, height: 44,
+            text: '',
+            contentMode: 'icon',
+            symbol: 'LV_SYMBOL_CHARGE', 
+            events: [],
+            style: { backgroundColor: '#ef4444', borderRadius: 22, textColor: '#fff', borderWidth: 0 }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ebike_dash',
+    name: 'E-Bike Dashboard',
+    description: 'Digital instrument cluster showing speed, battery, and trip info.',
+    icon: <Gauge size={24} />,
+    color: 'from-blue-500 to-cyan-500',
+    settings: {
+      width: 480,
+      height: 320,
+      defaultBackgroundColor: '#000000',
+      projectName: 'EBike_Cluster',
+      theme: 'cyber',
+      targetDevice: 'wave_35_ips'
+    },
+    screens: [
+      {
+        id: 'scr_dash_1',
+        name: 'Dashboard',
+        backgroundColor: '#000000',
+        layers: [createLayer('l_dash_1')],
+        widgets: [
+          // Center Arc (Speed)
+          {
+            id: 'w_arc_speed',
+            layerId: 'l_dash_1',
+            type: WidgetType.ARC,
+            name: 'SpeedArc',
+            x: 140, y: 40, width: 240, height: 240, 
+            value: 65, min: 0, max: 100,
+            events: [],
+            style: { borderColor: '#06b6d4', backgroundColor: '#111', borderWidth: 16, borderRadius: 0 }
+          },
+          {
+            id: 'w_lbl_speed',
+            layerId: 'l_dash_1',
+            type: WidgetType.LABEL,
+            name: 'SpeedVal',
+            x: 215, y: 110, width: 100, height: 60,
+            text: '42',
+            events: [],
+            style: { textColor: '#ffffff', fontSize: 64, backgroundColor: 'transparent' }
+          },
+          {
+            id: 'w_lbl_unit',
+            layerId: 'l_dash_1',
+            type: WidgetType.LABEL,
+            name: 'Unit',
+            x: 235, y: 175, width: 50, height: 20,
+            text: 'KM/H',
+            events: [],
+            style: { textColor: '#06b6d4', fontSize: 16, backgroundColor: 'transparent' }
+          },
+          
+          // Left Sidebar (Battery Slider)
+          {
+            id: 'w_bar_batt',
+            layerId: 'l_dash_1',
+            type: WidgetType.SLIDER,
+            name: 'Battery',
+            x: 50, y: 80, width: 24, height: 160,
+            value: 60, max: 100,
+            events: [],
+            style: { backgroundColor: '#1f2937', borderColor: '#ffffff', borderRadius: 12 } 
+          },
+          {
+             id: 'w_icon_batt',
+             layerId: 'l_dash_1',
+             type: WidgetType.ICON,
+             name: 'IconBatt',
+             x: 47, y: 250, width: 30, height: 30,
+             symbol: 'LV_SYMBOL_BATTERY_3',
+             events: [],
+             style: { textColor: '#22c55e', fontSize: 24, backgroundColor: 'transparent' }
+          },
+
+          // Right Sidebar (Buttons)
+          {
+             id: 'w_btn_mode',
+             layerId: 'l_dash_1',
+             type: WidgetType.BUTTON,
+             name: 'ModeEco',
+             x: 390, y: 100, width: 70, height: 45,
+             text: 'ECO',
+             events: [],
+             style: { backgroundColor: '#22c55e', textColor: '#000000', borderRadius: 6, borderWidth: 0 }
+          },
+          {
+             id: 'w_btn_sport',
+             layerId: 'l_dash_1',
+             type: WidgetType.BUTTON,
+             name: 'ModeSport',
+             x: 390, y: 160, width: 70, height: 45,
+             text: 'SPORT',
+             events: [],
+             style: { backgroundColor: '#333333', textColor: '#6b7280', borderRadius: 6, borderWidth: 0 }
           }
         ]
       }
@@ -122,36 +222,36 @@ export const SAMPLE_PROJECTS: SampleProject[] = [
             layerId: 'l_audio_1',
             type: WidgetType.CONTAINER,
             name: 'CoverArt',
-            x: 110, y: 20, width: 100, height: 100,
+            x: 110, y: 15, width: 100, height: 100,
             events: [],
-            style: { backgroundColor: '#334155', borderRadius: 12, borderColor: '#475569', borderWidth: 1 }
+            style: { backgroundColor: '#1e293b', borderRadius: 8, borderColor: '#334155', borderWidth: 1 }
           },
           {
              id: 'w_icon_note',
              layerId: 'l_audio_1',
              type: WidgetType.ICON,
              name: 'NoteIcon',
-             x: 145, y: 55, width: 30, height: 30,
-             symbol: 'LV_SYMBOL_SHUFFLE', // Abstract rep
+             x: 148, y: 50, width: 24, height: 24,
+             symbol: 'LV_SYMBOL_SHUFFLE', 
              events: [],
-             style: { textColor: '#64748b', fontSize: 24, backgroundColor: 'transparent' }
+             style: { textColor: '#475569', fontSize: 24, backgroundColor: 'transparent' }
           },
           {
             id: 'w_lbl_song',
             layerId: 'l_audio_1',
             type: WidgetType.LABEL,
             name: 'SongTitle',
-            x: 60, y: 130, width: 200, height: 24,
+            x: 60, y: 125, width: 200, height: 24,
             text: 'Midnight Synthwave',
             events: [],
-            style: { textColor: '#e2e8f0', fontSize: 16, backgroundColor: 'transparent' }
+            style: { textColor: '#f8fafc', fontSize: 16, backgroundColor: 'transparent' }
           },
           {
             id: 'w_lbl_artist',
             layerId: 'l_audio_1',
             type: WidgetType.LABEL,
             name: 'Artist',
-            x: 60, y: 150, width: 200, height: 20,
+            x: 60, y: 148, width: 200, height: 20,
             text: 'Neon Dreams',
             events: [],
             style: { textColor: '#94a3b8', fontSize: 12, backgroundColor: 'transparent' }
@@ -161,141 +261,43 @@ export const SAMPLE_PROJECTS: SampleProject[] = [
             layerId: 'l_audio_1',
             type: WidgetType.SLIDER,
             name: 'Progress',
-            x: 40, y: 180, width: 240, height: 8,
+            x: 30, y: 175, width: 260, height: 6,
             value: 45, max: 100,
             events: [],
-            style: { backgroundColor: '#1e293b', borderColor: '#6366f1', borderRadius: 4 }
+            style: { backgroundColor: '#334155', borderColor: '#6366f1', borderRadius: 3 }
           },
           {
             id: 'w_btn_prev',
             layerId: 'l_audio_1',
             type: WidgetType.BUTTON,
             name: 'Prev',
-            x: 80, y: 200, width: 32, height: 32,
+            x: 90, y: 195, width: 32, height: 32,
             contentMode: 'icon',
             symbol: 'LV_SYMBOL_PREV',
             events: [],
-            style: { backgroundColor: 'transparent', textColor: '#e2e8f0', borderRadius: 99 }
+            style: { backgroundColor: 'transparent', textColor: '#cbd5e1', borderRadius: 16, borderWidth: 0 }
           },
           {
             id: 'w_btn_play',
             layerId: 'l_audio_1',
             type: WidgetType.BUTTON,
             name: 'Play',
-            x: 144, y: 196, width: 40, height: 40,
+            x: 140, y: 190, width: 42, height: 42,
             contentMode: 'icon',
             symbol: 'LV_SYMBOL_PLAY',
             events: [],
-            style: { backgroundColor: '#6366f1', textColor: '#fff', borderRadius: 99 }
+            style: { backgroundColor: '#6366f1', textColor: '#ffffff', borderRadius: 21, borderWidth: 0 }
           },
           {
             id: 'w_btn_next',
             layerId: 'l_audio_1',
             type: WidgetType.BUTTON,
             name: 'Next',
-            x: 208, y: 200, width: 32, height: 32,
+            x: 200, y: 195, width: 32, height: 32,
             contentMode: 'icon',
             symbol: 'LV_SYMBOL_NEXT',
             events: [],
-            style: { backgroundColor: 'transparent', textColor: '#e2e8f0', borderRadius: 99 }
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'ebike_dash',
-    name: 'E-Bike Dashboard',
-    description: 'Digital instrument cluster showing speed, battery, and trip info.',
-    icon: <Gauge size={24} />,
-    color: 'from-blue-500 to-cyan-500',
-    settings: {
-      width: 480,
-      height: 320,
-      defaultBackgroundColor: '#000000',
-      projectName: 'EBike_Cluster',
-      theme: 'cyber',
-      targetDevice: 'wave_35_ips'
-    },
-    screens: [
-      {
-        id: 'scr_dash_1',
-        name: 'Dashboard',
-        backgroundColor: '#000000',
-        layers: [createLayer('l_dash_1')],
-        widgets: [
-          // Speedometer
-          {
-            id: 'w_arc_speed',
-            layerId: 'l_dash_1',
-            type: WidgetType.ARC,
-            name: 'SpeedArc',
-            x: 140, y: 60, width: 200, height: 200,
-            value: 65, min: 0, max: 100,
-            events: [],
-            style: { borderColor: '#22d3ee', backgroundColor: '#111', borderWidth: 10, borderRadius: 0 }
-          },
-          {
-            id: 'w_lbl_speed',
-            layerId: 'l_dash_1',
-            type: WidgetType.LABEL,
-            name: 'SpeedVal',
-            x: 190, y: 120, width: 100, height: 50,
-            text: '42',
-            events: [],
-            style: { textColor: '#ffffff', fontSize: 48, backgroundColor: 'transparent' }
-          },
-          {
-            id: 'w_lbl_unit',
-            layerId: 'l_dash_1',
-            type: WidgetType.LABEL,
-            name: 'Unit',
-            x: 220, y: 170, width: 40, height: 20,
-            text: 'KM/H',
-            events: [],
-            style: { textColor: '#22d3ee', fontSize: 14, backgroundColor: 'transparent' }
-          },
-          // Sidebar Left (Battery)
-          {
-            id: 'w_bar_batt',
-            layerId: 'l_dash_1',
-            type: WidgetType.SLIDER, // Visualizing as bar
-            name: 'Battery',
-            x: 40, y: 80, width: 20, height: 160,
-            value: 80, max: 100,
-            events: [],
-            style: { backgroundColor: '#111', borderColor: '#22c55e', borderRadius: 4 }
-          },
-          {
-             id: 'w_icon_batt',
-             layerId: 'l_dash_1',
-             type: WidgetType.ICON,
-             name: 'IconBatt',
-             x: 35, y: 250, width: 30, height: 30,
-             symbol: 'LV_SYMBOL_BATTERY_3',
-             events: [],
-             style: { textColor: '#22c55e', fontSize: 20, backgroundColor: 'transparent' }
-          },
-          // Sidebar Right (Mode)
-          {
-             id: 'w_btn_mode',
-             layerId: 'l_dash_1',
-             type: WidgetType.BUTTON,
-             name: 'Mode',
-             x: 380, y: 100, width: 60, height: 40,
-             text: 'ECO',
-             events: [],
-             style: { backgroundColor: '#22c55e', textColor: '#000', borderRadius: 4 }
-          },
-          {
-             id: 'w_btn_sport',
-             layerId: 'l_dash_1',
-             type: WidgetType.BUTTON,
-             name: 'ModeSport',
-             x: 380, y: 150, width: 60, height: 40,
-             text: 'SPORT',
-             events: [],
-             style: { backgroundColor: '#333', textColor: '#666', borderRadius: 4 }
+            style: { backgroundColor: 'transparent', textColor: '#cbd5e1', borderRadius: 16, borderWidth: 0 }
           }
         ]
       }
@@ -341,7 +343,6 @@ export const SAMPLE_PROJECTS: SampleProject[] = [
                 events: [],
                 style: { textColor: '#1f2937', fontSize: 16, backgroundColor: 'transparent' }
              },
-             // List Item 1
              {
                 id: 'w_cont_wifi',
                 layerId: 'l_set_1',
@@ -362,7 +363,6 @@ export const SAMPLE_PROJECTS: SampleProject[] = [
                 events: [],
                 style: { textColor: '#2196F3', fontSize: 18, backgroundColor: 'transparent' }
              },
-             // List Item 2
              {
                 id: 'w_cont_bt',
                 layerId: 'l_set_1',
