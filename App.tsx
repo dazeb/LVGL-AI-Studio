@@ -13,7 +13,7 @@ import HistoryMenu from './components/HistoryMenu';
 import { useHistory } from './hooks/useHistory';
 import { SampleProject } from './data/samples';
 import { generateLVGLCode } from './services/aiService';
-import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, RotateCw, FolderOpen, Download, Upload, FileJson } from 'lucide-react';
+import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, RotateCw, FileJson } from 'lucide-react';
 
 const STORAGE_KEY = 'lvgl_studio_autosave_v1';
 
@@ -79,7 +79,7 @@ const App: React.FC = () => {
     undo, 
     redo, 
     canUndo, 
-    canRedo,
+    canRedo, 
     jumpTo: jumpToHistory
   } = useHistory<ProjectState>({
     screens: initialScreens,
@@ -178,10 +178,6 @@ const App: React.FC = () => {
      const layerExists = currentScreen.layers.find(l => l.id === activeLayerId);
      if (!layerExists && currentScreen.layers.length > 0) {
         // Reset layer ID without adding to history (it's a sync correction)
-        // We need to bypass the history setter for this, or just do it silently? 
-        // Actually `activeLayerId` IS in history, so if we undid, it should be correct.
-        // But if the logic gets out of sync, we correct it.
-        // We'll skip this for now assuming history is consistent.
      }
   }, [activeScreenId, currentScreen, activeLayerId]);
 
@@ -341,9 +337,6 @@ const App: React.FC = () => {
   };
 
   const handleSetActiveScreen = (id: string) => {
-      // Just switching screen is a state change, but maybe not one we want to "Undo" heavily? 
-      // Actually, navigation IS a user action. Let's record it.
-      // But we need to make sure we find the correct activeLayerId for that screen.
       const targetScreen = screens.find(s => s.id === id);
       if (!targetScreen) return;
       
@@ -413,7 +406,6 @@ const App: React.FC = () => {
              return s;
          })
      }));
-     // Selection update happens outside of history for simplicity, or we can clear selection
      const layerWidgets = currentScreen.widgets.filter(w => w.layerId === layerId).map(w => w.id);
      setSelectedIds(prev => prev.filter(pid => !layerWidgets.includes(pid)));
   };
@@ -514,7 +506,6 @@ const App: React.FC = () => {
   };
 
   const handleUpdateWidget = useCallback((id: string, updates: Partial<Widget>) => {
-    // Determine action name based on what's changing for better history logs
     const keys = Object.keys(updates);
     const action = keys.length === 1 ? `Update ${keys[0]}` : 'Update Widget';
 
@@ -591,7 +582,7 @@ const App: React.FC = () => {
     if (selectedIds.length < 2) return;
     const newGroupId = `group_${Date.now()}`;
     const updates = selectedIds.map(id => ({ id, changes: { groupId: newGroupId } }));
-    handleUpdateWidgets(updates); // This calls updateProject internally
+    handleUpdateWidgets(updates);
   };
 
   const handleUngroup = () => {
@@ -614,11 +605,6 @@ const App: React.FC = () => {
                 } else if (action === 'back') {
                     newWidgets = [...selected, ...unselected];
                 } else {
-                    // Simplified logic for forward/backward
-                    // In a real implementation, we'd swap indices carefully
-                    // For now, reuse front/back logic or simple swap if implemented fully
-                    // (Assuming Bubble logic from previous App.tsx was desired, omitting for brevity in this refactor, but keeping structure)
-                    // Re-implementing bubbles for correctness:
                     if (action === 'forward') {
                         for (let i = newWidgets.length - 2; i >= 0; i--) {
                             if (selectedIds.includes(newWidgets[i].id) && !selectedIds.includes(newWidgets[i+1].id)) {
@@ -654,7 +640,7 @@ const App: React.FC = () => {
              backgroundColor: theme.colors.background,
              widgets: screen.widgets.map(widget => {
                  const newStyle = { ...widget.style };
-                 // ... (Same theme logic as before) ...
+                 // ... switch logic ...
                  switch (widget.type) {
                      case WidgetType.BUTTON:
                         newStyle.backgroundColor = theme.colors.primary;
@@ -700,7 +686,6 @@ const App: React.FC = () => {
                      case WidgetType.ICON:
                         newStyle.textColor = theme.colors.text;
                         break;
-                     // New Widgets
                      case WidgetType.BAR:
                         newStyle.backgroundColor = theme.colors.secondary;
                         newStyle.borderColor = theme.colors.primary;
@@ -740,7 +725,7 @@ const App: React.FC = () => {
     if (isGenerating) return;
     setIsGenerating(true);
     setShowCode(true);
-    setCode(''); // Clear previous code
+    setCode(''); 
 
     try {
         const generated = await generateLVGLCode(screens, canvasSettings, codeLanguage, aiSettings);
@@ -751,8 +736,6 @@ const App: React.FC = () => {
         setIsGenerating(false);
     }
   };
-
-  // --- Render ---
 
   return (
     <div className="h-screen w-screen flex flex-col bg-slate-950 text-slate-200 overflow-hidden font-sans">
@@ -815,12 +798,6 @@ const App: React.FC = () => {
              <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1 hover:text-white text-slate-400 hover:bg-slate-700 rounded"><ZoomIn size={14} /></button>
           </div>
           
-          {/* Open / Save */}
-          <div className="flex items-center gap-1">
-             <button onClick={handleOpenProjectClick} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-slate-700" title="Open Project"><FolderOpen size={16} className="text-amber-500" /> <span className="hidden sm:inline">Open</span></button>
-             <button onClick={handleSaveProject} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-slate-700" title="Save Project"><Download size={16} className="text-green-500" /> <span className="hidden sm:inline">Save</span></button>
-          </div>
-
           <button onClick={() => setShowSamples(true)} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-slate-700"><FileJson size={16} className="text-blue-400" /> Templates</button>
 
           <div className="flex items-center gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
@@ -830,7 +807,10 @@ const App: React.FC = () => {
             </select>
           </div>
           
-          <button onClick={() => setShowSettings(true)} className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors" title="AI Settings"><SettingsIcon size={20} /></button>
+          <button onClick={() => setShowSettings(true)} className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors border border-slate-700 bg-slate-800" title="Settings">
+             <SettingsIcon size={16} /> 
+             <span className="hidden lg:inline text-xs font-medium">Settings</span>
+          </button>
 
           <button onClick={handleGenerateCode} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-medium transition-all shadow-lg shadow-blue-900/20"><Code size={16} /> Generate Code</button>
         </div>
@@ -888,7 +868,14 @@ const App: React.FC = () => {
 
       {/* Modals */}
       {showCode && <CodeViewer code={code} language={codeLanguage} isLoading={isGenerating} onClose={() => setShowCode(false)} onRefresh={handleGenerateCode} onLanguageChange={setCodeLanguage} />}
-      <SettingsDialog isOpen={showSettings} onClose={() => setShowSettings(false)} settings={aiSettings} onSave={setAiSettings} />
+      <SettingsDialog 
+         isOpen={showSettings} 
+         onClose={() => setShowSettings(false)} 
+         settings={aiSettings} 
+         onSave={setAiSettings} 
+         onSaveProject={handleSaveProject}
+         onOpenProject={handleOpenProjectClick}
+      />
       <SampleCatalogue isOpen={showSamples} onClose={() => setShowSamples(false)} onSelectSample={handleLoadSample} />
       <ConfirmDialog isOpen={confirmDialog.isOpen} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} />
     </div>
