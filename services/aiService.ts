@@ -1,7 +1,6 @@
 
-
 import { GoogleGenAI } from "@google/genai";
-import { Widget, CanvasSettings, CodeLanguage, AISettings, Screen } from '../types';
+import { Widget, CanvasSettings, CodeLanguage, AISettings, Screen, WidgetType } from '../types';
 import { DEVICE_PRESETS } from '../constants';
 
 const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: CodeLanguage) => {
@@ -82,18 +81,66 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
         - If action is 'CUSTOM_CODE', insert the code snippet.
       `}
 
-      Widget Styling:
-      - Accurately apply x, y, width, height.
-      - Apply styles (radius, bg color, text color, border) using local styles or direct style modification functions (e.g., \`lv_obj_set_style_bg_color\`).
-      - For 'lv_icon', create a Label and set text to the symbol name (e.g., \`LV_SYMBOL_HOME\`).
-      - For 'lv_img' (Image Widgets):
-        - The 'src' property contains the filename (e.g., "my_image.png").
-        - Assume the image is a file.
-        - In C: Use \`lv_img_set_src(img_obj, "S:path/to/" + src_filename)\` or refer to a declared image descriptor pointer if common (e.g. \`&ui_img_filename_png\`). Prefer the declared pointer variable style \`&ui_img_FILENAME_png\` for standard converted images.
-        - In MicroPython: Use \`img.set_src("path/to/" + src_filename)\`.
-      - For Buttons (lv_btn):
-        - If \`contentMode\` is 'icon', create a child Label object on the button. Set the label's text to the \`symbol\` property (e.g. \`LV_SYMBOL_PLAY\`) and center it.
-        - If \`contentMode\` is 'text' (default), create a child Label object and set its text to the \`text\` property.
+      Widget Styling & Parts Logic:
+      - **Geometry**: Accurately apply x, y, width, height.
+      - **Fonts**: Map 'style.fontSize' to the closest standard LVGL font (e.g., 14 -> \`lv_font_montserrat_14\`, 24 -> \`lv_font_montserrat_24\`).
+      - **Base Styles**: Apply 'style.backgroundColor', 'style.borderRadius', 'style.borderWidth', 'style.borderColor' (as border color), 'style.textColor'.
+      
+      - **Advanced Part Styling**:
+        1. **Sliders, Bars, Switches**: 
+           - The 'style.borderColor' in JSON usually represents the **Active/Indicator** color.
+           - Apply 'style.backgroundColor' to \`LV_PART_MAIN\` (the background track).
+           - Apply 'style.borderColor' to \`LV_PART_INDICATOR\` (the filled area).
+           - For Sliders/Switches, style \`LV_PART_KNOB\` to be white or the indicator color, with a radius to make it round.
+        2. **Arcs**:
+           - Apply 'style.backgroundColor' to \`LV_PART_MAIN\` (background arc).
+           - Apply 'style.borderColor' to \`LV_PART_INDICATOR\` (foreground arc).
+           - Remove the knob (\`lv_obj_remove_style(..., NULL, LV_PART_KNOB)\`) unless it's interactive.
+        3. **Shadows**:
+           - If a Container or Button has a background color and no border, apply a subtle shadow (\`lv_obj_set_style_shadow_width\`, \`lv_obj_set_style_shadow_opa\`) to add depth (e.g., width 20, opacity 30).
+      
+      - **Specific Widget Logic**:
+        - **lv_icon**: Create a Label and set text to the symbol name (e.g., \`LV_SYMBOL_HOME\`). Apply text color.
+        - **lv_img**: Use \`lv_img_set_src(img_obj, "S:path/to/" + src_filename)\`.
+        - **lv_btn**: 
+           - If \`contentMode\` is 'icon', create a child Label with the symbol.
+           - If \`contentMode\` is 'text', create a child Label with the text.
+           - Center the label on the button.
+    `;
+};
+
+const constructWidgetPrompt = (description: string) => {
+    return `
+    You are an expert UI generator.
+    Task: Create a single LVGL widget configuration JSON based on this description: "${description}".
+    
+    Return ONLY a raw JSON object (no markdown, no backticks) matching this Typescript interface:
+    
+    interface WidgetPartial {
+      type: string; // One of: lv_btn, lv_label, lv_slider, lv_switch, lv_checkbox, lv_arc, lv_obj, lv_textarea, lv_chart, lv_img, lv_icon, lv_bar, lv_roller, lv_dropdown, lv_led, lv_keyboard
+      name: string; // A short descriptive name (e.g. "RedStopBtn")
+      width: number;
+      height: number;
+      text?: string; // For buttons, labels, checkboxes, textareas
+      value?: number; // For sliders, arcs, bars (0-100 usually)
+      checked?: boolean; // For switches, checkboxes
+      symbol?: string; // For icons or icon-buttons (e.g. LV_SYMBOL_HOME)
+      style: {
+        backgroundColor?: string; // Hex code
+        textColor?: string;
+        borderColor?: string;
+        borderWidth?: number;
+        borderRadius?: number;
+        fontSize?: number;
+      }
+    }
+
+    Rules:
+    1. Infer the best 'type' based on the description.
+    2. Suggest reasonable width/height dimensions.
+    3. If color is described, set backgroundColor/textColor/borderColor in hex (e.g. #FF0000).
+    4. If 'round' is mentioned for a button, set borderRadius to high value (e.g. 20 or 99).
+    5. If it's a specific icon (like 'settings' or 'wifi'), set the 'symbol' property to the closest 'LV_SYMBOL_...' string.
     `;
 };
 
@@ -124,7 +171,7 @@ const generateOpenAICompatible = async (prompt: string, settings: AISettings): P
     const body = {
         model: settings.model,
         messages: [
-            { role: "system", content: "You are an expert LVGL code generator. Output only code." },
+            { role: "system", content: "You are an expert LVGL code generator. Output only code/JSON." },
             { role: "user", content: prompt }
         ],
         temperature: 0.2
@@ -211,4 +258,31 @@ export const generateLVGLCode = async (
     console.error("Error generating code:", error);
     return `// Error generating code: ${(error as Error).message}\n// Please check your Settings (API Key/Provider).`;
   }
+};
+
+export const generateSingleWidget = async (
+    description: string,
+    aiSettings: AISettings
+): Promise<Partial<Widget>> => {
+    try {
+        const prompt = constructWidgetPrompt(description);
+        let jsonStr = '';
+
+        if (aiSettings.provider === 'gemini') {
+            jsonStr = await generateGemini(prompt, aiSettings);
+        } else if (aiSettings.provider === 'anthropic') {
+            jsonStr = await generateAnthropic(prompt, aiSettings);
+        } else {
+            jsonStr = await generateOpenAICompatible(prompt, aiSettings);
+        }
+
+        // Clean potentially leftover markdown
+        jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        const widgetData = JSON.parse(jsonStr);
+        return widgetData;
+    } catch (error) {
+        console.error("Error creating widget from AI:", error);
+        throw error;
+    }
 };

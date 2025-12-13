@@ -458,19 +458,34 @@ const App: React.FC = () => {
 
   // --- Widget Management ---
 
-  const handleSelectWidget = useCallback((id: string | null, isShift: boolean) => {
+  const handleSelectWidget = useCallback((id: string | string[] | null, isShift: boolean) => {
+    // If id is null and no shift, we clear
     if (id === null) {
         if (!isShift) setSelectedIds([]);
         return;
     }
-    
+
+    // Handle batch selection (array of IDs)
+    if (Array.isArray(id)) {
+        if (isShift) {
+            // Union with existing selection
+            setSelectedIds(prev => Array.from(new Set([...prev, ...id])));
+        } else {
+            // Replace selection
+            setSelectedIds(id);
+        }
+        return;
+    }
+
+    // Handle single selection (string ID)
+    const singleId = id as string;
     setSelectedIds(prev => {
         if (isShift) {
-            return prev.includes(id) 
-                ? prev.filter(p => p !== id) 
-                : [...prev, id];
+            return prev.includes(singleId) 
+                ? prev.filter(p => p !== singleId) 
+                : [...prev, singleId];
         }
-        return [id];
+        return [singleId];
     });
   }, []);
 
@@ -505,6 +520,51 @@ const App: React.FC = () => {
         })
     }));
     setSelectedIds([newWidget.id]);
+  };
+
+  const handleAddWidgetFromAI = (partialWidget: Partial<Widget>) => {
+      // Basic defaults
+      let posX = 40;
+      let posY = 40;
+      
+      // Calculate a staggered position if there are existing widgets
+      if (currentScreen.widgets.length > 0) {
+          const last = currentScreen.widgets[currentScreen.widgets.length - 1];
+          posX = last.x + 20;
+          posY = last.y + 20;
+      }
+
+      // Merge defaults, AI properties, and mandatory state fields
+      const newWidget: Widget = {
+          id: `widget_${Date.now()}`,
+          layerId: activeLayerId,
+          type: partialWidget.type || WidgetType.BUTTON, // Fallback
+          name: partialWidget.name || `Widget_${Date.now()}`,
+          x: posX,
+          y: posY,
+          width: partialWidget.width || 100,
+          height: partialWidget.height || 50,
+          text: partialWidget.text,
+          value: partialWidget.value,
+          checked: partialWidget.checked,
+          symbol: partialWidget.symbol,
+          events: [], // Start with no events
+          style: {
+              ...DEFAULT_WIDGET_PROPS[partialWidget.type || WidgetType.BUTTON].style,
+              ...partialWidget.style // Override with AI styles
+          }
+      };
+
+      updateProject('Add AI Widget', prev => ({
+          ...prev,
+          screens: prev.screens.map(s => {
+              if (s.id === prev.activeScreenId) {
+                  return { ...s, widgets: [...s.widgets, newWidget] };
+              }
+              return s;
+          })
+      }));
+      setSelectedIds([newWidget.id]);
   };
 
   const handleUpdateWidget = useCallback((id: string, updates: Partial<Widget>) => {
@@ -832,11 +892,13 @@ const App: React.FC = () => {
       <main className="flex-1 flex overflow-hidden">
         <WidgetPalette 
           onAddWidget={handleAddWidget}
+          onAddWidgetFromAI={handleAddWidgetFromAI}
           screens={screens}
           activeScreenId={activeScreenId}
           onSetActiveScreen={handleSetActiveScreen}
           onAddScreen={handleAddScreen}
           onDeleteScreen={handleDeleteScreen}
+          aiSettings={aiSettings}
         />
         
         <Canvas 

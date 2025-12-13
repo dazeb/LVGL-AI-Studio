@@ -47,7 +47,7 @@ interface CanvasProps {
   settings: CanvasSettings & { backgroundColor: string };
   zoom: number;
   selectedIds: string[];
-  onSelectWidget: (id: string | null, isShift: boolean) => void;
+  onSelectWidget: (id: string | string[] | null, isShift: boolean) => void;
   onUpdateWidgets: (updates: {id: string, changes: Partial<Widget>}[]) => void;
   onAddWidget: (type: WidgetType, x?: number, y?: number) => void;
 }
@@ -66,7 +66,7 @@ const LVGL_SYMBOLS: Record<string, React.ReactNode> = {
   'LV_SYMBOL_GPS': <MapPin />,
   'LV_SYMBOL_USB': <Usb />,
   'LV_SYMBOL_BATTERY_FULL': <BatteryFull />,
-  'LV_SYMBOL_BATTERY_3': <BatteryFull />, // Reuse full or almost full
+  'LV_SYMBOL_BATTERY_3': <BatteryFull />,
   'LV_SYMBOL_BATTERY_2': <BatteryMedium />,
   'LV_SYMBOL_BATTERY_1': <BatteryLow />,
   'LV_SYMBOL_BATTERY_EMPTY': <BatteryWarning />,
@@ -74,7 +74,7 @@ const LVGL_SYMBOLS: Record<string, React.ReactNode> = {
   'LV_SYMBOL_CALL': <Phone />,
   'LV_SYMBOL_PLAY': <Play />,
   'LV_SYMBOL_PAUSE': <Pause />,
-  'LV_SYMBOL_STOP': <X />, // Commonly mapped or use square
+  'LV_SYMBOL_STOP': <X />, 
   'LV_SYMBOL_NEXT': <SkipForward />,
   'LV_SYMBOL_PREV': <SkipBack />,
   'LV_SYMBOL_BELL': <Bell />,
@@ -90,6 +90,14 @@ const LVGL_SYMBOLS: Record<string, React.ReactNode> = {
   'LV_SYMBOL_MUTE': <VolumeX />,
   'LV_SYMBOL_SHUFFLE': <Shuffle />,
   'LV_SYMBOL_LOOP': <Repeat />,
+};
+
+// Helper: Check rectangle intersection
+const checkIntersection = (r1: {x: number, y: number, w: number, h: number}, r2: {x: number, y: number, w: number, h: number}) => {
+  return !(r2.x > r1.x + r1.w || 
+           r2.x + r2.w < r1.x || 
+           r2.y > r1.y + r1.h || 
+           r2.y + r2.h < r1.y);
 };
 
 const Canvas: React.FC<CanvasProps> = ({ 
@@ -110,23 +118,57 @@ const Canvas: React.FC<CanvasProps> = ({
     initialPositions: Record<string, {x: number, y: number}>;
   } | null>(null);
 
-  // Resize state tracks resizing a single widget
+  // Resize state tracks resizing widgets (single or group)
   const [resizeState, setResizeState] = useState<{
     active: boolean;
     direction: string; // 'n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'
     startMouse: {x: number, y: number};
-    startWidget: {x: number, y: number, width: number, height: number};
-    widgetId: string;
+    startWidget: {x: number, y: number, width: number, height: number}; // The bounding box being resized
+    widgetId: string | 'GROUP';
     aspectRatio: number;
+    // For Group Scaling
+    initialWidgetStates: Record<string, {x: number, y: number, width: number, height: number}>;
+  } | null>(null);
+
+  // Marquee Selection State
+  const [selectionBox, setSelectionBox] = useState<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
   } | null>(null);
 
   // Transient state for smooth rendering without history spam
   const [transientChanges, setTransientChanges] = useState<Record<string, Partial<Widget>>>({});
-  // Ref needed to access latest changes in event cleanup without stale closures
   const transientChangesRef = useRef<Record<string, Partial<Widget>>>({});
 
   const isLayerLocked = (layerId: string) => {
     return layers.find(l => l.id === layerId)?.locked ?? false;
+  };
+
+  const getGroupBounds = () => {
+    if (selectedIds.length === 0) return null;
+    const selected = widgets.filter(w => selectedIds.includes(w.id));
+    if (selected.length === 0) return null;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    
+    selected.forEach(w => {
+        // Use transient position if available
+        const t = transientChanges[w.id] || {};
+        const x = t.x !== undefined ? t.x : w.x;
+        const y = t.y !== undefined ? t.y : w.y;
+        const width = t.width !== undefined ? t.width : w.width;
+        const height = t.height !== undefined ? t.height : w.height;
+
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x + width);
+        maxY = Math.max(maxY, y + height);
+    });
+
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
   };
 
   const handleMouseDown = (e: React.MouseEvent, widget: Widget) => {
@@ -138,30 +180,34 @@ const Canvas: React.FC<CanvasProps> = ({
     // If we are currently resizing, don't start a drag
     if (resizeState?.active) return;
 
-    // Select widget (with Shift logic)
-    onSelectWidget(widget.id, e.shiftKey);
-    
-    let effectiveSelectedIds = [...selectedIds];
+    // Logic to handle selection state before dragging
     const isAlreadySelected = selectedIds.includes(widget.id);
     
     if (!isAlreadySelected && !e.shiftKey) {
-        if (widget.groupId) {
-            effectiveSelectedIds = widgets.filter(w => w.groupId === widget.groupId).map(w => w.id);
-        } else {
-            effectiveSelectedIds = [widget.id];
-        }
-    } else if (!isAlreadySelected && e.shiftKey) {
-        effectiveSelectedIds.push(widget.id);
-        if (widget.groupId) {
-            const peers = widgets.filter(w => w.groupId === widget.groupId).map(w => w.id);
-            effectiveSelectedIds = [...new Set([...effectiveSelectedIds, ...peers])];
-        }
+        // Single select new item
+        onSelectWidget(widget.id, false);
+    } else if (e.shiftKey) {
+        // Toggle selection
+        onSelectWidget(widget.id, true);
     }
+    // If already selected and no shift, keep selection (might be starting a group drag)
+
+    // Defer drag initialization slightly to ensure selection state is settled? 
+    // Actually, we need to calculate drag targets based on what *will* be selected.
+    
+    let effectiveSelectedIds = isAlreadySelected 
+        ? [...selectedIds] // Dragging existing selection
+        : e.shiftKey ? [...selectedIds, widget.id] : [widget.id]; // Dragging new selection
+
+    // Handle Groups logic (expanding selection to group members)
+    // Simplified for now: assuming selectedIds passed in props is accurate for the start of drag
+    // But we need to account for the just-clicked logic if it wasn't selected before.
     
     const initialPos: Record<string, {x: number, y: number}> = {};
+    
+    // We iterate over ALL widgets to find those that match effective selection
     widgets.forEach(w => {
         if (effectiveSelectedIds.includes(w.id)) {
-            // Safety check for locking again
             if (!isLayerLocked(w.layerId)) {
                 initialPos[w.id] = { x: w.x, y: w.y };
             }
@@ -176,22 +222,60 @@ const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
-  const handleResizeMouseDown = (e: React.MouseEvent, direction: string, widget: Widget) => {
+  const handleResizeMouseDown = (e: React.MouseEvent, direction: string, id: string | 'GROUP') => {
     e.stopPropagation();
-    if (isLayerLocked(widget.layerId)) return;
+
+    let startBox: {x: number, y: number, width: number, height: number};
+    const initialStates: Record<string, {x: number, y: number, width: number, height: number}> = {};
+
+    if (id === 'GROUP') {
+        const bounds = getGroupBounds();
+        if (!bounds) return;
+        startBox = bounds;
+        
+        // Capture state of all selected widgets
+        widgets.filter(w => selectedIds.includes(w.id)).forEach(w => {
+             initialStates[w.id] = { x: w.x, y: w.y, width: w.width, height: w.height };
+        });
+
+    } else {
+        const widget = widgets.find(w => w.id === id);
+        if (!widget || isLayerLocked(widget.layerId)) return;
+        startBox = { x: widget.x, y: widget.y, width: widget.width, height: widget.height };
+        initialStates[widget.id] = startBox;
+    }
 
     setResizeState({
       active: true,
       direction,
       startMouse: { x: e.clientX, y: e.clientY },
-      startWidget: { x: widget.x, y: widget.y, width: widget.width, height: widget.height },
-      widgetId: widget.id,
-      aspectRatio: widget.width / widget.height
+      startWidget: startBox,
+      widgetId: id,
+      aspectRatio: startBox.width / startBox.height,
+      initialWidgetStates: initialStates
     });
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    onSelectWidget(null, false);
+    // If clicking on empty canvas
+    if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / zoom;
+        const y = (e.clientY - rect.top) / zoom;
+        
+        setSelectionBox({
+            active: true,
+            startX: x,
+            startY: y,
+            currentX: x,
+            currentY: y
+        });
+        
+        // Clear selection unless Shift is held
+        if (!e.shiftKey) {
+            onSelectWidget(null, false);
+        }
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -200,7 +284,6 @@ const Canvas: React.FC<CanvasProps> = ({
     
     if (type && canvasRef.current) {
         const canvasRect = canvasRef.current.getBoundingClientRect();
-        // Adjust for Zoom: Scale the difference between mouse and canvas edge
         let x = (e.clientX - canvasRect.left) / zoom;
         let y = (e.clientY - canvasRect.top) / zoom;
         
@@ -216,56 +299,64 @@ const Canvas: React.FC<CanvasProps> = ({
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
-      // 1. Handle Resizing
+      // 1. Handle Selection Marquee
+      if (selectionBox?.active && canvasRef.current) {
+         const rect = canvasRef.current.getBoundingClientRect();
+         const x = (e.clientX - rect.left) / zoom;
+         const y = (e.clientY - rect.top) / zoom;
+
+         setSelectionBox(prev => prev ? ({ ...prev, currentX: x, currentY: y }) : null);
+
+         // We do not calculate intersections on move to avoid spamming state updates.
+         // We do it on MouseUp. Visual feedback is handled by renderSelectionBox.
+      }
+
+      // 2. Handle Resizing
       if (resizeState && resizeState.active) {
-        // Adjust delta for zoom
         const deltaX = (e.clientX - resizeState.startMouse.x) / zoom;
         const deltaY = (e.clientY - resizeState.startMouse.y) / zoom;
         
+        // Calculate new Bounds for the object being resized (Widget or Group)
         let newX = resizeState.startWidget.x;
         let newY = resizeState.startWidget.y;
         let newWidth = resizeState.startWidget.width;
         let newHeight = resizeState.startWidget.height;
 
         const { direction, aspectRatio, widgetId } = resizeState;
-        const currentWidget = widgets.find(w => w.id === widgetId);
-        // Lock aspect ratio for Icons, Images, or if Shift is held
-        const shouldLockAspect = (currentWidget?.type === WidgetType.ICON || currentWidget?.type === WidgetType.IMAGE) || e.shiftKey;
-
-        // --- Standard Calculation ---
-        // Horizontal
+        
+        // --- Dimension Calculation ---
         if (direction.includes('e')) {
           newWidth = Math.max(10, resizeState.startWidget.width + deltaX);
         } else if (direction.includes('w')) {
           const maxDelta = resizeState.startWidget.width - 10;
-          const appliedDelta = Math.min(maxDelta, deltaX); // Cannot shrink past 10 width
+          const appliedDelta = Math.min(maxDelta, deltaX);
           newX = resizeState.startWidget.x + appliedDelta;
           newWidth = resizeState.startWidget.width - appliedDelta;
         }
 
-        // Vertical
         if (direction.includes('s')) {
           newHeight = Math.max(10, resizeState.startWidget.height + deltaY);
         } else if (direction.includes('n')) {
           const maxDelta = resizeState.startWidget.height - 10;
-          const appliedDelta = Math.min(maxDelta, deltaY); // Cannot shrink past 10 height
+          const appliedDelta = Math.min(maxDelta, deltaY);
           newY = resizeState.startWidget.y + appliedDelta;
           newHeight = resizeState.startWidget.height - appliedDelta;
         }
 
-        // --- Aspect Ratio Correction ---
+        // --- Aspect Ratio Lock ---
+        // For groups, we probably want to default to scaling proportionally if shift held?
+        // Or for single images/icons.
+        const currentWidget = widgetId !== 'GROUP' ? widgets.find(w => w.id === widgetId) : null;
+        const shouldLockAspect = (currentWidget?.type === WidgetType.ICON || currentWidget?.type === WidgetType.IMAGE) || e.shiftKey;
+
         if (shouldLockAspect) {
           if (direction.length === 2) { 
-            // Corner Resizing: Drive by width, adjust height
             const calculatedHeight = newWidth / aspectRatio;
-            
-            // Adjust Y if dragging from top (North)
             if (direction.includes('n')) {
                newY = resizeState.startWidget.y + (resizeState.startWidget.height - calculatedHeight);
             }
             newHeight = calculatedHeight;
           } else {
-             // Edge Resizing: Maintain aspect ratio
              if (direction === 'e' || direction === 'w') {
                 newHeight = newWidth / aspectRatio;
              } else if (direction === 'n' || direction === 's') {
@@ -274,34 +365,52 @@ const Canvas: React.FC<CanvasProps> = ({
           }
         }
 
-        // Snap to grid (optional, can be toggled)
-        newX = Math.round(newX / 10) * 10;
-        newY = Math.round(newY / 10) * 10;
-        
-        // If not locked, snap dimensions. If locked, snap width but let height flow (or vice versa) to be smooth
-        if (!shouldLockAspect) {
-           newWidth = Math.round(newWidth / 10) * 10;
-           newHeight = Math.round(newHeight / 10) * 10;
+        // --- Applying Changes ---
+        const updates: Record<string, Partial<Widget>> = {};
+
+        if (widgetId === 'GROUP') {
+             // Calculate Scale Factors
+             const scaleX = newWidth / resizeState.startWidget.width;
+             const scaleY = newHeight / resizeState.startWidget.height;
+
+             // Apply to all widgets in group
+             Object.entries(resizeState.initialWidgetStates).forEach(([wId, startState]) => {
+                  const relativeX = startState.x - resizeState.startWidget.x;
+                  const relativeY = startState.y - resizeState.startWidget.y;
+
+                  updates[wId] = {
+                      x: newX + (relativeX * scaleX),
+                      y: newY + (relativeY * scaleY),
+                      width: Math.max(1, startState.width * scaleX),
+                      height: Math.max(1, startState.height * scaleY)
+                  };
+             });
         } else {
-           // Round to nearest integer at least
-           newWidth = Math.round(newWidth);
-           newHeight = Math.round(newHeight);
+             // Single Widget
+             // Snap to grid
+             newX = Math.round(newX / 10) * 10;
+             newY = Math.round(newY / 10) * 10;
+             if (!shouldLockAspect) {
+                 newWidth = Math.round(newWidth / 10) * 10;
+                 newHeight = Math.round(newHeight / 10) * 10;
+             } else {
+                 newWidth = Math.round(newWidth);
+                 newHeight = Math.round(newHeight);
+             }
+
+             if (newWidth < 10) newWidth = 10;
+             if (newHeight < 10) newHeight = 10;
+
+             updates[widgetId] = { x: newX, y: newY, width: newWidth, height: newHeight };
         }
 
-        // Ensure min size again after snap
-        if (newWidth < 10) newWidth = 10;
-        if (newHeight < 10) newHeight = 10;
-
-        // UPDATE TRANSIENT STATE ONLY (Don't commit to history yet)
-        const updates = { [resizeState.widgetId]: { x: newX, y: newY, width: newWidth, height: newHeight } };
         setTransientChanges(prev => ({ ...prev, ...updates }));
         transientChangesRef.current = { ...transientChangesRef.current, ...updates };
         return;
       }
 
-      // 2. Handle Moving
+      // 3. Handle Moving
       if (dragState && canvasRef.current) {
-        // Adjust delta for zoom
         const deltaX = (e.clientX - dragState.startMouse.x) / zoom;
         const deltaY = (e.clientY - dragState.startMouse.y) / zoom;
 
@@ -319,13 +428,40 @@ const Canvas: React.FC<CanvasProps> = ({
             updates[id] = { x: newX, y: newY };
         });
         
-        // UPDATE TRANSIENT STATE ONLY
         setTransientChanges(prev => ({ ...prev, ...updates }));
         transientChangesRef.current = { ...transientChangesRef.current, ...updates };
       }
     };
 
-    const handleGlobalMouseUp = () => {
+    const handleGlobalMouseUp = (e: MouseEvent) => {
+      // Finalize Selection Box
+      if (selectionBox?.active) {
+         // Calculate final selection
+         const selLeft = Math.min(selectionBox.startX, selectionBox.currentX);
+         const selTop = Math.min(selectionBox.startY, selectionBox.currentY);
+         const selWidth = Math.abs(selectionBox.currentX - selectionBox.startX);
+         const selHeight = Math.abs(selectionBox.currentY - selectionBox.startY);
+         const marqueeRect = { x: selLeft, y: selTop, w: selWidth, h: selHeight };
+
+         // Only select if box has some size to prevent clearing on accidental tiny drags
+         if (selWidth > 2 || selHeight > 2) {
+             const newIds: string[] = [];
+             widgets.forEach(w => {
+                if (checkIntersection(marqueeRect, {x: w.x, y: w.y, w: w.width, h: w.height})) {
+                    if (!isLayerLocked(w.layerId)) {
+                        newIds.push(w.id);
+                    }
+                }
+             });
+             
+             if (newIds.length > 0) {
+                 onSelectWidget(newIds, e.shiftKey);
+             }
+         }
+         
+         setSelectionBox(null);
+      }
+
       // Commit changes to history on MouseUp
       const changesToCommit = Object.entries(transientChangesRef.current).map(([id, changes]) => ({
           id,
@@ -342,7 +478,7 @@ const Canvas: React.FC<CanvasProps> = ({
       transientChangesRef.current = {};
     };
 
-    if (dragState || resizeState) {
+    if (dragState || resizeState || selectionBox) {
       window.addEventListener('mousemove', handleGlobalMouseMove);
       window.addEventListener('mouseup', handleGlobalMouseUp);
     }
@@ -351,7 +487,7 @@ const Canvas: React.FC<CanvasProps> = ({
       window.removeEventListener('mousemove', handleGlobalMouseMove);
       window.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [dragState, resizeState, widgets, onUpdateWidgets, zoom]);
+  }, [dragState, resizeState, selectionBox, widgets, onUpdateWidgets, zoom, onSelectWidget]);
 
 
   // Rendering Helpers
@@ -396,7 +532,12 @@ const Canvas: React.FC<CanvasProps> = ({
     };
 
     // Selection Ring (applied to container)
-    const selectionRing = isSelected ? 'ring-2 ring-blue-500 ring-offset-1 z-10' : 'z-0';
+    // If we have a group selection, we generally hide individual rings to reduce noise, 
+    // unless strictly needed. But keeping them helps know what's in the group.
+    // Let's keep a lighter ring for group members.
+    const selectionRing = isSelected 
+        ? (selectedIds.length > 1 ? 'ring-1 ring-blue-300 z-10' : 'ring-2 ring-blue-500 ring-offset-1 z-10')
+        : 'z-0';
     
     const renderInner = () => {
         switch (widget.type) {
@@ -802,11 +943,81 @@ const Canvas: React.FC<CanvasProps> = ({
                   borderRadius: '50%', // Round handles look nicer
                   boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
                }}
-               onMouseDown={(e) => handleResizeMouseDown(e, h.dir, widget)}
+               onMouseDown={(e) => handleResizeMouseDown(e, h.dir, widget.id)}
             />
         ))}
       </div>
     );
+  };
+
+  // Group Transform Overlay
+  const renderGroupOverlay = () => {
+      const bounds = getGroupBounds();
+      if (!bounds) return null;
+
+      // Handles for group
+      const handles = [
+       { cursor: 'nw-resize', pos: 'top-0 left-0', dir: 'nw' },
+       { cursor: 'n-resize',  pos: 'top-0 left-1/2 -translate-x-1/2', dir: 'n' },
+       { cursor: 'ne-resize', pos: 'top-0 right-0', dir: 'ne' },
+       { cursor: 'e-resize',  pos: 'top-1/2 right-0 -translate-y-1/2', dir: 'e' },
+       { cursor: 'se-resize', pos: 'bottom-0 right-0', dir: 'se' },
+       { cursor: 's-resize',  pos: 'bottom-0 left-1/2 -translate-x-1/2', dir: 's' },
+       { cursor: 'sw-resize', pos: 'bottom-0 left-0', dir: 'sw' },
+       { cursor: 'w-resize',  pos: 'top-1/2 left-0 -translate-y-1/2', dir: 'w' },
+      ];
+
+      return (
+          <div 
+            className="absolute z-50 pointer-events-none"
+            style={{
+                left: bounds.x,
+                top: bounds.y,
+                width: bounds.width,
+                height: bounds.height,
+                border: '1px dashed #3b82f6',
+            }}
+          >
+             {handles.map(h => (
+                <div 
+                   key={h.dir}
+                   className={`absolute w-2.5 h-2.5 bg-white border border-blue-500 pointer-events-auto ${h.pos}`}
+                   style={{ 
+                      cursor: h.cursor,
+                      marginTop: h.dir.includes('n') ? '-5px' : undefined,
+                      marginBottom: h.dir.includes('s') ? '-5px' : undefined,
+                      marginLeft: h.dir.includes('w') ? '-5px' : undefined,
+                      marginRight: h.dir.includes('e') ? '-5px' : undefined,
+                      borderRadius: '50%',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                   }}
+                   onMouseDown={(e) => handleResizeMouseDown(e, h.dir, 'GROUP')}
+                />
+             ))}
+          </div>
+      );
+  };
+
+  // Marquee Selection Box
+  const renderSelectionBox = () => {
+      if (!selectionBox?.active) return null;
+      
+      const left = Math.min(selectionBox.startX, selectionBox.currentX);
+      const top = Math.min(selectionBox.startY, selectionBox.currentY);
+      const width = Math.abs(selectionBox.currentX - selectionBox.startX);
+      const height = Math.abs(selectionBox.currentY - selectionBox.startY);
+
+      return (
+          <div 
+            className="absolute z-50 border border-blue-500 bg-blue-500/10 pointer-events-none"
+            style={{
+                left,
+                top,
+                width,
+                height
+            }}
+          />
+      );
   };
 
   return (
@@ -833,6 +1044,8 @@ const Canvas: React.FC<CanvasProps> = ({
          }}
        >
          {widgets.map(renderWidget)}
+         {renderGroupOverlay()}
+         {renderSelectionBox()}
        </div>
        
        <div className="absolute top-4 right-4 bg-slate-800 text-slate-400 text-xs px-2 py-1 rounded border border-slate-700 font-mono">

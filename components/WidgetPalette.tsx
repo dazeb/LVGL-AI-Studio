@@ -1,7 +1,7 @@
 
-
 import React, { useState } from 'react';
-import { WidgetType, Layer, Screen } from '../types';
+import { WidgetType, Layer, Screen, Widget, AISettings } from '../types';
+import { generateSingleWidget } from '../services/aiService';
 import { 
   Square, 
   Type, 
@@ -23,31 +23,39 @@ import {
   Trash2,
   Grid,
   Monitor,
-  CreditCard, // For Bar (visually similar to a bar)
-  GalleryVertical, // For Roller (looks like list)
+  CreditCard, // For Bar
+  GalleryVertical, // For Roller
   ChevronDownSquare, // For Dropdown
   Lightbulb, // For LED
-  Keyboard // For Keyboard
+  Keyboard, // For Keyboard
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
 interface WidgetPaletteProps {
   onAddWidget: (type: WidgetType) => void;
+  onAddWidgetFromAI: (partialWidget: Partial<Widget>) => void;
   screens: Screen[];
   activeScreenId: string;
   onSetActiveScreen: (id: string) => void;
   onAddScreen: () => void;
   onDeleteScreen: (id: string) => void;
+  aiSettings: AISettings;
 }
 
 const WidgetPalette: React.FC<WidgetPaletteProps> = ({ 
   onAddWidget,
+  onAddWidgetFromAI,
   screens,
   activeScreenId,
   onSetActiveScreen,
   onAddScreen,
   onDeleteScreen,
+  aiSettings
 }) => {
   const [activeTab, setActiveTab] = useState<'widgets' | 'screens'>('widgets');
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const widgets = [
     { type: WidgetType.BUTTON, icon: <Square size={18} />, label: 'Button' },
@@ -73,6 +81,21 @@ const WidgetPalette: React.FC<WidgetPaletteProps> = ({
     e.dataTransfer.effectAllowed = 'copy';
   };
 
+  const handleAIGenerate = async () => {
+      if (!prompt.trim() || isGenerating) return;
+      setIsGenerating(true);
+      try {
+          const widgetData = await generateSingleWidget(prompt, aiSettings);
+          onAddWidgetFromAI(widgetData);
+          setPrompt(''); // Clear after success
+      } catch (error) {
+          alert("Failed to generate widget. Check API settings.");
+          console.error(error);
+      } finally {
+          setIsGenerating(false);
+      }
+  };
+
   const renderTabButton = (id: 'widgets' | 'screens', icon: React.ReactNode, label: string) => (
     <button 
       onClick={() => setActiveTab(id)}
@@ -93,12 +116,38 @@ const WidgetPalette: React.FC<WidgetPaletteProps> = ({
       </div>
 
       {activeTab === 'widgets' && (
-        <>
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* AI Generator Input */}
+          <div className="p-3 border-b border-slate-700 bg-slate-800/30">
+             <label className="text-[10px] font-bold text-slate-500 uppercase mb-2 flex items-center gap-1">
+                <Sparkles size={10} className="text-purple-400" /> AI Generator
+             </label>
+             <div className="flex gap-2">
+                <input 
+                   type="text" 
+                   value={prompt}
+                   onChange={(e) => setPrompt(e.target.value)}
+                   onKeyDown={(e) => e.key === 'Enter' && handleAIGenerate()}
+                   placeholder="e.g. Red round button..."
+                   className="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-purple-500"
+                />
+                <button 
+                   onClick={handleAIGenerate}
+                   disabled={isGenerating || !prompt.trim()}
+                   className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white p-1.5 rounded transition-colors"
+                   title="Generate Widget"
+                >
+                   {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                </button>
+             </div>
+          </div>
+
           <div className="p-4 border-b border-slate-700 bg-slate-800/50">
             <p className="text-xs text-slate-400">
               Screen: <span className="text-blue-400 font-bold">{screens.find(s => s.id === activeScreenId)?.name}</span>
             </p>
           </div>
+          
           <div className="p-4 grid grid-cols-2 gap-3 overflow-y-auto flex-1">
             {widgets.map((widget) => (
               <div
@@ -120,7 +169,7 @@ const WidgetPalette: React.FC<WidgetPaletteProps> = ({
               Drag & Drop or Click to add
             </p>
           </div>
-        </>
+        </div>
       )}
 
       {activeTab === 'screens' && (

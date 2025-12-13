@@ -2,7 +2,7 @@
 import React from 'react';
 import { Screen, CanvasSettings, WidgetType, Layer } from '../types';
 import { PROJECT_THEMES } from '../constants';
-import { Thermometer, Music, Gauge, Activity, Wifi } from 'lucide-react';
+import { Thermometer, Music, Gauge, Activity, Wifi, Keyboard, Printer, Zap, LayoutTemplate } from 'lucide-react';
 
 export interface SampleProject {
   id: string;
@@ -17,6 +17,251 @@ export interface SampleProject {
 const createLayer = (id: string) => ({ id, name: 'Main Layer', visible: true, locked: false });
 
 export const SAMPLE_PROJECTS: SampleProject[] = [
+  {
+    id: 'lvgl_widgets_demo',
+    name: 'LVGL Widgets Demo',
+    description: 'Based on the official lv_demo_widgets. A complex profile dashboard showing layout capabilities.',
+    icon: <LayoutTemplate size={24} />,
+    color: 'from-blue-600 to-indigo-600',
+    settings: {
+      width: 480,
+      height: 320,
+      defaultBackgroundColor: '#f0f2f5',
+      projectName: 'LVGL_Demo_Widgets',
+      theme: 'light',
+      targetDevice: 'wave_35_ips'
+    },
+    screens: [
+      {
+        id: 'scr_widgets_1',
+        name: 'Profile Tab',
+        backgroundColor: '#f0f2f5',
+        layers: [createLayer('l_widgets_1')],
+        widgets: [
+           // Sidebar / Card
+           {
+              id: 'w_card_1',
+              layerId: 'l_widgets_1',
+              type: WidgetType.CONTAINER,
+              name: 'ProfileCard',
+              x: 10, y: 10, width: 160, height: 300,
+              events: [],
+              style: { backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 0, borderColor: '#e5e7eb' }
+           },
+           {
+              id: 'w_avatar',
+              layerId: 'l_widgets_1',
+              type: WidgetType.IMAGE,
+              name: 'Avatar',
+              x: 45, y: 30, width: 90, height: 90,
+              src: 'avatar.png',
+              events: [],
+              style: { backgroundColor: '#e2e8f0', borderRadius: 45, borderWidth: 3, borderColor: '#cbd5e1' }
+           },
+           {
+              id: 'w_lbl_name',
+              layerId: 'l_widgets_1',
+              type: WidgetType.LABEL,
+              name: 'UserName',
+              x: 20, y: 130, width: 140, height: 24,
+              text: 'Elena Smith',
+              events: [],
+              style: { textColor: '#1f2937', fontSize: 18, backgroundColor: 'transparent' }
+           },
+           {
+              id: 'w_lbl_role',
+              layerId: 'l_widgets_1',
+              type: WidgetType.LABEL,
+              name: 'Role',
+              x: 20, y: 155, width: 140, height: 20,
+              text: 'Product Designer',
+              events: [],
+              style: { textColor: '#6b7280', fontSize: 12, backgroundColor: 'transparent' }
+           },
+           {
+              id: 'w_btn_msg',
+              layerId: 'l_widgets_1',
+              type: WidgetType.BUTTON,
+              name: 'BtnMsg',
+              x: 30, y: 190, width: 120, height: 36,
+              text: 'Message',
+              contentMode: 'text',
+              events: [],
+              style: { backgroundColor: '#3b82f6', textColor: '#ffffff', borderRadius: 18, borderWidth: 0 }
+           },
+           {
+              id: 'w_btn_logout',
+              layerId: 'l_widgets_1',
+              type: WidgetType.BUTTON,
+              name: 'BtnLogout',
+              x: 30, y: 235, width: 120, height: 36,
+              text: 'Log Out',
+              contentMode: 'text',
+              events: [],
+              style: { backgroundColor: '#f3f4f6', textColor: '#374151', borderRadius: 18, borderWidth: 0 }
+           },
+
+           // Main Content Area
+           {
+              id: 'w_card_2',
+              layerId: 'l_widgets_1',
+              type: WidgetType.CONTAINER,
+              name: 'StatsCard',
+              x: 180, y: 10, width: 290, height: 145,
+              events: [],
+              style: { backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 0, borderColor: '#e5e7eb' }
+           },
+           {
+              id: 'w_lbl_stats',
+              layerId: 'l_widgets_1',
+              type: WidgetType.LABEL,
+              name: 'StatsTitle',
+              x: 195, y: 20, width: 100, height: 20,
+              text: 'Activity (24h)',
+              events: [],
+              style: { textColor: '#6b7280', fontSize: 10, backgroundColor: 'transparent' }
+           },
+           {
+              id: 'w_chart_1',
+              layerId: 'l_widgets_1',
+              type: WidgetType.CHART,
+              name: 'ActivityChart',
+              x: 190, y: 40, width: 270, height: 100,
+              chartType: 'line',
+              events: [],
+              style: { backgroundColor: 'transparent', borderColor: 'transparent', borderWidth: 0, borderRadius: 0 }
+           },
+           
+           // Bottom Controls
+           {
+              id: 'w_card_3',
+              layerId: 'l_widgets_1',
+              type: WidgetType.CONTAINER,
+              name: 'ControlsCard',
+              x: 180, y: 165, width: 290, height: 145,
+              events: [],
+              style: { backgroundColor: '#ffffff', borderRadius: 8, borderWidth: 0, borderColor: '#e5e7eb' }
+           },
+           {
+              id: 'w_lbl_vol',
+              layerId: 'l_widgets_1',
+              type: WidgetType.LABEL,
+              name: 'VolLabel',
+              x: 195, y: 180, width: 100, height: 20,
+              text: 'System Volume',
+              events: [],
+              style: { textColor: '#374151', fontSize: 12, backgroundColor: 'transparent' }
+           },
+           {
+              id: 'w_slider_vol',
+              layerId: 'l_widgets_1',
+              type: WidgetType.SLIDER,
+              name: 'VolSlider',
+              x: 195, y: 210, width: 260, height: 8,
+              value: 75,
+              events: [],
+              style: { backgroundColor: '#e5e7eb', borderColor: '#3b82f6', borderRadius: 4 }
+           },
+           {
+              id: 'w_sw_dnd',
+              layerId: 'l_widgets_1',
+              type: WidgetType.SWITCH,
+              name: 'SwDND',
+              x: 195, y: 250, width: 50, height: 28,
+              checked: true,
+              events: [],
+              style: { backgroundColor: '#e5e7eb', borderColor: '#ef4444', borderRadius: 99 }
+           },
+           {
+              id: 'w_lbl_dnd',
+              layerId: 'l_widgets_1',
+              type: WidgetType.LABEL,
+              name: 'DNDLabel',
+              x: 255, y: 255, width: 150, height: 20,
+              text: 'Do Not Disturb',
+              events: [],
+              style: { textColor: '#374151', fontSize: 12, backgroundColor: 'transparent' }
+           }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'lvgl_keypad',
+    name: 'Keypad & Login',
+    description: 'Based on lv_demo_keypad. Demonstrates text input handling with a visual keyboard.',
+    icon: <Keyboard size={24} />,
+    color: 'from-slate-600 to-slate-800',
+    settings: {
+      width: 480,
+      height: 320,
+      defaultBackgroundColor: '#111827',
+      projectName: 'SecureLogin',
+      theme: 'dark',
+      targetDevice: 'elecrow_crowpanel_50'
+    },
+    screens: [
+      {
+        id: 'scr_login',
+        name: 'Login Screen',
+        backgroundColor: '#111827',
+        layers: [createLayer('l_login')],
+        widgets: [
+          {
+             id: 'w_hdr',
+             layerId: 'l_login',
+             type: WidgetType.CONTAINER,
+             name: 'Header',
+             x: 0, y: 0, width: 480, height: 40,
+             events: [],
+             style: { backgroundColor: '#1f2937', borderRadius: 0, borderWidth: 0 }
+          },
+          {
+             id: 'w_lbl_hdr',
+             layerId: 'l_login',
+             type: WidgetType.LABEL,
+             name: 'Title',
+             x: 15, y: 10, width: 200, height: 20,
+             text: 'Secure Terminal Access',
+             events: [],
+             style: { textColor: '#9ca3af', fontSize: 14, backgroundColor: 'transparent' }
+          },
+          {
+             id: 'w_ta_pass',
+             layerId: 'l_login',
+             type: WidgetType.TEXT_AREA,
+             name: 'PasswordInput',
+             x: 90, y: 60, width: 300, height: 40,
+             text: '******',
+             placeholder: 'Enter Password',
+             events: [{ id: 'evt_focus', trigger: 'FOCUSED', action: 'CUSTOM_CODE', customCode: 'lv_keyboard_set_textarea(ui_Keyboard1, ui_PasswordInput);' }],
+             style: { backgroundColor: '#374151', textColor: '#ffffff', borderColor: '#4b5563', borderWidth: 1, borderRadius: 4, fontSize: 16 }
+          },
+          {
+             id: 'w_kb',
+             layerId: 'l_login',
+             type: WidgetType.KEYBOARD,
+             name: 'Keyboard',
+             x: 0, y: 140, width: 480, height: 180,
+             events: [],
+             style: { backgroundColor: '#1f2937', borderColor: '#374151', borderWidth: 1, borderRadius: 0 }
+          },
+          {
+             id: 'w_btn_connect',
+             layerId: 'l_login',
+             type: WidgetType.BUTTON,
+             name: 'BtnConnect',
+             x: 395, y: 60, width: 40, height: 40,
+             text: '',
+             contentMode: 'icon',
+             symbol: 'LV_SYMBOL_OK',
+             events: [],
+             style: { backgroundColor: '#22c55e', textColor: '#fff', borderRadius: 4, borderWidth: 0 }
+          }
+        ]
+      }
+    ]
+  },
   {
     id: 'thermostat',
     name: 'Smart Thermostat',
@@ -95,6 +340,101 @@ export const SAMPLE_PROJECTS: SampleProject[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'printer_hmi',
+    name: '3D Printer HMI',
+    description: 'Control interface for 3D printers with temperature curves and axis control.',
+    icon: <Printer size={24} />,
+    color: 'from-amber-500 to-orange-600',
+    settings: {
+      width: 480,
+      height: 320,
+      defaultBackgroundColor: '#1c1917', // Warm dark
+      projectName: 'Printer_UI',
+      theme: 'dark',
+      targetDevice: 'elecrow_crowpanel_50'
+    },
+    screens: [
+      {
+        id: 'scr_print_1',
+        name: 'Status Monitor',
+        backgroundColor: '#1c1917',
+        layers: [createLayer('l_print')],
+        widgets: [
+          // Header
+          { id: 'w_p_hdr', layerId: 'l_print', type: WidgetType.CONTAINER, name: 'Header', x: 0, y: 0, width: 480, height: 50, events: [], style: { backgroundColor: '#292524', borderWidth: 0, borderRadius: 0 } },
+          { id: 'w_p_title', layerId: 'l_print', type: WidgetType.LABEL, name: 'Title', x: 20, y: 15, width: 200, height: 20, text: 'Printing: Benchy.gcode', events: [], style: { textColor: '#fbbf24', fontSize: 16, backgroundColor: 'transparent' } },
+          { id: 'w_p_time', layerId: 'l_print', type: WidgetType.LABEL, name: 'Time', x: 380, y: 15, width: 80, height: 20, text: '01:45 left', events: [], style: { textColor: '#a8a29e', fontSize: 14, backgroundColor: 'transparent' } },
+
+          // Nozzle Temp
+          { id: 'w_arc_nozzle', layerId: 'l_print', type: WidgetType.ARC, name: 'NozzleArc', x: 30, y: 80, width: 140, height: 140, value: 85, min: 0, max: 280, events: [], style: { borderColor: '#ef4444', backgroundColor: '#44403c', borderWidth: 12, borderRadius: 0 } },
+          { id: 'w_lbl_nozzle', layerId: 'l_print', type: WidgetType.LABEL, name: 'NozzleLbl', x: 80, y: 130, width: 40, height: 20, text: '210°', events: [], style: { textColor: '#fff', fontSize: 24, backgroundColor: 'transparent' } },
+          { id: 'w_lbl_n_txt', layerId: 'l_print', type: WidgetType.LABEL, name: 'NozzleTxt', x: 82, y: 160, width: 40, height: 20, text: 'Nozzle', events: [], style: { textColor: '#a8a29e', fontSize: 12, backgroundColor: 'transparent' } },
+
+          // Bed Temp
+          { id: 'w_arc_bed', layerId: 'l_print', type: WidgetType.ARC, name: 'BedArc', x: 190, y: 80, width: 140, height: 140, value: 60, min: 0, max: 110, events: [], style: { borderColor: '#3b82f6', backgroundColor: '#44403c', borderWidth: 12, borderRadius: 0 } },
+          { id: 'w_lbl_bed', layerId: 'l_print', type: WidgetType.LABEL, name: 'BedLbl', x: 245, y: 130, width: 40, height: 20, text: '60°', events: [], style: { textColor: '#fff', fontSize: 24, backgroundColor: 'transparent' } },
+          { id: 'w_lbl_b_txt', layerId: 'l_print', type: WidgetType.LABEL, name: 'BedTxt', x: 248, y: 160, width: 40, height: 20, text: 'Bed', events: [], style: { textColor: '#a8a29e', fontSize: 12, backgroundColor: 'transparent' } },
+
+          // Progress
+          { id: 'w_bar_prog', layerId: 'l_print', type: WidgetType.BAR, name: 'ProgressBar', x: 30, y: 250, width: 300, height: 16, value: 45, events: [], style: { backgroundColor: '#44403c', borderColor: '#22c55e', borderRadius: 8 } },
+          
+          // Controls
+          { id: 'w_btn_pause', layerId: 'l_print', type: WidgetType.BUTTON, name: 'Pause', x: 360, y: 80, width: 90, height: 60, text: 'PAUSE', events: [], style: { backgroundColor: '#f59e0b', textColor: '#000', borderRadius: 8, borderWidth: 0 } },
+          { id: 'w_btn_stop', layerId: 'l_print', type: WidgetType.BUTTON, name: 'Stop', x: 360, y: 160, width: 90, height: 60, text: 'STOP', events: [], style: { backgroundColor: '#dc2626', textColor: '#fff', borderRadius: 8, borderWidth: 0 } },
+        ]
+      }
+    ]
+  },
+  {
+      id: 'ev_charger',
+      name: 'EV Charger',
+      description: 'Modern HMI for electric vehicle charging stations.',
+      icon: <Zap size={24} />,
+      color: 'from-emerald-400 to-teal-600',
+      settings: {
+        width: 800,
+        height: 480,
+        defaultBackgroundColor: '#0f172a',
+        projectName: 'EV_Station',
+        theme: 'midnight',
+        targetDevice: 'sunton_esp32_50'
+      },
+      screens: [
+        {
+          id: 'scr_ev',
+          name: 'Charging',
+          backgroundColor: '#0f172a',
+          layers: [createLayer('l_ev')],
+          widgets: [
+             // Center Visualization
+             { id: 'w_arc_pwr', layerId: 'l_ev', type: WidgetType.ARC, name: 'PowerArc', x: 250, y: 60, width: 300, height: 300, value: 72, min: 0, max: 100, events: [], style: { borderColor: '#34d399', backgroundColor: '#1e293b', borderWidth: 30, borderRadius: 0 } },
+             { id: 'w_lbl_kwh', layerId: 'l_ev', type: WidgetType.LABEL, name: 'KwhVal', x: 320, y: 160, width: 160, height: 80, text: '42.5', events: [], style: { textColor: '#fff', fontSize: 64, backgroundColor: 'transparent' } },
+             { id: 'w_lbl_unit', layerId: 'l_ev', type: WidgetType.LABEL, name: 'KwhUnit', x: 365, y: 230, width: 80, height: 30, text: 'kWh Delivered', events: [], style: { textColor: '#94a3b8', fontSize: 16, backgroundColor: 'transparent' } },
+
+             // Left Details
+             { id: 'w_card_1', layerId: 'l_ev', type: WidgetType.CONTAINER, name: 'Card1', x: 40, y: 100, width: 180, height: 100, events: [], style: { backgroundColor: '#1e293b', borderRadius: 12, borderWidth: 1, borderColor: '#334155' } },
+             { id: 'w_lbl_d1', layerId: 'l_ev', type: WidgetType.LABEL, name: 'LblD1', x: 60, y: 120, width: 140, height: 20, text: 'Current Power', events: [], style: { textColor: '#94a3b8', fontSize: 14, backgroundColor: 'transparent' } },
+             { id: 'w_val_d1', layerId: 'l_ev', type: WidgetType.LABEL, name: 'ValD1', x: 60, y: 150, width: 140, height: 30, text: '11.2 kW', events: [], style: { textColor: '#34d399', fontSize: 28, backgroundColor: 'transparent' } },
+
+             { id: 'w_card_2', layerId: 'l_ev', type: WidgetType.CONTAINER, name: 'Card2', x: 40, y: 220, width: 180, height: 100, events: [], style: { backgroundColor: '#1e293b', borderRadius: 12, borderWidth: 1, borderColor: '#334155' } },
+             { id: 'w_lbl_d2', layerId: 'l_ev', type: WidgetType.LABEL, name: 'LblD2', x: 60, y: 240, width: 140, height: 20, text: 'Time Elapsed', events: [], style: { textColor: '#94a3b8', fontSize: 14, backgroundColor: 'transparent' } },
+             { id: 'w_val_d2', layerId: 'l_ev', type: WidgetType.LABEL, name: 'ValD2', x: 60, y: 270, width: 140, height: 30, text: '00:45:12', events: [], style: { textColor: '#38bdf8', fontSize: 28, backgroundColor: 'transparent' } },
+
+             // Right Details
+             { id: 'w_card_3', layerId: 'l_ev', type: WidgetType.CONTAINER, name: 'Card3', x: 580, y: 100, width: 180, height: 100, events: [], style: { backgroundColor: '#1e293b', borderRadius: 12, borderWidth: 1, borderColor: '#334155' } },
+             { id: 'w_lbl_d3', layerId: 'l_ev', type: WidgetType.LABEL, name: 'LblD3', x: 600, y: 120, width: 140, height: 20, text: 'Cost', events: [], style: { textColor: '#94a3b8', fontSize: 14, backgroundColor: 'transparent' } },
+             { id: 'w_val_d3', layerId: 'l_ev', type: WidgetType.LABEL, name: 'ValD3', x: 600, y: 150, width: 140, height: 30, text: '$ 8.50', events: [], style: { textColor: '#fbbf24', fontSize: 28, backgroundColor: 'transparent' } },
+
+             { id: 'w_btn_stop', layerId: 'l_ev', type: WidgetType.BUTTON, name: 'StopBtn', x: 580, y: 240, width: 180, height: 80, text: 'STOP CHARGING', events: [], style: { backgroundColor: '#ef4444', textColor: '#fff', borderRadius: 12, borderWidth: 0 } },
+
+             // Bottom Bar
+             { id: 'w_bar_soc', layerId: 'l_ev', type: WidgetType.BAR, name: 'SoCBar', x: 200, y: 400, width: 400, height: 30, value: 80, events: [], style: { backgroundColor: '#334155', borderColor: '#34d399', borderRadius: 15 } },
+             { id: 'w_lbl_soc', layerId: 'l_ev', type: WidgetType.LABEL, name: 'SoCLbl', x: 380, y: 375, width: 50, height: 20, text: '80%', events: [], style: { textColor: '#fff', fontSize: 16, backgroundColor: 'transparent' } }
+          ]
+        }
+      ]
   },
   {
     id: 'ebike_dash',
