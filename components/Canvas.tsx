@@ -38,7 +38,12 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
-  ChevronDown
+  ChevronDown,
+  Cloud,
+  Server,
+  Database,
+  Network,
+  Globe
 } from 'lucide-react';
 
 interface CanvasProps {
@@ -99,6 +104,11 @@ const LVGL_SYMBOLS: Record<string, React.ReactNode> = {
   'LV_SYMBOL_MUTE': <VolumeX />,
   'LV_SYMBOL_SHUFFLE': <Shuffle />,
   'LV_SYMBOL_LOOP': <Repeat />,
+  'LV_SYMBOL_CLOUD': <Cloud />,
+  'LV_SYMBOL_SERVER': <Server />,
+  'LV_SYMBOL_DATABASE': <Database />,
+  'LV_SYMBOL_NETWORK': <Network />,
+  'LV_SYMBOL_GLOBE': <Globe />,
 };
 
 // Helper: Check rectangle intersection

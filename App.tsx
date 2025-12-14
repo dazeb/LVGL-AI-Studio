@@ -988,6 +988,20 @@ const App: React.FC = () => {
         />
       </main>
 
+      {/* Footer */}
+      <footer className="h-7 bg-slate-950 border-t border-slate-800 flex items-center justify-between px-4 text-[10px] text-slate-500 shrink-0 select-none z-10">
+         <div>
+            &copy; 2025 <a href="https://lvglstudio.online" target="_blank" rel="noreferrer" className="hover:text-blue-400 transition-colors">lvglstudio.online</a>. All rights reserved.
+         </div>
+         <div className="flex items-center gap-4">
+            <button onClick={() => setShowHelp(true)} className="hover:text-slate-300 transition-colors">Help & Documentation</button>
+            <span className="text-slate-700">|</span>
+            <a href="https://github.com/lvgl-studio/lvgl-studio-ai" target="_blank" rel="noreferrer" className="hover:text-slate-300 transition-colors">GitHub</a>
+            <span className="text-slate-700">|</span>
+            <a href="#" className="hover:text-slate-300 transition-colors">Changelog</a>
+         </div>
+      </footer>
+
       {/* Modals */}
       {showCode && <CodeViewer code={code} language={codeLanguage} isLoading={isGenerating} onClose={() => setShowCode(false)} onRefresh={handleGenerateCode} onLanguageChange={setCodeLanguage} />}
       <SettingsDialog 
