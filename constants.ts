@@ -103,19 +103,19 @@ export const AI_MODELS = {
 
 export const DEVICE_PRESETS: DevicePreset[] = [
   { id: 'custom', name: 'Custom Resolution', manufacturer: 'Generic', width: 480, height: 320 },
-
+  
   // M5Stack
   { id: 'm5_core', name: 'Core / Core2 / Basic', manufacturer: 'M5Stack', width: 320, height: 240 },
   { id: 'm5_stickc_plus', name: 'StickC Plus', manufacturer: 'M5Stack', width: 240, height: 135 },
   { id: 'm5_cardputer', name: 'Cardputer', manufacturer: 'M5Stack', width: 240, height: 135 },
   { id: 'm5_paper', name: 'M5Paper', manufacturer: 'M5Stack', width: 960, height: 540 },
   { id: 'm5_dial', name: 'M5Dial (Round)', manufacturer: 'M5Stack', width: 240, height: 240 },
-
+  
   // LilyGo
   { id: 'lilygo_t_display_s3', name: 'T-Display S3', manufacturer: 'LilyGo', width: 320, height: 170 },
   { id: 'lilygo_t_deck', name: 'T-Deck', manufacturer: 'LilyGo', width: 320, height: 240 },
   { id: 'lilygo_t_hmi', name: 'T-HMI', manufacturer: 'LilyGo', width: 320, height: 240 },
-
+  
   // Sunton (Makerfabs/Espressif)
   { id: 'sunton_esp32_43', name: 'ESP32-S3 4.3"', manufacturer: 'Sunton', width: 800, height: 480 },
   { id: 'sunton_esp32_50', name: 'ESP32-S3 5.0"', manufacturer: 'Sunton', width: 800, height: 480 },
@@ -124,24 +124,24 @@ export const DEVICE_PRESETS: DevicePreset[] = [
   // Elecrow
   { id: 'elecrow_crowpanel_50', name: 'CrowPanel 5.0"', manufacturer: 'Elecrow', width: 800, height: 480 },
   { id: 'elecrow_crowpanel_70', name: 'CrowPanel 7.0"', manufacturer: 'Elecrow', width: 800, height: 480 },
-
+  
   // Seeed Studio
   { id: 'wio_terminal', name: 'Wio Terminal', manufacturer: 'Seeed Studio', width: 320, height: 240 },
-
+  
   // Adafruit
   { id: 'ada_pyportal', name: 'PyPortal', manufacturer: 'Adafruit', width: 320, height: 240 },
   { id: 'ada_pyportal_titano', name: 'PyPortal Titano', manufacturer: 'Adafruit', width: 480, height: 320 },
   { id: 'ada_tft_24', name: '2.4" TFT FeatherWing', manufacturer: 'Adafruit', width: 320, height: 240 },
   { id: 'ada_tft_35', name: '3.5" TFT Breakout', manufacturer: 'Adafruit', width: 480, height: 320 },
   { id: 'ada_round_128', name: '1.28" Round IPS', manufacturer: 'Adafruit', width: 240, height: 240 },
-
+  
   // Waveshare
   { id: 'wave_35_ips', name: '3.5" IPS LCD', manufacturer: 'Waveshare', width: 480, height: 320 },
   { id: 'wave_40_hdmi', name: '4.0" HDMI LCD', manufacturer: 'Waveshare', width: 800, height: 480 },
   { id: 'wave_50_hdmi', name: '5.0" HDMI LCD', manufacturer: 'Waveshare', width: 800, height: 480 },
   { id: 'wave_70_hdmi', name: '7.0" HDMI LCD', manufacturer: 'Waveshare', width: 1024, height: 600 },
   { id: 'wave_128_round', name: '1.28" Touch LCD', manufacturer: 'Waveshare', width: 240, height: 240 },
-
+  
   // Riverdi
   { id: 'riverdi_50_stm32', name: '5.0" STM32 Embedded', manufacturer: 'Riverdi', width: 800, height: 480 },
   { id: 'riverdi_70_stm32', name: '7.0" STM32 Embedded', manufacturer: 'Riverdi', width: 1024, height: 600 },
@@ -164,18 +164,18 @@ export const DEFAULT_CANVAS_SETTINGS: CanvasSettings = {
 
 export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
   [WidgetType.BUTTON]: {
-    width: 100, // Matches lv_example_button_1 approx size
+    width: 120,
     height: 40,
     text: 'Button',
     contentMode: 'text',
     symbol: 'LV_SYMBOL_HOME',
     events: [],
-    style: {
-      backgroundColor: '#2196F3',
-      textColor: '#FFFFFF',
-      borderRadius: 4, // Standard LVGL is slightly sharper than 8
-      borderWidth: 0,
-      fontSize: 14
+    style: { 
+        backgroundColor: '#2196F3', 
+        textColor: '#FFFFFF', 
+        borderRadius: 8, 
+        borderWidth: 0,
+        fontSize: 14 
     }
   },
   [WidgetType.LABEL]: {
@@ -183,10 +183,10 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 30,
     text: 'Label Text',
     events: [],
-    style: {
-      textColor: '#1f2937', // Slate 800
-      fontSize: 16,
-      backgroundColor: 'transparent'
+    style: { 
+        textColor: '#1f2937', // Slate 800
+        fontSize: 16, 
+        backgroundColor: 'transparent' 
     }
   },
   [WidgetType.SLIDER]: {
@@ -196,10 +196,10 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     min: 0,
     max: 100,
     events: [],
-    style: {
-      backgroundColor: '#e5e7eb', // Track color (Gray 200)
-      borderColor: '#2196F3',     // Indicator color
-      borderRadius: 10
+    style: { 
+        backgroundColor: '#e5e7eb', // Track color (Gray 200)
+        borderColor: '#2196F3',     // Indicator color
+        borderRadius: 10
     }
   },
   [WidgetType.SWITCH]: {
@@ -207,10 +207,10 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 32,
     checked: false,
     events: [],
-    style: {
-      backgroundColor: '#e5e7eb', // Off state (Gray 200)
-      borderColor: '#2196F3',     // On state color
-      borderRadius: 999
+    style: { 
+        backgroundColor: '#e5e7eb', // Off state (Gray 200)
+        borderColor: '#2196F3',     // On state color
+        borderRadius: 999 
     }
   },
   [WidgetType.CHECKBOX]: {
@@ -219,10 +219,10 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     text: 'Checkbox',
     checked: false,
     events: [],
-    style: {
-      textColor: '#1f2937',
-      fontSize: 16,
-      borderColor: '#2196F3' // Checkbox active color
+    style: { 
+        textColor: '#1f2937', 
+        fontSize: 16,
+        borderColor: '#2196F3' // Checkbox active color
     }
   },
   [WidgetType.ARC]: {
@@ -232,22 +232,22 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     min: 0,
     max: 100,
     events: [],
-    style: {
-      borderColor: '#3b82f6', // Indicator
-      backgroundColor: '#e2e8f0', // Track
-      borderWidth: 0,
-      borderRadius: 0 // Not used for Arc but keeps type happy
+    style: { 
+        borderColor: '#3b82f6', // Indicator
+        backgroundColor: '#e2e8f0', // Track
+        borderWidth: 10,
+        borderRadius: 0 // Not used for Arc but keeps type happy
     }
   },
   [WidgetType.CONTAINER]: {
     width: 200,
     height: 150,
     events: [],
-    style: {
-      backgroundColor: '#ffffff',
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: '#e2e8f0'
+    style: { 
+        backgroundColor: '#ffffff', 
+        borderRadius: 12, 
+        borderWidth: 1, 
+        borderColor: '#e2e8f0' 
     }
   },
   [WidgetType.TEXT_AREA]: {
@@ -256,13 +256,13 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     text: '',
     placeholder: 'Enter text...',
     events: [],
-    style: {
-      backgroundColor: '#ffffff',
-      textColor: '#1f2937',
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#cbd5e1',
-      fontSize: 14
+    style: { 
+        backgroundColor: '#ffffff', 
+        textColor: '#1f2937', 
+        borderRadius: 8, 
+        borderWidth: 1, 
+        borderColor: '#cbd5e1', 
+        fontSize: 14 
     }
   },
   [WidgetType.CHART]: {
@@ -270,17 +270,17 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 160,
     chartType: 'line',
     events: [],
-    style: {
-      backgroundColor: '#ffffff',
-      borderColor: '#e2e8f0',
-      borderWidth: 1,
-      borderRadius: 8
+    style: { 
+        backgroundColor: '#ffffff', 
+        borderColor: '#e2e8f0', 
+        borderWidth: 1, 
+        borderRadius: 8 
     }
   },
   [WidgetType.IMAGE]: {
-    width: 100,
-    height: 100,
-    src: '/assets/img_cogwheel_argb.png', // Default from LVGL examples
+    width: 64,
+    height: 64,
+    src: 'lv_symbol_image',
     events: [],
     style: { backgroundColor: 'transparent' }
   },
@@ -289,10 +289,10 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 32,
     symbol: 'LV_SYMBOL_HOME',
     events: [],
-    style: {
-      textColor: '#1f2937',
-      fontSize: 24,
-      backgroundColor: 'transparent'
+    style: { 
+        textColor: '#1f2937', 
+        fontSize: 24, 
+        backgroundColor: 'transparent' 
     }
   },
   // New Widgets
@@ -304,9 +304,9 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     max: 100,
     events: [],
     style: {
-      backgroundColor: '#e5e7eb', // Track
-      borderColor: '#2196F3', // Indicator
-      borderRadius: 10
+        backgroundColor: '#e5e7eb', // Track
+        borderColor: '#2196F3', // Indicator
+        borderRadius: 10
     }
   },
   [WidgetType.ROLLER]: {
@@ -315,12 +315,12 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     options: 'Option 1\nOption 2\nOption 3\nOption 4',
     events: [],
     style: {
-      backgroundColor: '#ffffff',
-      textColor: '#1f2937',
-      borderRadius: 4,
-      borderWidth: 1,
-      borderColor: '#e2e8f0',
-      fontSize: 16
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        fontSize: 16
     }
   },
   [WidgetType.DROPDOWN]: {
@@ -329,12 +329,12 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     options: 'Option 1\nOption 2\nOption 3',
     events: [],
     style: {
-      backgroundColor: '#ffffff',
-      textColor: '#1f2937',
-      borderRadius: 4,
-      borderWidth: 1,
-      borderColor: '#e2e8f0',
-      fontSize: 14
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        fontSize: 14
     }
   },
   [WidgetType.LED]: {
@@ -342,10 +342,10 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 24,
     events: [],
     style: {
-      backgroundColor: '#ef4444', // Red default
-      borderRadius: 999,
-      borderWidth: 2,
-      borderColor: '#991b1b' // Darker rim
+        backgroundColor: '#ef4444', // Red default
+        borderRadius: 999,
+        borderWidth: 2,
+        borderColor: '#991b1b' // Darker rim
     }
   },
   [WidgetType.KEYBOARD]: {
@@ -353,10 +353,10 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 140,
     events: [],
     style: {
-      backgroundColor: '#cbd5e1',
-      borderRadius: 4,
-      borderColor: '#94a3b8',
-      borderWidth: 1
+        backgroundColor: '#cbd5e1',
+        borderRadius: 4,
+        borderColor: '#94a3b8',
+        borderWidth: 1
     }
   }
 };
