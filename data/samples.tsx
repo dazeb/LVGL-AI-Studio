@@ -2,7 +2,7 @@
 import React from 'react';
 import { Screen, CanvasSettings, WidgetType, Layer } from '../types';
 import { PROJECT_THEMES } from '../constants';
-import { Thermometer, Music, Gauge, Activity, Wifi, Keyboard, Printer, Zap, LayoutTemplate } from 'lucide-react';
+import { Thermometer, Music, Gauge, Activity, Wifi, Keyboard, Printer, Zap, LayoutTemplate, Grid, List, MousePointer2 } from 'lucide-react';
 
 export interface SampleProject {
   id: string;
@@ -17,6 +17,92 @@ export interface SampleProject {
 const createLayer = (id: string) => ({ id, name: 'Main Layer', visible: true, locked: false });
 
 export const SAMPLE_PROJECTS: SampleProject[] = [
+  {
+    id: 'lvgl_gallery',
+    name: 'LVGL Widget Gallery',
+    description: 'A comprehensive collection of standard LVGL widgets based on official examples (Buttons, Charts, Sliders, Lists).',
+    icon: <Grid size={24} />,
+    color: 'from-cyan-600 to-blue-700',
+    settings: {
+      width: 480,
+      height: 320,
+      defaultBackgroundColor: '#ffffff',
+      projectName: 'LVGL_Examples',
+      theme: 'light',
+      targetDevice: 'wave_35_ips'
+    },
+    screens: [
+      {
+        id: 'scr_ex_btn',
+        name: 'Buttons & Inputs',
+        backgroundColor: '#ffffff',
+        layers: [createLayer('l_ex_btn')],
+        widgets: [
+           { id: 'lbl_btn_title', layerId: 'l_ex_btn', type: WidgetType.LABEL, name: 'Title', x: 20, y: 15, width: 200, height: 30, text: 'Buttons & Inputs', style: { fontSize: 20, textColor: '#333' }, events: [] },
+           
+           // Button 1
+           { id: 'btn_1', layerId: 'l_ex_btn', type: WidgetType.BUTTON, name: 'BtnSimple', x: 20, y: 55, width: 100, height: 40, text: 'Button', style: { backgroundColor: '#2196f3', borderRadius: 5, textColor: '#fff' }, events: [] },
+           
+           // Button 2 (Rounded)
+           { id: 'btn_2', layerId: 'l_ex_btn', type: WidgetType.BUTTON, name: 'BtnRound', x: 140, y: 55, width: 100, height: 40, text: 'Rounded', style: { backgroundColor: '#e91e63', borderRadius: 20, textColor: '#fff' }, events: [] },
+
+           // Switch
+           { id: 'sw_1', layerId: 'l_ex_btn', type: WidgetType.SWITCH, name: 'Switch1', x: 20, y: 110, width: 50, height: 25, checked: true, style: { backgroundColor: '#ccc', borderColor: '#4caf50', borderRadius: 20 }, events: [] },
+           { id: 'lbl_sw', layerId: 'l_ex_btn', type: WidgetType.LABEL, name: 'LblSw', x: 80, y: 112, width: 100, height: 20, text: 'Toggle Me', style: { fontSize: 14, textColor: '#666' }, events: [] },
+           
+           // Checkbox
+           { id: 'cb_1', layerId: 'l_ex_btn', type: WidgetType.CHECKBOX, name: 'Checkbox1', x: 20, y: 150, width: 150, height: 30, text: 'I agree', checked: false, style: { textColor: '#333', borderColor: '#2196f3' }, events: [] },
+
+           // Text Area
+           { id: 'ta_1', layerId: 'l_ex_btn', type: WidgetType.TEXT_AREA, name: 'TextArea1', x: 20, y: 190, width: 220, height: 80, text: '', placeholder: 'Type something...', style: { backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 4 }, events: [] },
+
+           // Keyboard (small preview)
+           { id: 'kb_1', layerId: 'l_ex_btn', type: WidgetType.KEYBOARD, name: 'Keyboard', x: 260, y: 130, width: 200, height: 140, style: { backgroundColor: '#eee', borderColor: '#ccc', borderWidth: 1 }, events: [] }
+        ]
+      },
+      {
+        id: 'scr_ex_sliders',
+        name: 'Sliders & Selectors',
+        backgroundColor: '#ffffff',
+        layers: [createLayer('l_ex_sel')],
+        widgets: [
+           { id: 'lbl_sel_title', layerId: 'l_ex_sel', type: WidgetType.LABEL, name: 'Title', x: 20, y: 15, width: 200, height: 30, text: 'Sliders & Selectors', style: { fontSize: 20, textColor: '#333' }, events: [] },
+
+           // Sliders
+           { id: 'sl_1', layerId: 'l_ex_sel', type: WidgetType.SLIDER, name: 'Slider1', x: 20, y: 60, width: 200, height: 10, value: 30, style: { backgroundColor: '#eee', borderColor: '#2196f3', borderRadius: 5 }, events: [] },
+           { id: 'sl_2', layerId: 'l_ex_sel', type: WidgetType.SLIDER, name: 'Slider2', x: 20, y: 90, width: 200, height: 10, value: 70, style: { backgroundColor: '#eee', borderColor: '#ff9800', borderRadius: 5 }, events: [] },
+
+           // Roller
+           { id: 'roll_1', layerId: 'l_ex_sel', type: WidgetType.ROLLER, name: 'Roller1', x: 260, y: 50, width: 100, height: 120, options: 'January\nFebruary\nMarch\nApril\nMay\nJune\nJuly', style: { backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 4 }, events: [] },
+
+           // Dropdown
+           { id: 'dd_1', layerId: 'l_ex_sel', type: WidgetType.DROPDOWN, name: 'Dropdown1', x: 20, y: 140, width: 180, height: 40, options: 'Select Option\nOption 1\nOption 2\nOption 3', style: { backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 4 }, events: [] },
+
+           // Bar
+           { id: 'bar_1', layerId: 'l_ex_sel', type: WidgetType.BAR, name: 'Bar1', x: 20, y: 220, width: 200, height: 20, value: 45, style: { backgroundColor: '#eee', borderColor: '#9c27b0', borderRadius: 10 }, events: [] }
+        ]
+      },
+      {
+        id: 'scr_ex_data',
+        name: 'Charts & Gauges',
+        backgroundColor: '#ffffff',
+        layers: [createLayer('l_ex_data')],
+        widgets: [
+           { id: 'lbl_data_title', layerId: 'l_ex_data', type: WidgetType.LABEL, name: 'Title', x: 20, y: 15, width: 200, height: 30, text: 'Data Visualization', style: { fontSize: 20, textColor: '#333' }, events: [] },
+
+           // Line Chart
+           { id: 'chart_1', layerId: 'l_ex_data', type: WidgetType.CHART, name: 'LineChart', x: 20, y: 60, width: 220, height: 160, chartType: 'line', style: { backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 4 }, events: [] },
+
+           // Bar Chart
+           { id: 'chart_2', layerId: 'l_ex_data', type: WidgetType.CHART, name: 'BarChart', x: 260, y: 180, width: 180, height: 100, chartType: 'bar', style: { backgroundColor: '#fff', borderColor: '#ccc', borderWidth: 1, borderRadius: 4 }, events: [] },
+
+           // Arc
+           { id: 'arc_1', layerId: 'l_ex_data', type: WidgetType.ARC, name: 'Arc1', x: 280, y: 40, width: 120, height: 120, value: 70, style: { backgroundColor: '#eee', borderColor: '#2196f3', borderWidth: 12 }, events: [] },
+           { id: 'lbl_arc', layerId: 'l_ex_data', type: WidgetType.LABEL, name: 'ArcVal', x: 320, y: 90, width: 40, height: 20, text: '70%', style: { fontSize: 16, textColor: '#333' }, events: [] }
+        ]
+      }
+    ]
+  },
   {
     id: 'lvgl_widgets_demo',
     name: 'LVGL Widgets Demo',

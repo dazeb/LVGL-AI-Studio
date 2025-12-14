@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, RotateCcw, Shield, Server, Cpu, Key, ExternalLink, Zap, FolderOpen, Download, Layout, Settings } from 'lucide-react';
+import { X, Save, RotateCcw, Shield, Server, Cpu, Key, ExternalLink, Zap, FolderOpen, Download, Layout, Settings, CloudDownload, Loader2 } from 'lucide-react';
 import { AISettings, AIProvider } from '../types';
 import { AI_MODELS } from '../constants';
 import InfoTooltip from './InfoTooltip';
@@ -12,6 +12,7 @@ interface SettingsDialogProps {
   onSave: (settings: AISettings) => void;
   onSaveProject: () => void;
   onOpenProject: () => void;
+  onImportFromUrl: (url: string) => Promise<void>;
 }
 
 type SettingsTab = 'project' | 'ai';
@@ -22,10 +23,13 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   settings, 
   onSave,
   onSaveProject,
-  onOpenProject
+  onOpenProject,
+  onImportFromUrl
 }) => {
   const [localSettings, setLocalSettings] = useState<AISettings>(settings);
   const [activeTab, setActiveTab] = useState<SettingsTab>('project');
+  const [importUrl, setImportUrl] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -38,6 +42,15 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
   const handleSaveAISettings = () => {
     onSave(localSettings);
     onClose(); 
+  };
+
+  const handleUrlImportClick = async () => {
+      if (!importUrl.trim()) return;
+      setIsImporting(true);
+      await onImportFromUrl(importUrl);
+      setIsImporting(false);
+      setImportUrl('');
+      // Note: We don't close the dialog automatically in case of error, handled by App.tsx
   };
 
   const handleChange = (field: keyof AISettings, value: string) => {
@@ -98,7 +111,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 
   return (
     <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-slate-900 w-full max-w-2xl h-[500px] rounded-xl shadow-2xl flex border border-slate-700 overflow-hidden">
+      <div className="bg-slate-900 w-full max-w-2xl h-[550px] rounded-xl shadow-2xl flex border border-slate-700 overflow-hidden">
         
         {/* Sidebar */}
         <div className="w-48 bg-slate-950 border-r border-slate-800 flex flex-col">
@@ -154,6 +167,31 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
                              <span className="text-sm font-medium text-slate-200">Save Project</span>
                              <span className="text-[10px] text-slate-500">Export as .json</span>
                           </button>
+                       </div>
+                    </div>
+
+                    <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                       <h3 className="text-sm font-bold text-slate-300 mb-3 uppercase flex items-center gap-2">
+                           <CloudDownload size={14} className="text-blue-400" /> Cloud / URL Import
+                       </h3>
+                       <p className="text-xs text-slate-500 mb-3">
+                           Load a project file directly from a GitHub Raw URL or other JSON source.
+                       </p>
+                       <div className="flex gap-2">
+                           <input 
+                               type="text" 
+                               value={importUrl}
+                               onChange={(e) => setImportUrl(e.target.value)}
+                               placeholder="https://raw.githubusercontent.com/.../project.json"
+                               className="flex-1 bg-slate-900 border border-slate-600 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                           />
+                           <button 
+                               onClick={handleUrlImportClick}
+                               disabled={isImporting || !importUrl.trim()}
+                               className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3 py-2 rounded text-xs font-medium transition-colors flex items-center gap-2"
+                           >
+                               {isImporting ? <Loader2 size={14} className="animate-spin" /> : 'Import'}
+                           </button>
                        </div>
                     </div>
 

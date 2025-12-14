@@ -403,7 +403,8 @@ const Canvas: React.FC<CanvasProps> = ({
              const scaleY = newHeight / resizeState.startWidget.height;
 
              // Apply to all widgets in group
-             Object.entries(resizeState.initialWidgetStates).forEach(([wId, startState]) => {
+             Object.entries(resizeState.initialWidgetStates).forEach(([wId, s]) => {
+                  const startState = s as {x: number, y: number, width: number, height: number};
                   const relativeX = startState.x - resizeState.startWidget.x;
                   const relativeY = startState.y - resizeState.startWidget.y;
 
@@ -449,7 +450,8 @@ const Canvas: React.FC<CanvasProps> = ({
         // Calculate the bounding box of the MOVING SELECTION
         let selectionMinX = Infinity, selectionMinY = Infinity, selectionMaxX = -Infinity, selectionMaxY = -Infinity;
         
-        Object.entries(dragState.initialPositions).forEach(([id, initPos]) => {
+        Object.entries(dragState.initialPositions).forEach(([id, i]) => {
+             const initPos = i as { x: number, y: number };
              const x = initPos.x + deltaX;
              const y = initPos.y + deltaY;
              const w = widgets.find(wi => wi.id === id)?.width || 0;

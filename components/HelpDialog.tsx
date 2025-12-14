@@ -7,32 +7,32 @@ interface HelpDialogProps {
   onClose: () => void;
 }
 
+const Section = ({ title, icon, children }: { title: string, icon: React.ReactNode, children?: React.ReactNode }) => (
+  <div className="mb-6 bg-slate-800/40 p-4 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-colors">
+    <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-3 border-b border-slate-700 pb-2">
+      {icon} {title}
+    </h3>
+    <div className="text-sm text-slate-300 space-y-2 leading-relaxed">
+      {children}
+    </div>
+  </div>
+);
+
+const HotkeyRow = ({ keys, action }: { keys: string[], action: string }) => (
+  <div className="flex items-center justify-between py-1.5 border-b border-slate-700/50 last:border-0">
+    <span className="text-slate-400 text-xs">{action}</span>
+    <div className="flex gap-1">
+      {keys.map((k, i) => (
+        <span key={i} className="bg-slate-700 border border-slate-600 rounded px-1.5 py-0.5 text-[10px] font-mono text-white min-w-[20px] text-center shadow-sm">
+          {k}
+        </span>
+      ))}
+    </div>
+  </div>
+);
+
 const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
-
-  const Section = ({ title, icon, children }: { title: string, icon: React.ReactNode, children: React.ReactNode }) => (
-    <div className="mb-6 bg-slate-800/40 p-4 rounded-lg border border-slate-700/50 hover:border-slate-600 transition-colors">
-      <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-3 border-b border-slate-700 pb-2">
-        {icon} {title}
-      </h3>
-      <div className="text-sm text-slate-300 space-y-2 leading-relaxed">
-        {children}
-      </div>
-    </div>
-  );
-
-  const HotkeyRow = ({ keys, action }: { keys: string[], action: string }) => (
-    <div className="flex items-center justify-between py-1.5 border-b border-slate-700/50 last:border-0">
-      <span className="text-slate-400 text-xs">{action}</span>
-      <div className="flex gap-1">
-        {keys.map((k, i) => (
-          <span key={i} className="bg-slate-700 border border-slate-600 rounded px-1.5 py-0.5 text-[10px] font-mono text-white min-w-[20px] text-center shadow-sm">
-            {k}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
 
   return (
     <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">

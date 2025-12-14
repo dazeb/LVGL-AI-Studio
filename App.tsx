@@ -213,6 +213,29 @@ const App: React.FC = () => {
     fileInputRef.current?.click();
   };
 
+  // Reusable loading logic
+  const loadProjectState = (projectData: ProjectFile, sourceName: string) => {
+    if (!projectData.screens || !Array.isArray(projectData.screens) || !projectData.settings) {
+        throw new Error("Invalid project file structure.");
+    }
+    
+    setConfirmDialog({
+        isOpen: true,
+        title: 'Import Project',
+        message: `Load "${projectData.settings.projectName}"? This will overwrite your current workspace.`,
+        onConfirm: () => {
+           setProjectState({
+               screens: projectData.screens,
+               activeScreenId: projectData.screens.length > 0 ? projectData.screens[0].id : 'screen_1',
+               activeLayerId: projectData.screens.length > 0 ? projectData.screens[0].layers[0].id : 'layer_1',
+               settings: projectData.settings,
+               stylePresets: projectData.stylePresets || []
+           }, `Load Project (${sourceName})`);
+           setSelectedIds([]);
+        }
+     });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -222,33 +245,25 @@ const App: React.FC = () => {
       try {
         const json = event.target?.result as string;
         const projectData = JSON.parse(json) as ProjectFile;
-        
-        if (!projectData.screens || !Array.isArray(projectData.screens) || !projectData.settings) {
-          throw new Error("Invalid project file structure.");
-        }
-
-        setConfirmDialog({
-           isOpen: true,
-           title: 'Import Project',
-           message: `Load "${projectData.settings.projectName}"? This will overwrite your current workspace.`,
-           onConfirm: () => {
-              // Replace entire history state
-              setProjectState({
-                  screens: projectData.screens,
-                  activeScreenId: projectData.screens.length > 0 ? projectData.screens[0].id : 'screen_1',
-                  activeLayerId: projectData.screens.length > 0 ? projectData.screens[0].layers[0].id : 'layer_1',
-                  settings: projectData.settings,
-                  stylePresets: projectData.stylePresets || []
-              }, 'Load Project');
-              setSelectedIds([]);
-           }
-        });
+        loadProjectState(projectData, 'File');
       } catch (err) {
         alert("Failed to load project: " + (err as Error).message);
       }
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handleImportFromUrl = async (url: string) => {
+      try {
+          const response = await fetch(url);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const data = await response.json();
+          loadProjectState(data, 'URL Import');
+      } catch (err) {
+          console.error(err);
+          alert("Failed to import project from URL. Ensure it is a valid raw JSON file.");
+      }
   };
 
   // --- Sample Loading ---
@@ -1011,6 +1026,7 @@ const App: React.FC = () => {
          onSave={setAiSettings} 
          onSaveProject={handleSaveProject}
          onOpenProject={handleOpenProjectClick}
+         onImportFromUrl={handleImportFromUrl}
       />
       <SampleCatalogue isOpen={showSamples} onClose={() => setShowSamples(false)} onSelectSample={handleLoadSample} />
       <ConfirmDialog isOpen={confirmDialog.isOpen} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} />
