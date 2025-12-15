@@ -1312,6 +1312,9 @@ const Canvas: React.FC<CanvasProps> = ({
 
   // Group Transform Overlay
   const renderGroupOverlay = () => {
+    // Only render group overlay for multiple items
+    if (selectedIds.length <= 1) return null;
+
     const bounds = getGroupBounds();
     if (!bounds) return null;
 
