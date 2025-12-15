@@ -92,12 +92,14 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
            - Apply 'style.backgroundColor' to \`LV_PART_MAIN\` (the background track).
            - Apply 'style.borderColor' to \`LV_PART_INDICATOR\` (the filled area).
            - For Sliders/Switches, style \`LV_PART_KNOB\` to be white or the indicator color, with a radius to make it round.
-        2. **Arcs**:
+        2. **Arcs, Spinners**:
            - Apply 'style.backgroundColor' to \`LV_PART_MAIN\` (background arc).
            - Apply 'style.borderColor' to \`LV_PART_INDICATOR\` (foreground arc).
            - Remove the knob (\`lv_obj_remove_style(..., NULL, LV_PART_KNOB)\`) unless it's interactive.
         3. **Shadows**:
            - If a Container or Button has a background color and no border, apply a subtle shadow (\`lv_obj_set_style_shadow_width\`, \`lv_obj_set_style_shadow_opa\`) to add depth (e.g., width 20, opacity 30).
+        4. **Color Wheel**:
+           - Use \`lv_colorwheel_create\`.
       
       - **Specific Widget Logic**:
         - **lv_icon**: Create a Label and set text to the symbol name (e.g., \`LV_SYMBOL_HOME\`). Apply text color.
@@ -106,6 +108,19 @@ const constructPrompt = (screens: Screen[], settings: CanvasSettings, language: 
            - If \`contentMode\` is 'icon', create a child Label with the symbol.
            - If \`contentMode\` is 'text', create a child Label with the text.
            - Center the label on the button.
+        - **lv_list**:
+           - Use \`lv_list_create\`.
+           - The \`options\` property contains newline-separated items. Parse this string.
+           - For each item, use \`lv_list_add_btn(list, LV_SYMBOL_FILE, "Item Text")\`. Default to FILE icon for now or generic.
+        - **lv_table**:
+           - Use \`lv_table_create\`.
+           - The \`options\` property contains CSV data (lines separated by \\n, cells by comma).
+           - Set row/col count based on data.
+           - Iterate and use \`lv_table_set_cell_value(table, row, col, "Value")\`.
+        - **lv_spinbox**:
+           - Use \`lv_spinbox_create\`.
+           - Set \`lv_spinbox_set_range\` using widget min/max.
+           - Set \`lv_spinbox_set_value\`.
     `;
 };
 
@@ -117,7 +132,7 @@ const constructWidgetPrompt = (description: string) => {
     Return ONLY a raw JSON object (no markdown, no backticks) matching this Typescript interface:
     
     interface WidgetPartial {
-      type: string; // One of: lv_btn, lv_label, lv_slider, lv_switch, lv_checkbox, lv_arc, lv_obj, lv_textarea, lv_chart, lv_img, lv_icon, lv_bar, lv_roller, lv_dropdown, lv_led, lv_keyboard
+      type: string; // One of: lv_btn, lv_label, lv_slider, lv_switch, lv_checkbox, lv_arc, lv_obj, lv_textarea, lv_chart, lv_img, lv_icon, lv_bar, lv_roller, lv_dropdown, lv_led, lv_keyboard, lv_calendar, lv_colorwheel, lv_spinner, lv_list, lv_table, lv_spinbox
       name: string; // A short descriptive name (e.g. "RedStopBtn")
       width: number;
       height: number;
@@ -125,6 +140,7 @@ const constructWidgetPrompt = (description: string) => {
       value?: number; // For sliders, arcs, bars (0-100 usually)
       checked?: boolean; // For switches, checkboxes
       symbol?: string; // For icons or icon-buttons (e.g. LV_SYMBOL_HOME)
+      options?: string; // For List (newline sep) or Table (CSV format)
       style: {
         backgroundColor?: string; // Hex code
         textColor?: string;
@@ -141,6 +157,8 @@ const constructWidgetPrompt = (description: string) => {
     3. If color is described, set backgroundColor/textColor/borderColor in hex (e.g. #FF0000).
     4. If 'round' is mentioned for a button, set borderRadius to high value (e.g. 20 or 99).
     5. If it's a specific icon (like 'settings' or 'wifi'), set the 'symbol' property to the closest 'LV_SYMBOL_...' string.
+    6. For 'list', populate 'options' with example items separated by newlines.
+    7. For 'table', populate 'options' with CSV data (Header1,Header2\nRow1Col1,Row1Col2).
     `;
 };
 
