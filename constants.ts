@@ -1,6 +1,4 @@
 
-
-
 import { WidgetType, CanvasSettings, Theme, DevicePreset } from './types';
 
 export const PROJECT_THEMES: Record<string, Theme> = {
@@ -357,6 +355,82 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
         borderRadius: 4,
         borderColor: '#94a3b8',
         borderWidth: 1
+    }
+  },
+  // Visuals
+  [WidgetType.CALENDAR]: {
+    width: 240,
+    height: 240,
+    events: [],
+    style: {
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e5e7eb'
+    }
+  },
+  [WidgetType.COLORWHEEL]: {
+    width: 150,
+    height: 150,
+    events: [],
+    style: {
+        backgroundColor: '#ffffff', // Knob color if represented
+        borderWidth: 0
+    }
+  },
+  [WidgetType.SPINNER]: {
+    width: 50,
+    height: 50,
+    events: [],
+    style: {
+        borderColor: '#3b82f6', // Spin color
+        borderWidth: 5, // Arc thickness
+        backgroundColor: 'transparent'
+    }
+  },
+  // Data/Input Added
+  [WidgetType.LIST]: {
+    width: 180,
+    height: 200,
+    options: 'Item 1\nItem 2\nItem 3\nItem 4',
+    events: [],
+    style: {
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e2e8f0'
+    }
+  },
+  [WidgetType.TABLE]: {
+    width: 240,
+    height: 160,
+    options: 'Name,Price,Qty\nApple,$1.50,10\nBanana,$0.80,20\nCherry,$3.00,5', // CSV format for table data
+    events: [],
+    style: {
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e2e8f0'
+    }
+  },
+  [WidgetType.SPINBOX]: {
+    width: 120,
+    height: 40,
+    value: 0,
+    min: 0,
+    max: 9999,
+    step: 1,
+    events: [],
+    style: {
+        backgroundColor: '#ffffff',
+        textColor: '#1f2937',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        fontSize: 20
     }
   }
 };

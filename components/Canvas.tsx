@@ -43,7 +43,11 @@ import {
   Server,
   Database,
   Network,
-  Globe
+  Globe,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 
 interface CanvasProps {
@@ -1002,6 +1006,127 @@ const Canvas: React.FC<CanvasProps> = ({
                      </div>
                      <div className="flex-1 flex gap-1 px-16">
                          <div className="flex-1 bg-white rounded shadow-sm flex items-center justify-center text-[8px] font-bold text-slate-500">SPACE</div>
+                     </div>
+                 </div>
+             );
+
+          case WidgetType.SPINNER:
+             return (
+                 <div className="w-full h-full flex items-center justify-center">
+                     <Loader2 
+                        className="animate-spin" 
+                        size={Math.min(widget.width, widget.height)} 
+                        color={widget.style.borderColor || '#3b82f6'} 
+                        strokeWidth={(widget.style.borderWidth || 5) * 0.5} // Scale lucide stroke
+                     />
+                 </div>
+             );
+
+          case WidgetType.COLORWHEEL:
+             return (
+                 <div className="w-full h-full rounded-full relative overflow-hidden" style={{
+                     background: `conic-gradient(red, yellow, lime, cyan, blue, magenta, red)`
+                 }}>
+                     {/* Center cutout for ring effect, or solid for knob */}
+                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-lg" style={{
+                         width: widget.width * 0.3,
+                         height: widget.height * 0.3,
+                         backgroundColor: widget.style.backgroundColor || '#ffffff'
+                     }}></div>
+                     {/* Knob indicator */}
+                     <div className="absolute top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow border border-slate-300"></div>
+                 </div>
+             );
+
+          case WidgetType.CALENDAR:
+             return (
+                 <div className="w-full h-full flex flex-col bg-white shadow-sm overflow-hidden" style={{
+                     borderRadius: widget.style.borderRadius,
+                     border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
+                     backgroundColor: widget.style.backgroundColor
+                 }}>
+                     {/* Header */}
+                     <div className="flex items-center justify-between p-2 border-b border-slate-100">
+                         <div className="text-xs font-bold text-slate-700">October 2025</div>
+                         <div className="flex gap-1">
+                             <ChevronLeft size={12} className="text-slate-400" />
+                             <ChevronRight size={12} className="text-slate-400" />
+                         </div>
+                     </div>
+                     {/* Days Header */}
+                     <div className="grid grid-cols-7 text-center p-1 bg-slate-50">
+                         {['S','M','T','W','T','F','S'].map(d => (
+                             <div key={d} className="text-[8px] font-medium text-slate-500">{d}</div>
+                         ))}
+                     </div>
+                     {/* Calendar Grid (Mock) */}
+                     <div className="grid grid-cols-7 flex-1 p-1 gap-px bg-slate-100">
+                         {Array.from({length: 35}).map((_, i) => (
+                             <div key={i} className={`bg-white flex items-center justify-center text-[8px] ${i === 14 ? 'bg-blue-500 text-white rounded-full' : 'text-slate-700'}`}>
+                                 {i + 1 > 31 ? i - 30 : i + 1}
+                             </div>
+                         ))}
+                     </div>
+                 </div>
+             );
+
+          case WidgetType.LIST:
+             const listItems = (widget.options || 'Item 1\nItem 2\nItem 3').split('\n');
+             return (
+                 <div className="w-full h-full flex flex-col overflow-hidden bg-white shadow-sm" style={{
+                     borderRadius: widget.style.borderRadius,
+                     border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
+                     backgroundColor: widget.style.backgroundColor
+                 }}>
+                     {listItems.map((item, idx) => (
+                         <div key={idx} className="flex items-center gap-2 p-2 border-b border-slate-100 last:border-0 hover:bg-slate-50">
+                             <FileText size={14} className="text-slate-400" />
+                             <span className="text-xs text-slate-700 truncate">{item}</span>
+                         </div>
+                     ))}
+                 </div>
+             );
+
+          case WidgetType.TABLE:
+             const rows = (widget.options || '').split('\n').map(r => r.split(','));
+             return (
+                 <div className="w-full h-full overflow-hidden bg-white shadow-sm" style={{
+                     borderRadius: widget.style.borderRadius,
+                     border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
+                     backgroundColor: widget.style.backgroundColor
+                 }}>
+                     <div className="grid w-full h-full" style={{
+                         gridTemplateColumns: rows[0] ? `repeat(${rows[0].length}, 1fr)` : '1fr',
+                         gridAutoRows: 'min-content'
+                     }}>
+                         {rows.map((row, rIdx) => (
+                             row.map((cell, cIdx) => (
+                                 <div key={`${rIdx}-${cIdx}`} className={`p-1 text-[10px] border-r border-b border-slate-100 flex items-center justify-center truncate ${rIdx === 0 ? 'font-bold bg-slate-50 text-slate-700' : 'text-slate-600'}`}>
+                                     {cell}
+                                 </div>
+                             ))
+                         ))}
+                     </div>
+                 </div>
+             );
+
+          case WidgetType.SPINBOX:
+             return (
+                 <div className="w-full h-full flex items-center bg-white" style={{
+                     borderRadius: widget.style.borderRadius,
+                     border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
+                     backgroundColor: widget.style.backgroundColor
+                 }}>
+                     <div className="flex-1 flex items-center justify-center font-mono font-bold text-slate-800" style={{fontSize: widget.style.fontSize}}>
+                         {widget.value || 0}
+                     </div>
+                     <div className="flex flex-col border-l border-slate-200 h-full w-8">
+                         <div className="flex-1 flex items-center justify-center hover:bg-slate-100 cursor-pointer border-b border-slate-200">
+                             <Plus size={12} className="text-slate-500" />
+                         </div>
+                         <div className="flex-1 flex items-center justify-center hover:bg-slate-100 cursor-pointer">
+                             <Minus size={12} className="text-slate-500" />
+                         </div>
                      </div>
                  </div>
              );

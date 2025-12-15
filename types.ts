@@ -1,6 +1,4 @@
 
-
-
 export enum WidgetType {
   BUTTON = 'lv_btn',
   LABEL = 'lv_label',
@@ -18,7 +16,15 @@ export enum WidgetType {
   ROLLER = 'lv_roller',
   DROPDOWN = 'lv_dropdown',
   LED = 'lv_led',
-  KEYBOARD = 'lv_keyboard'
+  KEYBOARD = 'lv_keyboard',
+  // Visuals
+  CALENDAR = 'lv_calendar',
+  COLORWHEEL = 'lv_colorwheel',
+  SPINNER = 'lv_spinner',
+  // Data & Input
+  LIST = 'lv_list',
+  TABLE = 'lv_table',
+  SPINBOX = 'lv_spinbox'
 }
 
 export interface WidgetStyle {
@@ -67,18 +73,19 @@ export interface Widget {
   height: number;
   text?: string;
   contentMode?: 'text' | 'icon'; // For Button: toggle text vs icon
-  value?: number; // For slider/arc/bar/roller
+  value?: number; // For slider/arc/bar/roller/spinbox
   checked?: boolean; // For switch/checkbox
   style: WidgetStyle;
   // Specific properties
   min?: number;
   max?: number;
+  step?: number; // For Spinbox
   placeholder?: string; // For Text Area
   chartType?: 'line' | 'bar'; // For Chart
   src?: string; // For Image (symbol or path)
   imageData?: string; // Base64 string for image preview
   symbol?: string; // For Icon
-  options?: string; // For Roller/Dropdown (newline separated)
+  options?: string; // For Roller/Dropdown/List/Table (newline separated)
   // Navigation & Events
   events: WidgetEvent[];
 }
