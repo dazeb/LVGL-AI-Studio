@@ -232,9 +232,9 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     events: [],
     style: {
       borderColor: '#3b82f6', // Indicator
-      backgroundColor: '#e2e8f0', // Track
-      borderWidth: 0,
-      borderRadius: 0 // Not used for Arc but keeps type happy
+      backgroundColor: 'transparent', // Container
+      borderWidth: 10, // Thickness
+      borderRadius: 0 
     }
   },
   [WidgetType.CONTAINER]: {

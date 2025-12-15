@@ -357,14 +357,16 @@ const App: React.FC = () => {
   };
 
   const handleSetActiveScreen = (id: string) => {
-    const targetScreen = screens.find(s => s.id === id);
-    if (!targetScreen) return;
+    updateProject('Switch Screen', prev => {
+      const targetScreen = prev.screens.find(s => s.id === id);
+      if (!targetScreen) return prev;
 
-    updateProject('Switch Screen', prev => ({
-      ...prev,
-      activeScreenId: id,
-      activeLayerId: targetScreen.layers[0].id // Default to first layer
-    }));
+      return {
+        ...prev,
+        activeScreenId: id,
+        activeLayerId: targetScreen.layers[0].id
+      };
+    });
     setSelectedIds([]);
   };
 
@@ -752,14 +754,18 @@ const App: React.FC = () => {
   };
 
   const handleWidgetEvent = (eventName: string, widgetId: string) => {
-    // Find the widget and the specific event
-    const widget = visibleSortedWidgets.find(w => w.id === widgetId);
+    // Find the widget via state directly to ensure freshness
+    const currentScreen = screens.find(s => s.id === activeScreenId);
+    if (!currentScreen) return;
+
+    const widget = currentScreen.widgets.find(w => w.id === widgetId);
     if (!widget) return;
 
     const eventDef = widget.events.find(e => e.id === eventName);
     if (!eventDef) return;
 
     if (eventDef.action === 'NAVIGATE' && eventDef.targetScreenId) {
+      // alert(`Navigating to ${eventDef.targetScreenId}`); // DEBUG - KEEP COMMENTED FOR USER, UNCOMMENT TO DEBUG
       handleSetActiveScreen(eventDef.targetScreenId);
     }
   };
@@ -1009,6 +1015,7 @@ const App: React.FC = () => {
           onContextMenu={handleContextMenu}
           isPreview={isPreview}
           onWidgetEvent={handleWidgetEvent}
+          onZoomChange={setZoom}
         />
 
         <PropertiesPanel

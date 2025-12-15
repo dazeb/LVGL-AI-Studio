@@ -45,9 +45,6 @@ import {
   Network,
   Globe,
   Loader2,
-  ChevronLeft,
-  ChevronRight,
-  FileText,
   ArrowLeft,
   ArrowRight,
   ArrowUp,
@@ -104,6 +101,7 @@ interface CanvasProps {
   onContextMenu: (e: React.MouseEvent, widgetId: string) => void;
   isPreview?: boolean;
   onWidgetEvent?: (eventName: string, widgetId: string) => void;
+  onZoomChange?: (zoom: number) => void;
 }
 
 interface Guideline {
@@ -213,7 +211,8 @@ const Canvas: React.FC<CanvasProps> = ({
   onAddWidget,
   onContextMenu,
   isPreview = false,
-  onWidgetEvent
+  onWidgetEvent,
+  onZoomChange
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);
 
@@ -281,6 +280,16 @@ const Canvas: React.FC<CanvasProps> = ({
     });
 
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.altKey && onZoomChange) {
+      e.preventDefault();
+      e.stopPropagation();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newZoom = Math.min(3, Math.max(0.2, zoom + delta));
+      onZoomChange(newZoom);
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent, widget: Widget) => {
@@ -912,7 +921,11 @@ const Canvas: React.FC<CanvasProps> = ({
           const arcMin = widget.min || 0;
           const arcMax = widget.max || 100;
           const arcPercent = Math.min(100, Math.max(0, ((arcVal - arcMin) / (arcMax - arcMin)) * 100));
-          const trackColor = widget.style.backgroundColor || '#e5e7eb';
+
+          // Use background color for track ONLY if it's not transparent, otherwise default to gray
+          const bgCol = widget.style.backgroundColor;
+          const trackColor = (bgCol && bgCol !== 'transparent' && bgCol !== 'rgba(0,0,0,0)') ? bgCol : '#e5e7eb';
+
           const indicatorColor = widget.style.borderColor || '#3b82f6';
           const width = widget.style.borderWidth || 10;
 
@@ -1258,6 +1271,7 @@ const Canvas: React.FC<CanvasProps> = ({
         style={containerStyle}
         className={`${selectionRing}`}
         onMouseDown={(e) => handleMouseDown(e, widget)}
+        onClick={handleWidgetClick}
         onContextMenu={(e) => {
           e.preventDefault();
           onContextMenu(e, widget.id);
@@ -1401,7 +1415,10 @@ const Canvas: React.FC<CanvasProps> = ({
   };
 
   return (
-    <div className="flex-1 bg-slate-950 flex items-center justify-center relative overflow-hidden p-8">
+    <div
+      className="flex-1 bg-slate-950 flex items-center justify-center relative overflow-hidden p-8"
+      onWheel={handleWheel}
+    >
       {/* Background Grid */}
       <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
         backgroundImage: 'radial-gradient(#475569 1px, transparent 1px)',
