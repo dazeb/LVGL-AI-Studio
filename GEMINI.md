@@ -31,7 +31,8 @@ interface Widget {
   id: string;
   type: WidgetType; // e.g., 'lv_btn', 'lv_label'
   events: WidgetEvent[];
-  style: WidgetStyle; // CSS-like props mapped to LVGL styles
+  style: WidgetStyle; // CSS-like props mapped to LVGL styles (includes shadowSpread)
+  flags?: WidgetFlags; // LVGL specific flags (hidden, checkable, scrollable, etc.)
 
   // Image Specifics
   src?: string; // Filename reference (e.g. "icon.png")
@@ -76,6 +77,9 @@ interface ProjectFile {
 - **Zooming**: Supports zooming via `Alt + Scroll` (20-300%).
 - **Preview Mode**: When `isPreview` is enabled, editing (drag/resize) is disabled. Click events (`onClick`) are captured and bubbled up to `App.tsx`'s `handleWidgetEvent` to trigger actions like `NAVIGATE` without code generation.
 - Renders LVGL-like HTML approximations of widgets.
+- **Rendering Architecture**: Implements a split-rendering strategy:
+  - **Wrapper**: Handles absolute positioning, interactions (click/drag), selection rings, and resize handles. Always has `overflow: visible` to prevent handle clipping.
+  - **Visual Box**: Inner container that applies the actual widget styles (background, border, shadow, opacity) and controls content overflow (visible/hidden/scroll).
 - **Slider Orientation**: Automatically renders as **Vertical** if height > width.
 - **Image Rendering**: Renders Base64 `imageData` if present, otherwise shows a placeholder.
 
@@ -105,6 +109,8 @@ interface ProjectFile {
   - `ui_init()` function.
   - Event callbacks (`ui_event_Button1`).
   - Image references using `src` filename (e.g., `lv_img_set_src(obj, "S:path/" + src)`).
+  - Flags: `lv_obj_add_flag` for properties like `LV_OBJ_FLAG_OVERFLOW_VISIBLE`, `LV_OBJ_FLAG_CHECKABLE`, etc.
+  - Styles: Extended support including `shadow_spread`.
 - **Single Widget Gen**: Implements `generateSingleWidget` which prompts the AI to return a single JSON object (Partial Widget) based on a user description.
 
 ## 5. Themes (`constants.ts`)
@@ -128,6 +134,9 @@ When generating code for this project:
 6.  **New Widgets**:
     - `lv_roller` and `lv_dropdown`: Use `lv_roller_set_options` / `lv_dropdown_set_options` with newline separators.
     - `lv_led`: Use `lv_led_set_brightness` or `lv_led_on/off`.
+7.  **Flags & Styles**:
+    -   Generate `lv_obj_add_flag(obj, FLAG_NAME)` for enabled flags (e.g., `LV_OBJ_FLAG_CHECKABLE`).
+    -   Use `lv_obj_set_style_shadow_spread` for shadow spread property.
 
 ## 7. Infrastructure
 

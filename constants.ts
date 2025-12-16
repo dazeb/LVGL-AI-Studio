@@ -99,6 +99,13 @@ export const AI_MODELS = {
   ]
 };
 
+export const LVGL_FONTS = [
+  { name: 'Montserrat (Default)', value: 'Montserrat, sans-serif' },
+  { name: 'UniscII (Pixel)', value: '"Press Start 2P", cursive' },
+  { name: 'Dejavu (Mono)', value: 'monospace' },
+  { name: 'SimSun (Chinese)', value: 'SimSun, serif' }
+];
+
 export const DEVICE_PRESETS: DevicePreset[] = [
   { id: 'custom', name: 'Custom Resolution', manufacturer: 'Generic', width: 480, height: 320 },
 
@@ -157,7 +164,8 @@ export const DEFAULT_CANVAS_SETTINGS: CanvasSettings = {
   defaultBackgroundColor: PROJECT_THEMES.light.colors.background,
   projectName: 'My_LVGL_Project',
   theme: 'light',
-  targetDevice: 'custom'
+  targetDevice: 'custom',
+  rotation: 0
 };
 
 export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
@@ -173,7 +181,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
       textColor: '#FFFFFF',
       borderRadius: 4, // Standard LVGL is slightly sharper than 8
       borderWidth: 0,
-      fontSize: 14
+      fontSize: 14,
+      shadowSpread: 0
     }
   },
   [WidgetType.LABEL]: {
@@ -234,7 +243,7 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
       borderColor: '#3b82f6', // Indicator
       backgroundColor: 'transparent', // Container
       borderWidth: 10, // Thickness
-      borderRadius: 0 
+      borderRadius: 0
     }
   },
   [WidgetType.CONTAINER]: {
@@ -260,7 +269,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
       borderRadius: 8,
       borderWidth: 1,
       borderColor: '#cbd5e1',
-      fontSize: 14
+      fontSize: 14,
+      shadowSpread: 0
     }
   },
   [WidgetType.CHART]: {
@@ -272,7 +282,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
       backgroundColor: '#ffffff',
       borderColor: '#e2e8f0',
       borderWidth: 1,
-      borderRadius: 8
+      borderRadius: 8,
+      shadowSpread: 0
     }
   },
   [WidgetType.IMAGE]: {
@@ -318,7 +329,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
       borderRadius: 4,
       borderWidth: 1,
       borderColor: '#e2e8f0',
-      fontSize: 16
+      fontSize: 16,
+      shadowSpread: 0
     }
   },
   [WidgetType.DROPDOWN]: {
@@ -332,7 +344,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
       borderRadius: 4,
       borderWidth: 1,
       borderColor: '#e2e8f0',
-      fontSize: 14
+      fontSize: 14,
+      shadowSpread: 0
     }
   },
   [WidgetType.LED]: {
@@ -354,7 +367,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
       backgroundColor: '#cbd5e1',
       borderRadius: 4,
       borderColor: '#94a3b8',
-      borderWidth: 1
+      borderWidth: 1,
+      shadowSpread: 0
     }
   },
   // Visuals
@@ -363,11 +377,12 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 240,
     events: [],
     style: {
-        backgroundColor: '#ffffff',
-        textColor: '#1f2937',
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#e5e7eb'
+      backgroundColor: '#ffffff',
+      textColor: '#1f2937',
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: '#e5e7eb',
+      shadowSpread: 0
     }
   },
   [WidgetType.COLORWHEEL]: {
@@ -375,8 +390,8 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 150,
     events: [],
     style: {
-        backgroundColor: '#ffffff', // Knob color if represented
-        borderWidth: 0
+      backgroundColor: '#ffffff', // Knob color if represented
+      borderWidth: 0
     }
   },
   [WidgetType.SPINNER]: {
@@ -384,9 +399,9 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     height: 50,
     events: [],
     style: {
-        borderColor: '#3b82f6', // Spin color
-        borderWidth: 5, // Arc thickness
-        backgroundColor: 'transparent'
+      borderColor: '#3b82f6', // Spin color
+      borderWidth: 5, // Arc thickness
+      backgroundColor: 'transparent'
     }
   },
   // Data/Input Added
@@ -396,11 +411,12 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     options: 'Item 1\nItem 2\nItem 3\nItem 4',
     events: [],
     style: {
-        backgroundColor: '#ffffff',
-        textColor: '#1f2937',
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#e2e8f0'
+      backgroundColor: '#ffffff',
+      textColor: '#1f2937',
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: '#e2e8f0',
+      shadowSpread: 0
     }
   },
   [WidgetType.TABLE]: {
@@ -409,11 +425,12 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     options: 'Name,Price,Qty\nApple,$1.50,10\nBanana,$0.80,20\nCherry,$3.00,5', // CSV format for table data
     events: [],
     style: {
-        backgroundColor: '#ffffff',
-        textColor: '#1f2937',
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#e2e8f0'
+      backgroundColor: '#ffffff',
+      textColor: '#1f2937',
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: '#e2e8f0',
+      shadowSpread: 0
     }
   },
   [WidgetType.SPINBOX]: {
@@ -425,12 +442,241 @@ export const DEFAULT_WIDGET_PROPS: Record<WidgetType, any> = {
     step: 1,
     events: [],
     style: {
-        backgroundColor: '#ffffff',
-        textColor: '#1f2937',
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#e2e8f0',
-        fontSize: 20
+      backgroundColor: '#ffffff',
+      textColor: '#1f2937',
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: '#e2e8f0',
+      fontSize: 20,
+      shadowSpread: 0
+    }
+  },
+  // Layouts
+  [WidgetType.TABVIEW]: {
+    width: 320,
+    height: 200,
+    options: 'Tab 1\nTab 2\nTab 3', // Tab names
+    value: 0, // Active Tab Index
+    events: [],
+    style: {
+      backgroundColor: '#f8fafc', // Body BG
+      borderColor: '#e2e8f0', // Border
+      borderWidth: 1,
+      borderRadius: 8,
+      textColor: '#1f2937', // Text color
+      shadowSpread: 0
+    }
+  },
+  [WidgetType.WIN]: {
+    width: 300,
+    height: 200,
+    text: 'Window Title',
+    events: [],
+    style: {
+      backgroundColor: '#ffffff', // Content BG
+      borderColor: '#cbd5e1', // Header/Border
+      borderWidth: 1,
+      borderRadius: 8,
+      textColor: '#1f2937',
+      shadowSpread: 0
+    }
+  },
+  [WidgetType.TILEVIEW]: {
+    width: 240,
+    height: 240,
+    options: 'Tile 1,1\nTile 1,2\nTile 2,1', // Visualizing tiles
+    events: [],
+    style: {
+      backgroundColor: '#f1f5f9',
+      borderColor: '#cbd5e1',
+      borderWidth: 1,
+      borderRadius: 0,
+      textColor: '#64748b'
+    }
+  },
+  [WidgetType.MENU]: {
+    width: 320,
+    height: 240,
+    options: 'Page 1\nPage 2\nSettings',
+    events: [],
+    style: {
+      backgroundColor: '#ffffff',
+      borderColor: '#e2e8f0',
+      borderWidth: 1,
+      borderRadius: 8,
+      textColor: '#1f2937',
+      shadowSpread: 0
+    }
+  },
+  // Interaction
+  [WidgetType.BUTTONMATRIX]: {
+    width: 240,
+    height: 160,
+    options: '1\n2\n3\n4\nClose', // Map
+    events: [],
+    style: {
+      backgroundColor: 'transparent',
+      textColor: '#FFFFFF',
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: '#3b82f6', // Main Button Color (simulated)
+      fontSize: 16
+    }
+  },
+  [WidgetType.IMAGEBUTTON]: {
+    width: 64,
+    height: 64,
+    text: 'Img', // Fallback text
+    src: 'icon.png', // Placeholder
+    events: [],
+    style: {
+      backgroundColor: '#3b82f6',
+      borderRadius: 8,
+      borderWidth: 0,
+      textColor: '#ffffff'
+    }
+  },
+  [WidgetType.MSGBOX]: {
+    width: 280,
+    height: 160,
+    text: 'This is a message box',
+    options: 'OK\nCancel', // Buttons
+    events: [],
+    style: {
+      backgroundColor: '#ffffff',
+      borderColor: '#cbd5e1',
+      borderWidth: 1,
+      borderRadius: 8,
+      textColor: '#1f2937',
+      shadowSpread: 0
+    }
+  },
+  // Visualization
+  [WidgetType.LINE]: {
+    width: 100,
+    height: 100,
+    options: '0,0\n100,100', // Points x,y
+    events: [],
+    style: {
+      backgroundColor: 'transparent',
+      borderColor: '#3b82f6', // Line Color
+      borderWidth: 2, // Line Width
+      borderRadius: 0, // Line Ending (0=Butt, 1=Round) -- mapped conceptually
+      textColor: 'transparent'
+    }
+  },
+  [WidgetType.SCALE]: {
+    width: 200,
+    height: 40,
+    min: 0,
+    max: 100,
+    value: 50, // Major tick interval? or just current value if needle?
+    // Let's use value as "Number of major ticks" or similar if generic
+    // Actually scale usually has a range.
+    events: [],
+    style: {
+      backgroundColor: 'transparent',
+      borderColor: '#94a3b8', // Tick color
+      borderWidth: 2, // Tick width
+      borderRadius: 0,
+      textColor: '#64748b' // Label color
+    }
+  },
+  [WidgetType.ANIMIMG]: {
+    width: 100,
+    height: 100,
+    src: 'anim001.png', // Represents sequence start
+    options: '30\n16', // Duration (ms), Count
+    events: [],
+    style: {
+      backgroundColor: 'transparent',
+      borderRadius: 0,
+      borderWidth: 0,
+      borderColor: 'transparent',
+      textColor: '#ffffff'
+    }
+  },
+  [WidgetType.LOTTIE]: {
+    width: 120,
+    height: 120,
+    src: 'animation.json',
+    events: [],
+    style: {
+      backgroundColor: 'transparent',
+      borderRadius: 0,
+      borderWidth: 0,
+      borderColor: 'transparent',
+      textColor: '#ffffff'
+    }
+  },
+  [WidgetType.TEXTURE3D]: {
+    width: 150,
+    height: 150,
+    src: 'model.3d',
+    events: [],
+    style: {
+      backgroundColor: '#1e293b', // Dark container for 3D
+      borderRadius: 8,
+      borderWidth: 0,
+      borderColor: 'transparent',
+      textColor: '#ffffff'
+    }
+  },
+  // Utilities
+  [WidgetType.CANVAS]: {
+    width: 200,
+    height: 150,
+    events: [],
+    style: {
+      backgroundColor: '#f8fafc',
+      borderColor: '#cbd5e1',
+      borderWidth: 1,
+      borderRadius: 0,
+      textColor: '#000000'
+    }
+  },
+  [WidgetType.ARCLABEL]: {
+    width: 120,
+    height: 120,
+    text: 'Curved Text',
+    events: [],
+    style: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      borderWidth: 0,
+      borderRadius: 0,
+      textColor: '#1f2937'
+    }
+  },
+  [WidgetType.SPANGROUP]: {
+    style: {
+      backgroundColor: 'transparent',
+      textColor: '#1f2937',
+      borderColor: '#e2e8f0',
+      borderWidth: 0,
+      borderRadius: 0,
+      fontSize: 14,
+      opacity: 100
+    },
+    width: 200,
+    height: 60,
+    text: '', // spans used instead
+    spans: [
+      { id: 's1', text: 'Rich ', color: '#3b82f6', fontWeight: 'bold' },
+      { id: 's2', text: 'Text ', color: '#ef4444', fontStyle: 'italic' },
+      { id: 's3', text: 'Group', color: '#22c55e', textDecoration: 'underline' }
+    ]
+  },
+  [WidgetType.IMEPINYIN]: {
+    width: 320,
+    height: 180,
+    events: [],
+    style: {
+      backgroundColor: '#e2e8f0',
+      borderColor: '#94a3b8',
+      borderWidth: 1,
+      borderRadius: 4,
+      textColor: '#1f2937'
     }
   }
 };

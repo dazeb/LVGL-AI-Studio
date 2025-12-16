@@ -2,6 +2,26 @@
 
 All notable changes to the **LVGL Studio AI** project will be documented in this file.
 
+## [0.6.1] - 2025-12-16
+
+### Added
+
+- **Advanced Widget Properties**:
+  - Added support for new LVGL Flags: `Checkable`, `Press Lock`, `Adv. Hittest`, `Floating`, `Ignore Layout`, `Overflow Visible`, `Scroll Elastic`, `Scroll Momentum`, `Scroll One`.
+  - Added `Shadow Spread` property to the Shadow style section.
+  - Updated AI Service to generate C/MicroPython code for these new flags and styles.
+
+### Fixed
+
+- **Canvas Rendering**:
+  - **Transform Handles**: Fixed an issue where resize handles were cut off/clipped by the widget's overflow property. Refactored `renderWidget` to separate the selection/interaction wrapper from the visual rendering box.
+  - **Double Borders**: Removed redundant internal border/background rendering for Container, Window, TabView, and other widgets to eliminate visual artifacts and extra whitespace.
+  - **Overflow**: Correctly visualized the `Overflow Visible` flag in the editor.
+
+### Changed
+
+- **Default Defaults**: Updated default properties for widgets like Button, Container, Window, and others to include initialized `shadowSpread` and safe defaults.
+
 ## [0.6.0] - 2025-12-15
 
 ### Added

@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@google/genai": "^1.33.0",
+    "@types/jszip": "^3.4.0",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.560.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

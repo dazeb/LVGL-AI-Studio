@@ -25,6 +25,8 @@
 - **Image Uploads**: Upload images to preview them on the canvas and generate correct file-reference code.
 - **Multi-Provider AI**: Generate code using **Gemini (Flash/Pro)**, **DeepSeek V3/R1**, **Claude 3.5**, **GPT-4o**, or local models (Ollama).
 - **Live Properties**: Real-time editing of dimensions, colors, borders, shadows, and logic.
+- **Advanced Widget Properties** 🆕: Support for LVGL Flags (Checkable, Floating, Scroll Momentum, etc.) and deep styling options like **Shadow Spread**.
+- **WSIWYG Rendering** 🎨: High-fidelity WYSWIYG rendering engine with visible overflows, exact border placement, and glitch-free resize handles.
 
 ---
 

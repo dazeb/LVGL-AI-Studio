@@ -12,10 +12,11 @@ import SampleCatalogue from './components/SampleCatalogue';
 import HistoryMenu from './components/HistoryMenu';
 import HelpDialog from './components/HelpDialog';
 import ContextMenu from './components/ContextMenu';
+import ExportProjectDialog from './components/ExportProjectDialog'; // [NEW]
 import { useHistory } from './hooks/useHistory';
 import { SampleProject } from './data/samples';
 import { generateLVGLCode } from './services/aiService';
-import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, RotateCw, FileJson, CircleHelp, Edit } from 'lucide-react';
+import { Code, MonitorPlay, Settings as SettingsIcon, ZoomIn, ZoomOut, RotateCcw, RotateCw, FileJson, CircleHelp, Edit, Download, Eraser } from 'lucide-react';
 
 const STORAGE_KEY = 'lvgl_studio_autosave_v1';
 
@@ -99,6 +100,7 @@ const App: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [showCode, setShowCode] = useState(false);
+  const [showExport, setShowExport] = useState(false); // [NEW]
   const [showSettings, setShowSettings] = useState(false);
   const [showSamples, setShowSamples] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -297,6 +299,31 @@ const App: React.FC = () => {
     } else {
       loadLogic();
     }
+  };
+
+  // --- Reset Project ---
+  const handleResetProject = () => {
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Reset Canvas',
+      message: 'Are you sure you want to wipe the canvas and reset all settings? This cannot be undone (except via Undo).',
+      onConfirm: () => {
+        setProjectState({
+          screens: [{
+            id: 'screen_1',
+            name: 'Main Screen',
+            backgroundColor: DEFAULT_CANVAS_SETTINGS.defaultBackgroundColor,
+            widgets: [],
+            layers: [{ id: 'layer_1', name: 'Base Layer', visible: true, locked: false }]
+          }],
+          activeScreenId: 'screen_1',
+          activeLayerId: 'layer_1',
+          settings: DEFAULT_CANVAS_SETTINGS,
+          stylePresets: [] // Or restore default presets if preferred, but existing logic in initial state provides defaults if empty/undefined. Ideally we should pass the same initial defaults.
+        }, 'Reset Canvas');
+        setSelectedIds([]);
+      }
+    });
   };
 
   // --- Screen Management ---
@@ -986,6 +1013,18 @@ const App: React.FC = () => {
             <span className="hidden lg:inline text-xs font-medium">Help</span>
           </button>
 
+          <div className="flex items-center gap-2">
+            <button onClick={handleResetProject} className="flex items-center gap-2 bg-red-600/10 hover:bg-red-600 hover:text-white text-red-400 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border border-red-900/50" title="Reset Canvas">
+              <Eraser size={16} />
+              <span className="hidden xl:inline">Reset</span>
+            </button>
+            <div className="h-6 w-px bg-slate-700 mx-1 hidden md:block"></div>
+
+            <button onClick={() => setShowExport(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1.5 rounded-md text-sm font-medium transition-all shadow-lg shadow-indigo-900/20 mr-2" title="Export Project">
+              <Download size={16} /> <span className="hidden xl:inline">Export</span>
+            </button>
+          </div>
+
           <button onClick={handleGenerateCode} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-1.5 rounded-md text-sm font-medium transition-all shadow-lg shadow-blue-900/20"><Code size={16} /> Generate Code</button>
         </div>
       </header>
@@ -1074,6 +1113,12 @@ const App: React.FC = () => {
       <SampleCatalogue isOpen={showSamples} onClose={() => setShowSamples(false)} onSelectSample={handleLoadSample} />
       <ConfirmDialog isOpen={confirmDialog.isOpen} title={confirmDialog.title} message={confirmDialog.message} onConfirm={confirmDialog.onConfirm} onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} />
       <HelpDialog isOpen={showHelp} onClose={() => setShowHelp(false)} />
+
+      <ExportProjectDialog
+        isOpen={showExport}
+        onClose={() => setShowExport(false)}
+        sourceCode={{}}
+      />
 
       {contextMenu && (
         <ContextMenu

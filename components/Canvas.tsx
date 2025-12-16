@@ -86,7 +86,9 @@ import {
   Clipboard,
   Delete,
   CornerDownLeft,
-  LayoutGrid
+  LayoutGrid,
+  Box,
+  Film
 } from 'lucide-react';
 
 interface CanvasProps {
@@ -731,34 +733,68 @@ const Canvas: React.FC<CanvasProps> = ({
       }
     };
 
-    // Container Style: Positioning and layout
-    const containerStyle: React.CSSProperties = {
+    // 1. Wrapper Style: Positioning, Interaction, Animation
+    // This element generally does NOT clip overflow so that handles/rings are visible.
+    const wrapperStyle: React.CSSProperties = {
       position: 'absolute',
       left: widget.x,
       top: widget.y,
       width: widget.width,
       height: widget.height,
-      opacity: widget.style.opacity ?? 1,
-      cursor: locked ? 'not-allowed' : (dragState && isSelected ? 'grabbing' : 'grab'),
-      userSelect: 'none',
-      boxSizing: 'border-box',
+      opacity: (widget.style.opacity ?? 100) / 100,
+      pointerEvents: widget.flags?.clickable === false || widget.state?.disabled ? 'none' : 'auto',
+      filter: widget.state?.disabled ? 'grayscale(100%) opacity(70%)' : 'none',
+      zIndex: isSelected ? 100 : undefined, // Selection z-index handled here or via class
+
+      // Animation
+      animationName: (!widget.animation || widget.animation.type === 'NONE') ? 'none' :
+        (widget.animation.type === 'FADE_IN' ? 'fadeIn' :
+          widget.animation.type === 'SLIDE_IN_LEFT' ? 'slideInLeft' :
+            widget.animation.type === 'SLIDE_IN_RIGHT' ? 'slideInRight' :
+              widget.animation.type === 'SLIDE_IN_TOP' ? 'slideInTop' :
+                widget.animation.type === 'SLIDE_IN_BOTTOM' ? 'slideInBottom' :
+                  widget.animation.type === 'SCALE_UP' ? 'scaleUp' :
+                    widget.animation.type === 'SCALE_DOWN' ? 'scaleDown' :
+                      widget.animation.type === 'BOUNCE_IN' ? 'bounceIn' :
+                        widget.animation.type === 'FADE_OUT' ? 'fadeOut' :
+                          widget.animation.type === 'SLIDE_OUT_LEFT' ? 'slideOutLeft' :
+                            widget.animation.type === 'SLIDE_OUT_RIGHT' ? 'slideOutRight' :
+                              widget.animation.type === 'SLIDE_OUT_TOP' ? 'slideOutTop' :
+                                widget.animation.type === 'SLIDE_OUT_BOTTOM' ? 'slideOutBottom' :
+                                  widget.animation.type === 'BOUNCE_OUT' ? 'bounceOut' : 'none'),
+      animationDuration: `${widget.animation?.duration || 0}ms`,
+      animationDelay: `${widget.animation?.delay || 0}ms`,
+      animationTimingFunction: widget.animation?.easing || 'ease',
+      animationFillMode: 'forwards'
     };
 
-    // Inner Style: Visuals (bg, border, radius, font)
-    const innerStyle: React.CSSProperties = {
+    // 2. Visual Style: Appearance (Border, BG, Shadow) within the wrapper
+    // This element handles overflow clipping for the content.
+    const visualStyle: React.CSSProperties = {
       width: '100%',
       height: '100%',
-      backgroundColor: widget.style.backgroundColor,
-      color: widget.style.textColor,
-      borderWidth: widget.style.borderWidth,
-      borderColor: widget.style.borderColor,
-      borderRadius: widget.style.borderRadius,
-      fontSize: widget.style.fontSize,
+      backgroundColor: widget.style.backgroundColor || 'transparent',
+      borderWidth: widget.style.borderWidth || 0,
+      borderColor: widget.style.borderColor || 'transparent',
+      borderStyle: 'solid',
+      borderRadius: widget.style.borderRadius || 0,
+      boxSizing: 'border-box',
+      overflow: widget.flags?.overflow_visible ? 'visible' : (widget.flags?.scrollable ? 'auto' : 'hidden'),
+      padding: widget.style.padding ?? 0,
+      boxShadow: widget.style.shadowColor ? `${widget.style.shadowOffsetX ?? 0}px ${widget.style.shadowOffsetY ?? 0}px ${widget.style.shadowWidth ?? 0}px ${widget.style.shadowSpread ?? 0}px ${widget.style.shadowColor}` : 'none',
+    };
+
+    // 3. Content Style: Initial placement of inner content (flex center usually)
+    const contentStyle: React.CSSProperties = {
+      width: '100%',
+      height: '100%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      overflow: 'hidden', // Clip content that spills out
-      pointerEvents: 'none', // Let clicks pass to container (except specific interactive parts if needed)
+      color: widget.style.textColor,
+      fontSize: widget.style.fontSize || 14,
+      fontFamily: widget.style.fontFamily || 'Montserrat, sans-serif',
+      pointerEvents: 'none', // Pass clicks to parent
     };
 
     // Selection Ring (applied to container)
@@ -950,21 +986,17 @@ const Canvas: React.FC<CanvasProps> = ({
 
         case WidgetType.CONTAINER:
           return (
-            <div className="w-full h-full overflow-hidden shadow-sm" style={{
-              backgroundColor: widget.style.backgroundColor,
-              borderRadius: widget.style.borderRadius,
-              border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`
-            }}>
+            <div className="w-full h-full flex flex-col relative">
               {/* Dotted pattern if transparent, to indicate container area in edit mode */}
               {widget.style.backgroundColor === 'transparent' && (
-                <div className="w-full h-full opacity-20 border-2 border-dashed border-slate-400"></div>
+                <div className="w-full h-full opacity-20 border-2 border-dashed border-slate-400 pointer-events-none"></div>
               )}
             </div>
           );
 
         case WidgetType.TEXT_AREA:
           return (
-            <div className="w-full h-full p-2 flex items-start text-left bg-white relative overflow-hidden">
+            <div className="w-full h-full p-2 flex items-start text-left relative">
               <span className={`${widget.text ? 'text-slate-800' : 'text-slate-400 italic'}`}>
                 {widget.text || widget.placeholder}
               </span>
@@ -1158,11 +1190,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
         case WidgetType.CALENDAR:
           return (
-            <div className="w-full h-full flex flex-col bg-white shadow-sm overflow-hidden" style={{
-              borderRadius: widget.style.borderRadius,
-              border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
-              backgroundColor: widget.style.backgroundColor
-            }}>
+            <div className="w-full h-full flex flex-col relative">
               {/* Header */}
               <div className="flex items-center justify-between p-2 border-b border-slate-100">
                 <div className="text-xs font-bold text-slate-700">October 2025</div>
@@ -1191,11 +1219,7 @@ const Canvas: React.FC<CanvasProps> = ({
         case WidgetType.LIST:
           const listItems = (widget.options || 'Item 1\nItem 2\nItem 3').split('\n');
           return (
-            <div className="w-full h-full flex flex-col overflow-hidden bg-white shadow-sm" style={{
-              borderRadius: widget.style.borderRadius,
-              border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
-              backgroundColor: widget.style.backgroundColor
-            }}>
+            <div className="w-full h-full flex flex-col relative">
               {listItems.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2 p-2 border-b border-slate-100 last:border-0 hover:bg-slate-50">
                   <FileText size={14} className="text-slate-400" />
@@ -1208,11 +1232,7 @@ const Canvas: React.FC<CanvasProps> = ({
         case WidgetType.TABLE:
           const rows = (widget.options || '').split('\n').map(r => r.split(','));
           return (
-            <div className="w-full h-full overflow-hidden bg-white shadow-sm" style={{
-              borderRadius: widget.style.borderRadius,
-              border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
-              backgroundColor: widget.style.backgroundColor
-            }}>
+            <div className="w-full h-full relative">
               <div className="grid w-full h-full" style={{
                 gridTemplateColumns: rows[0] ? `repeat(${rows[0].length}, 1fr)` : '1fr',
                 gridAutoRows: 'min-content'
@@ -1228,13 +1248,354 @@ const Canvas: React.FC<CanvasProps> = ({
             </div>
           );
 
-        case WidgetType.SPINBOX:
+
+
+        case WidgetType.BUTTONMATRIX:
+          // Parse rows (newlines) and items
+          // LVGL Matrix map is often 1D array with "\n" control char, but users might adhere to Newline = Row
+          // Let's assume standard behavior: Flat list, styled as grid?
+          // Actually LVGL map is flat, with "\n" marker.
+          // For simplicty in Editor: Treat entire string split by newline as items.
+          // If the user wants a grid, we can just use flex-wrap.
+          const btnLabels = (widget.options || 'Btn').split('\n');
           return (
-            <div className="w-full h-full flex items-center bg-white" style={{
-              borderRadius: widget.style.borderRadius,
-              border: `${widget.style.borderWidth}px solid ${widget.style.borderColor}`,
+            <div className="w-full h-full flex flex-wrap gap-1 p-1 bg-transparent overflow-hidden">
+              {btnLabels.map((lbl, i) => (
+                <div key={i} className="flex-1 min-w-[30%] h-auto flex items-center justify-center shadow-sm"
+                  style={{
+                    backgroundColor: widget.style.borderColor || '#3b82f6', // Use border color as fill for buttons
+                    borderRadius: widget.style.borderRadius,
+                    color: widget.style.textColor,
+                    fontSize: widget.style.fontSize
+                  }}>
+                  {lbl}
+                </div>
+              ))}
+            </div>
+          );
+
+        case WidgetType.TABVIEW:
+          const tabs = (widget.options || 'Tab').split('\n');
+          const activeTab = widget.value || 0;
+          return (
+            <div className="w-full h-full flex flex-col relative">
+              {/* Tab Header */}
+              <div className="flex w-full border-b" style={{ borderColor: widget.style.borderColor }}>
+                {tabs.map((t, i) => (
+                  <div key={i} className="flex-1 py-2 text-center text-sm font-medium cursor-pointer relative"
+                    style={{
+                      color: widget.style.textColor,
+                      backgroundColor: i === activeTab ? 'rgba(0,0,0,0.05)' : 'transparent'
+                    }}>
+                    {t}
+                    {/* Active Indicator */}
+                    {i === activeTab && (
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-500"></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Tab Content Body (Placeholder) */}
+              <div className="flex-1 w-full bg-white/50 relative">
+                <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs italic">
+                  Content Area
+                </div>
+              </div>
+            </div>
+          );
+
+        case WidgetType.WIN:
+          return (
+            <div className="w-full h-full flex flex-col relative">
+              {/* Window Header */}
+              <div className="h-8 px-2 flex items-center justify-between bg-slate-100 border-b"
+                style={{ borderColor: widget.style.borderColor }}>
+                <span className="text-xs font-bold" style={{ color: widget.style.textColor }}>
+                  {widget.text || 'Window Title'}
+                </span>
+                <div className="flex gap-1">
+                  <div className="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500 cursor-pointer"></div>
+                </div>
+              </div>
+              {/* Window Content */}
+              <div className="flex-1 relative bg-white/50">
+                <div className="absolute inset-0 p-2 overflow-auto text-[10px] text-slate-400">
+                  Content Area
+                </div>
+              </div>
+            </div>
+          );
+
+        case WidgetType.TILEVIEW:
+          const tileList = (widget.options || 'Tile 1,1').split('\n');
+          return (
+            <div className="w-full h-full flex flex-col relative">
+              {/* Grid Visualization */}
+              <div className="absolute inset-0 opacity-20 pointer-events-none"
+                style={{
+                  backgroundImage: `linear-gradient(${widget.style.borderColor || '#ccc'} 1px, transparent 1px),
+                                      linear-gradient(90deg, ${widget.style.borderColor || '#ccc'} 1px, transparent 1px)`,
+                  backgroundSize: '50% 50%' // 2x2 Grid hint
+                }}>
+              </div>
+
+              {/* Center Badge */}
+              <div className="m-auto z-10 bg-white/90 px-3 py-1 rounded-full shadow-sm text-xs border border-slate-200 text-slate-600 font-mono">
+                {tileList[0]}
+              </div>
+
+              <div className="absolute bottom-1 right-1 text-[9px] text-slate-400">
+                {tileList.length} Tiles
+              </div>
+            </div >
+          );
+
+        case WidgetType.MENU:
+          const menuItems = (widget.options || 'Page 1').split('\n');
+          return (
+            <div className="w-full h-full flex flex-row relative">
+              {/* Sidebar */}
+              <div className="w-1/3 bg-slate-50 border-r flex flex-col p-1" style={{ borderColor: widget.style.borderColor }}>
+                {/* Title/Back */}
+                <div className="p-1 mb-1 text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full border border-slate-400"></div> Menu
+                </div>
+                {/* Items */}
+                <div className="flex-1 overflow-y-auto space-y-0.5">
+                  {menuItems.map((item, i) => (
+                    <div key={i} className="px-2 py-1.5 text-xs text-slate-600 hover:bg-slate-200 rounded cursor-pointer flex justify-between group">
+                      {item}
+                      <span className="text-slate-400 opacity-0 group-hover:opacity-100">›</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="flex-1 bg-white/50 relative">
+                <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs italic">
+                  Select a page
+                </div>
+              </div>
+            </div>
+          );
+
+        case WidgetType.IMAGEBUTTON:
+          return (
+            <div className="w-full h-full flex items-center justify-center">
+              {widget.src && !widget.src.endsWith('.png') ? (
+                // Symbol or bad path
+                <span style={{ color: widget.style.textColor, fontSize: widget.style.fontSize }}>{widget.text}</span>
+              ) : (
+                // Placeholder for actual image
+                <div className="flex flex-col items-center justify-center text-white/80">
+                  <ImageIcon size={24} />
+                  <span className="text-[10px] mt-1">{widget.text || 'ImgBtn'}</span>
+                </div>
+              )}
+            </div>
+          );
+
+        case WidgetType.MSGBOX:
+          const btns = (widget.options || 'OK').split('\n');
+          return (
+            <div className="w-full h-full flex flex-col relative">
+              {/* Title */}
+              <div className="px-3 py-2 border-b flex items-center justify-between" style={{ borderColor: widget.style.borderColor }}>
+                <span className="font-bold text-sm" style={{ color: widget.style.textColor }}>Message</span>
+                <div className="cursor-pointer text-slate-400 hover:text-red-500">×</div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 p-3 text-sm text-slate-600 flex items-center justify-center text-center">
+                {widget.text}
+              </div>
+
+              {/* Buttons */}
+              <div className="p-2 flex gap-2 justify-end border-t bg-slate-50/50" style={{ borderColor: widget.style.borderColor }}>
+                {btns.map((btn, i) => (
+                  <div key={i} className="px-3 py-1 rounded bg-white border shadow-sm text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-100">
+                    {btn}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+
+        case WidgetType.LINE:
+          const points = (widget.options || '0,0\n100,100').split('\n').map(p => {
+            const [x, y] = p.split(',').map(Number);
+            return `${x},${y}`;
+          }).join(' ');
+
+          return (
+            <div className="w-full h-full overflow-visible">
+              <svg className="w-full h-full overflow-visible">
+                <polyline
+                  points={points}
+                  fill="none"
+                  stroke={widget.style.borderColor}
+                  strokeWidth={widget.style.borderWidth}
+                  strokeLinecap={widget.style.borderRadius ? 'round' : 'butt'}
+                />
+              </svg>
+            </div>
+          );
+
+        case WidgetType.SCALE:
+          // Simple horizontal linear scale visualization
+          const ticks = 11; // 0 to 10
+          return (
+            <div className="w-full h-full flex flex-col justify-end" style={{
               backgroundColor: widget.style.backgroundColor
             }}>
+              {/* Horizontal Bar */}
+              <div className="w-full relative h-4 border-t" style={{ borderColor: widget.style.borderColor, borderTopWidth: widget.style.borderWidth }}>
+                {Array.from({ length: ticks }).map((_, i) => (
+                  <div key={i} className="absolute top-0 h-2 border-l" style={{
+                    left: `${(i / (ticks - 1)) * 100}%`,
+                    borderColor: widget.style.borderColor,
+                    borderLeftWidth: widget.style.borderWidth
+                  }}>
+                    {/* Check if major tick? For now just all same */}
+                  </div>
+                ))}
+              </div>
+              {/* Labels */}
+              <div className="w-full relative h-4" style={{ color: widget.style.textColor }}>
+                <div className="absolute left-0 transform -translate-x-1/2 text-[10px]">{widget.min || 0}</div>
+                <div className="absolute right-0 transform translate-x-1/2 text-[10px]">{widget.max || 100}</div>
+              </div>
+            </div>
+          );
+
+        case WidgetType.ANIMIMG:
+          return (
+            <div className="w-full h-full flex items-center justify-center bg-slate-900 border border-slate-700 overflow-hidden relative">
+              <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/diagmonds-light.png')]"></div>
+              <div className="z-10 flex flex-col items-center">
+                <ImageIcon size={24} className="text-purple-400 animate-pulse" />
+                <span className="text-[9px] text-slate-400 mt-1">Anim Image</span>
+              </div>
+              <div className="absolute bottom-1 right-1 px-1 bg-slate-800 rounded text-[8px] text-slate-500 font-mono">
+                {widget.options?.split('\n')[1] || '16'} f
+              </div>
+            </div>
+          );
+
+        case WidgetType.LOTTIE:
+          return (
+            <div className="w-full h-full flex items-center justify-center bg-teal-900/20 border border-teal-500/30 overflow-hidden relative rounded-lg">
+              <div className="flex flex-col items-center text-teal-400">
+                <div className="font-bold text-xs tracking-widest border-2 border-teal-400 rounded px-1 mb-1">JSON</div>
+                <span className="text-[9px]">Lottie</span>
+              </div>
+            </div>
+          );
+
+        case WidgetType.TEXTURE3D:
+          return (
+            <div className="w-full h-full flex items-center justify-center bg-black border border-slate-800 relative overflow-hidden">
+              {/* 3D Wireframe Simulation */}
+              <div className="w-1/2 h-1/2 border-2 border-indigo-500 transform rotate-45 skew-x-12 opacity-80"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Box size={32} className="text-indigo-400" />
+              </div>
+              <span className="absolute bottom-2 text-[9px] text-indigo-300">3D Texture</span>
+            </div>
+          );
+
+        case WidgetType.CANVAS:
+          return (
+            <div className="w-full h-full bg-white border border-slate-300 relative overflow-hidden"
+              style={{
+                borderColor: widget.style.borderColor,
+                borderWidth: widget.style.borderWidth,
+                borderRadius: widget.style.borderRadius
+              }}>
+              {/* Checkerboard pattern for transparency indication */}
+              <div className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage: `linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                                          linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                                          linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                                          linear-gradient(-45deg, transparent 75%, #ccc 75%)`,
+                  backgroundSize: '20px 20px',
+                  backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-xs font-mono">
+                Canvas Buffer
+              </div>
+            </div>
+          );
+
+        case WidgetType.ARCLABEL:
+          return (
+            <div className="w-full h-full flex items-center justify-center overflow-visible">
+              <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
+                <path id={`curve-${widget.id}`} d="M 10,50 Q 50,10 90,50" fill="none" stroke="transparent" />
+                <text fill={widget.style.textColor} fontSize="14" textAnchor="middle">
+                  <textPath href={`#curve-${widget.id}`} startOffset="50%">
+                    {widget.text || 'Arc Label'}
+                  </textPath>
+                </text>
+              </svg>
+            </div>
+          );
+
+        case WidgetType.SPANGROUP:
+          return (
+            <div className="w-full h-full p-2 break-words"
+              style={{
+                color: widget.style.textColor,
+                fontSize: widget.style.fontSize
+              }}>
+              {widget.spans && widget.spans.length > 0 ? (
+                widget.spans.map(span => (
+                  <span
+                    key={span.id}
+                    style={{
+                      color: span.color || widget.style.textColor,
+                      fontSize: span.fontSize ? `${span.fontSize}px` : undefined,
+                      fontWeight: span.fontWeight || 'normal',
+                      fontStyle: span.fontStyle || 'normal',
+                      textDecoration: span.textDecoration || 'none'
+                    }}
+                  >
+                    {span.text}
+                  </span>
+                ))
+              ) : (
+                // Fallback if no spans
+                <span className="text-slate-400 italic">Empty Span Group</span>
+              )}
+            </div>
+          );
+
+        case WidgetType.IMEPINYIN:
+          return (
+            <div className="w-full h-full flex flex-col bg-slate-100 border border-slate-300 rounded overflow-hidden">
+              {/* Input Area */}
+              <div className="h-8 bg-white border-b border-slate-200 flex items-center px-2 text-sm">
+                ni hao <span className="ml-1 animate-pulse">|</span>
+              </div>
+              {/* Candidates */}
+              <div className="h-8 bg-slate-50 border-b border-slate-200 flex items-center px-2 gap-2 overflow-x-auto no-scrollbar">
+                <span className="px-1 bg-blue-100 text-blue-600 rounded text-xs cursor-pointer">1. 你好</span>
+                <span className="px-1 hover:bg-slate-200 rounded text-xs cursor-pointer text-slate-600">2. 泥好</span>
+                <span className="px-1 hover:bg-slate-200 rounded text-xs cursor-pointer text-slate-600">3. 拟好</span>
+              </div>
+              {/* Keyboard Hint */}
+              <div className="flex-1 flex items-center justify-center bg-slate-200 text-slate-400 text-[10px] uppercase tracking-wider">
+                Keyboard Area
+              </div>
+            </div>
+          );
+
+        case WidgetType.SPINBOX:
+          return (
+            <div className="w-full h-full flex items-center">
               <div className="flex-1 flex items-center justify-center font-mono font-bold text-slate-800" style={{ fontSize: widget.style.fontSize }}>
                 {widget.value || 0}
               </div>
@@ -1268,17 +1629,19 @@ const Canvas: React.FC<CanvasProps> = ({
     return (
       <div
         key={widget.id}
-        style={containerStyle}
         className={`${selectionRing}`}
         onMouseDown={(e) => handleMouseDown(e, widget)}
         onClick={handleWidgetClick}
+        style={wrapperStyle}
         onContextMenu={(e) => {
           e.preventDefault();
           onContextMenu(e, widget.id);
         }}
       >
-        <div style={innerStyle}>
-          {renderInner()}
+        <div style={visualStyle}>
+          <div style={contentStyle}>
+            {renderInner()}
+          </div>
         </div>
 
         {/* Event Indicator Badge */}
@@ -1443,10 +1806,73 @@ const Canvas: React.FC<CanvasProps> = ({
           transform: `scale(${zoom})`,
         }}
       >
-        {widgets.map(renderWidget)}
-        {renderGroupOverlay()}
-        {renderGuidelines()}
-        {renderSelectionBox()}
+        <div
+          id="canvas-container"
+          className="relative bg-white shadow-sm overflow-hidden"
+          style={{
+            width: settings.width,
+            height: settings.height,
+            transform: `scale(${zoom}) rotate(${settings.rotation || 0}deg)`,
+            transformOrigin: 'center center',
+            backgroundColor: settings.backgroundColor || '#f0f2f5',
+            transition: 'width 0.3s, height 0.3s, transform 0.3s' // Smooth rotation
+          }}
+          onMouseDown={handleCanvasMouseDown}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            onContextMenu(e, 'CANVAS_BACKGROUND');
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+        >
+          <style>{`
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Press+Start+2P&display=swap');
+            
+            /* Animation Keyframes */
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+            @keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+            @keyframes slideInTop { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            @keyframes slideInBottom { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+            @keyframes scaleUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            @keyframes scaleDown { from { transform: scale(1.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            @keyframes bounceIn {
+              50% { opacity: 1; transform: scale(1.05); }
+              70% { transform: scale(0.9); }
+              100% { transform: scale(1); }
+            }
+            @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+            @keyframes slideOutLeft { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-100%); opacity: 0; } }
+            @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+            @keyframes slideOutTop { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+            @keyframes slideOutBottom { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
+            @keyframes bounceOut {
+              0% { transform: scale(1); }
+              20% { transform: scale(0.9); }
+              50% { opacity: 1; transform: scale(1.1); }
+              100% { opacity: 0; transform: scale(0.3); }
+            }
+          `}</style>
+          {/* Guidelines */}
+          {guidelines.map((g, i) => (
+            <div
+              key={i}
+              className="absolute bg-pink-500 z-50 pointer-events-none"
+              style={{
+                left: g.type === 'vertical' ? g.x : g.start,
+                top: g.type === 'horizontal' ? g.y : g.start,
+                width: g.type === 'vertical' ? 1 : (g.end - g.start),
+                height: g.type === 'horizontal' ? 1 : (g.end - g.start)
+              }}
+            />
+          ))}
+
+          {/* Widgets */}
+          {widgets.map(widget => renderWidget(widget))}
+          {renderGroupOverlay()}
+          {renderGuidelines()}
+          {renderSelectionBox()}
+        </div>
       </div>
 
       <div className="absolute top-4 right-4 bg-slate-800 text-slate-400 text-xs px-2 py-1 rounded border border-slate-700 font-mono">
